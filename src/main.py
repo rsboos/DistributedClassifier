@@ -2,33 +2,10 @@
 import sys
 import dataPreparation
 import classifier
+import rankings
+import socialChoiceEstimator
 
 
-
-
-"""
-form: high prob - index
-def makeRankingsForModel(individualsProbs):
-	numberOfClasses = individualsProbs.shape[1]
-	for i in range(numberOfClasses):
-		probsForClass = individualsProbs[:,[i]]
-		for (elem)
-			elem = (elem,index)
-		sorted(arrayOFtuPLES, key=lambda x: x[0 or 1])
-
-
-def makeRankings(outProbs,nModels):
-	for i in range(nModels):
-		makeRankingsForModel(outProbs[i])
-
-def agregateRankings():
-	for each classe
-		n rankings
-
-def calculateBordaCount():
-
-def calculateCopelandFunction():
-"""
 class FacilitatorAgent:
 	def __init__(self, dataSetFile):
 		self.dataSetFile=dataSetFile
@@ -44,18 +21,18 @@ class FacilitatorAgent:
 		for i in range(self.numberOfModels):
 			vectorProbabilities = classifier.MakeClassification(i,modelsData[i],instancesClasses)
 			outputProbabilities.update( {i : vectorProbabilities } )
-		
-		
-		#makeRankings(outputProbabilities,numberOfModels)
-		#agregateRankings()
+		rankingsOutput = rankings.makeRankings(outputProbabilities) 
+		#rankings = { i (modelIndex: { j (classIndex): preference } }
+
+		estimator = socialChoiceEstimator.socialChoiceEstimator(rankingsOutput)
+		#estimator.execute("BordaCount")
 
 	def getNumberOfModels(self,data):
 		return len(data)
 	
 def main(argv):
     Executer = FacilitatorAgent("../datasets/iris.data.txt")
-    Debug=True
-    Executer.executeAlgorithm(Debug)
+    Executer.executeAlgorithm()
 
 if __name__ == "__main__":
     main(sys.argv[1:])

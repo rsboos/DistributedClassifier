@@ -9,10 +9,10 @@ import sklearn.svm
 def MakeClassification(index,instancesData,classesData):
 	classifiers = [
 	OneVsRestClassifier(sklearn.svm.SVC(probability=1)),
-	GaussianNB(),
+	MLPClassifier(alpha=1),
 	KNeighborsClassifier(),
 	DecisionTreeClassifier(random_state=0),
-	MLPClassifier(alpha=0.1),
+	GaussianNB()
 	]
 	if (index >= len(classifiers)):
 		print "ERROR. The index is not valid."
