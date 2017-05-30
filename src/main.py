@@ -1,9 +1,9 @@
-
 import sys
 import dataPreparation
 import classifier
 import rankings
 import socialChoiceEstimator
+
 
 
 class FacilitatorAgent:
@@ -25,7 +25,8 @@ class FacilitatorAgent:
 		#rankings = { i (modelIndex: { j (classIndex): preference } }
 
 		estimator = socialChoiceEstimator.socialChoiceEstimator(rankingsOutput)
-		#estimator.execute("BordaCount")
+		print estimator.getWinnerClass("BordaCount")
+		
 
 	def getNumberOfModels(self,data):
 		return len(data)
