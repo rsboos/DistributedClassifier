@@ -9,9 +9,9 @@ import sklearn.svm
 def MakeClassification(index,instancesData,classesData):
 	classifiers = [
 	OneVsRestClassifier(sklearn.svm.SVC(probability=1)),
-	MLPClassifier(alpha=1),
-	KNeighborsClassifier(),
 	DecisionTreeClassifier(random_state=0),
+	KNeighborsClassifier(),
+	MLPClassifier(alpha=1),
 	GaussianNB()
 	]
 	if (index >= len(classifiers)):

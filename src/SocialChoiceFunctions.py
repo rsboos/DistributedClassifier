@@ -1,5 +1,6 @@
 # Luke Miles, August 2016
 # a python implementation of some ideas in chapter 2 of the book Computational Choice
+# some functions added by Rodrigo Augusto Scheller Boos, May 2017
 
 from __future__ import division
 import random
@@ -40,6 +41,12 @@ class Profile(object):
         topScore = len(self.mayors) - 1
         return sum(numVotes * (topScore - ballot.index(mayor))
                    for numVotes, ballot in self.pairs)
+
+    def dowdallScore(self, mayor):
+        topScore = len(self.mayors) - 1
+        return sum(numVotes * ((topScore - ballot.index(mayor))/(ballot.index(mayor)+1))
+                   for numVotes, ballot in self.pairs)
+
     def simpsonScore(self, mayor):
         return min(self.netPreference(mayor, mayor2)
                    for mayor2 in self.mayors - {mayor})

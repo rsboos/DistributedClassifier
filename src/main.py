@@ -1,39 +1,20 @@
 import sys
-import dataPreparation
-import classifier
-import rankings
-import socialChoiceEstimator
+from pathlib import Path
+import FacilitatorAgent
 
 
-
-class FacilitatorAgent:
-	def __init__(self, dataSetFile):
-		self.dataSetFile=dataSetFile
-		self.numberOfModels=0
-
-	# this function will call all the underlying methods in order to perform data prepation, classification in each simulated agent, and aggregation
-	def executeAlgorithm(self,debug=False):
-		instancesFeatures, instancesClasses = dataPreparation.loadDataSetFromFile(self.dataSetFile)
-		modelsData = dataPreparation.divideDataSetInPartitions(instancesFeatures)
-		self.numberOfModels = self.getNumberOfModels(modelsData)
-		
-		outputProbabilities = {}
-		for i in range(self.numberOfModels):
-			vectorProbabilities = classifier.MakeClassification(i,modelsData[i],instancesClasses)
-			outputProbabilities.update( {i : vectorProbabilities } )
-		rankingsOutput = rankings.makeRankings(outputProbabilities) 
-		#rankings = { i (modelIndex: { j (classIndex): preference } }
-
-		estimator = socialChoiceEstimator.socialChoiceEstimator(rankingsOutput)
-		print estimator.getWinnerClass("BordaCount")
-		
-
-	def getNumberOfModels(self,data):
-		return len(data)
 	
 def main(argv):
-    Executer = FacilitatorAgent("../datasets/iris.data.txt")
-    Executer.executeAlgorithm()
+	if (len(argv) != 1):
+		print "Execution should be in the format: python main.py dataset.txt"
+	else:
+		dataSetFile = argv[0]
+		file = Path(dataSetFile)
+		if file.is_file():
+			Executer = FacilitatorAgent.FacilitatorAgent(dataSetFile)
+			print Executer.simulateDistributedClassification()
+		else:
+			print "The dataset file should have a valid path"
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+	main(sys.argv[1:])

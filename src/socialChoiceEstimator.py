@@ -1,4 +1,4 @@
-from social_choice_functions import Profile
+from SocialChoiceFunctions import Profile
 
 class socialChoiceEstimator:
 	def __init__(self, rankings):
