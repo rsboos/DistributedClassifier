@@ -32,11 +32,11 @@ def main(argv):
 		algorithm = argv[1]
 		function = argv[2]
 		if (len(argv) > 3):
-			kFoldNumber = argv[3]
+			kFoldNumber = int(argv[3])
 		else:
 			kFoldNumber = 10
 		if (len(argv) > 4):
-			subsetFeatures = argv[4]
+			subsetFeatures = int(argv[4])
 		else:
 			subsetFeatures = -1
 		file = Path(dataSetFile)

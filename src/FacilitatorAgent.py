@@ -20,9 +20,10 @@ class FacilitatorAgent:
 	#if numberOfFeatures == -1, then compute with all of them
 	def computeAccuracyForSingleModel(self,algorithm="SVM",numberOfFeatures=-1):
 		if (numberOfFeatures > 0):
-			print "hey"
+			instFeatures = dataPreparation.selectNRandomColumns(self.instancesFeatures,numberOfFeatures)
 			#select random numberOfFeatures columns
-		resultClasses = classifier.MakeClassification(self.algorithmsIndex[algorithm],self.instancesFeatures,self.instancesClasses,"value")
+		
+		resultClasses = classifier.MakeClassification(self.algorithmsIndex[algorithm],instFeatures,self.instancesClasses,"value")
 		return accuracy_score(self.instancesClasses,resultClasses)
 
 	# this function will call all the underlying methods in order to perform data prepation, classification in each simulated agent, and aggregation

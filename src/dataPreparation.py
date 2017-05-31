@@ -17,20 +17,35 @@ def loadDataSetFromFile(file):
 	y = le.transform(y)
 	return X,y
 
+def selectNRandomColumns(instances,numberOfFeatures):
+	dimensions = instances.shape
+	totNumFeatures = dimensions[1]
+	numbers = []
+	for i in range(totNumFeatures):
+		numbers.append(i)
+	numbersRand = np.random.permutation(numbers)
+	indexNumbers = numbersRand[0:numberOfFeatures]
+	instancesNumPy = np.array(instances)
+	return instancesNumPy[:,indexNumbers]
+
+
 def divideDataSetInPartitions(instances):
 	dimensions = instances.shape
 	numFeatures = dimensions[1]
 	ret = {}
 	instancesNumPy = np.array(instances)
-
 	n = min(5, numFeatures/2) # as explained in the article, the number of local agents will be 5
-	
+	numbers = []
+	for i in range(numFeatures):
+		numbers.append(i)
+	numbersRand = np.random.permutation(numbers)
 	if (n <= numFeatures):
 		numberOfFeaturesInEachModel = int( math.ceil (numFeatures / n))
 		for i in range(n):
 			startIndex = i*numberOfFeaturesInEachModel
 			endIndex = min((i+1) * numberOfFeaturesInEachModel,numFeatures)
-			extractedData = instancesNumPy[:,startIndex:endIndex]
+			indexNumbers = numbersRand[startIndex:endIndex]
+			extractedData = instancesNumPy[:,indexNumbers]
 			ret.update( {i : extractedData } )
 		return ret
 	else:
