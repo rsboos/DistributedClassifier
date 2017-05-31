@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 class FacilitatorAgent:
 	def __init__(self, dataSetFile):
 		self.dataSetFile=dataSetFile
-		self.instancesFeatures, self.instancesClasses = dataPreparation.loadDataSetFromFile(self.dataSetFile)
+		self.instancesFeatures, self.instancesClasses = dataPreparation.loadDataSetFromFile(self.dataSetFile,"first")
 		self.numberOfModels=0
 		self.algorithmsIndex = { "SVM": 0, "DecisionTree": 1, "KNN": 2, "NN": 3, "NB": 4, "ECOC": 5}
 
@@ -40,6 +40,7 @@ class FacilitatorAgent:
 		estimator = socialChoiceEstimator.socialChoiceEstimator(rankingsOutput)
 		results= estimator.getWinnerClass(combineFunction)
 		return accuracy_score(self.instancesClasses, results)
+		print "Done classification!"
 
 	def getNumberOfModels(self,data):
 		return len(data)

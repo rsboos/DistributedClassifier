@@ -6,12 +6,17 @@ import numpy as np
 
 # File should be organized in lines with every feature first, and then corresponding class
 # it changes the classes to an integer interval from 0 to N-1
-def loadDataSetFromFile(file):
+def loadDataSetFromFile(file,columClasses="last"):
+
 	dataset = pd.read_csv(file)
 	dimensions = dataset.shape
 	numColumns = dimensions[1]
-	X = dataset.ix[:,:-1]
-	y = dataset.ix[:,-1]
+	if columClasses == "last":
+		X = dataset.ix[:,:-1]
+		y = dataset.ix[:,-1]
+	else:
+		X = dataset.ix[:,1:]
+		y = dataset.ix[:,0]
 	le = preprocessing.LabelEncoder()
 	le.fit(y)
 	y = le.transform(y)

@@ -21,6 +21,7 @@ def MakeClassification(index,instancesData,classesData,type="proba"):
 		print "ERROR. The index is not valid."
 		return None
 	else:
+		print "Performing classification"
 		if type == "proba":
 			return classifiers[index].fit(instancesData,classesData).predict_proba(instancesData)
 		else:
