@@ -30,7 +30,6 @@ class socialChoiceEstimator:
 		return ret
 
 	def getWinnerClass(self,functionType):
-		functionType = "Borda"
 		bestClass = [-1] * self.numberOfInstances
 		bestScore = [0] * self.numberOfInstances
 		for i in range(self.numberOfClasses):
@@ -45,7 +44,14 @@ class socialChoiceEstimator:
 		profileClass = Profile(self.prepareDataToPySCF(indexClass))
 		ret = []
 		for i in range(self.numberOfInstances):
-			ret.append(profileClass.bordaScore(i))
+			if functionType == "Borda":
+				ret.append(profileClass.bordaScore(i))
+			elif functionType == "Copeland":
+				ret.append(profileClass.copelandScore(i))
+			elif functionType == "Dowdall":
+				ret.append(profileClass.dowdallScore(i))
+			elif functionType == "Plurality":
+				ret.append(profileClass.pluralityScore(i))
 		return ret
 
 """	def getBordaDecision(self):
