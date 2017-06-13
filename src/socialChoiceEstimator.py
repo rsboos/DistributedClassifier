@@ -8,7 +8,6 @@ class socialChoiceEstimator:
 		self.numberOfModels = len(self.data[0])
 		self.numberOfInstances = len(self.data[0][0])
 		self.classesScores = None
-		#print self.data
 
 	def getClassesData(self): # transform model,class,data into class,model,data
 		ret = {}
@@ -53,43 +52,3 @@ class socialChoiceEstimator:
 			elif functionType == "Plurality":
 				ret.append(profileClass.pluralityScore(i))
 		return ret
-
-"""	def getBordaDecision(self):
-
-		bordaDecision = [-1] * self.numberOfInstances
-		maxBordaScore = [0] * self.numberOfInstances
-		for indexInstance in range(self.numberOfInstances):
-			for indexClass in range(self.numberOfClasses):
-				if (bordaScore[])
-			indexClass,dataClass in self.data.items():
-			maxB
-			score[indexClass] = bordaScore(indexClass)
-
-
-	def getBordaScore():
-		
-	def bordaScore(self,indexClass):
-		arr = data[indexClass]
-		numberOfModels = len(arr)
-		numberOfInstances = len(arr[0])
-		scores = [0] * numberOfInstances
-		for ranking in arr:
-			curIndex=numberOfInstances-1
-			for element in ranking:
-				scores[element]+=curIndex
-				curIndex-=1
-		return scores
-
-	def copelandScore(self,indexClass):
-		arr = data[indexClass]
-		numberOfModels = len(arr)
-		numberOfInstances = len(arr[0])
-		scores = [0] * numberOfInstances
-		for ranking in arr:
-			curIndex=numberOfInstances-1
-			for element in ranking:
-				scores[element]+=curIndex
-				curIndex-=1
-		return scores
-
-"""

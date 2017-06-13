@@ -8,7 +8,7 @@ from sklearn.multiclass import OutputCodeClassifier
 from sklearn.svm import LinearSVC
 import sklearn.svm
 
-def MakeClassification(index,instancesData,classesData,type="proba"):
+def MakeClassification(index,instancesData,classesData,instancesTest,type="proba"):
 	classifiers = [
 	OneVsRestClassifier(sklearn.svm.SVC(probability=1)),
 	DecisionTreeClassifier(random_state=0),
@@ -23,6 +23,6 @@ def MakeClassification(index,instancesData,classesData,type="proba"):
 	else:
 		print "Performing classification"
 		if type == "proba":
-			return classifiers[index].fit(instancesData,classesData).predict_proba(instancesData)
+			return classifiers[index].fit(instancesData,classesData).predict_proba(instancesTest)
 		else:
-			return classifiers[index].fit(instancesData,classesData).predict(instancesData)
+			return classifiers[index].fit(instancesData,classesData).predict(instancesTest)
