@@ -82,5 +82,3 @@ class FacilitatorAgent:
 		
 	def getNumberOfModels(self,data):
 		return len(data)
-
-#curva ROC
