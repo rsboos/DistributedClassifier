@@ -8,7 +8,7 @@ from sklearn.multiclass import OutputCodeClassifier
 from sklearn.svm import LinearSVC
 import sklearn.svm
 
-def MakeClassification(index,instancesData,classesData,instancesTest,type="proba"):
+def MakeClassification(index,instancesData,classesData,instancesTest,type="proba",classifiersType="normal"):
 	classifiers = [
 	OneVsRestClassifier(sklearn.svm.SVC(probability=1)),
 	DecisionTreeClassifier(random_state=0),
@@ -17,11 +17,19 @@ def MakeClassification(index,instancesData,classesData,instancesTest,type="proba
 	GaussianNB(),
 	OutputCodeClassifier(LinearSVC(random_state=0),code_size=2, random_state=0)
 	]
+	if (classifiersType == "ova"):
+		classifiers = [
+			OneVsRestClassifier(sklearn.svm.SVC(probability=1)),
+			OneVsRestClassifier(DecisionTreeClassifier(random_state=0)),
+			OneVsRestClassifier(KNeighborsClassifier()),
+			OneVsRestClassifier(MLPClassifier(alpha=1)),
+			OneVsRestClassifier(sklearn.svm.SVC(probability=1))
+		]
 	if (index >= len(classifiers)):
 		print "ERROR. The index is not valid."
 		return None
 	else:
-		print "Performing classification"
+		#print "Performing classification"
 		if type == "proba":
 			return classifiers[index].fit(instancesData,classesData).predict_proba(instancesTest)
 		else:
