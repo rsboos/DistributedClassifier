@@ -15,9 +15,19 @@ class Executer:
 		self.classifiersType = classifiersType 
 
 	def getAverageAccuracy(self):
+		avgScore, avgF1Macro, avgF1Micro, avgF1Weighted = (0,0,0,0)
 		Executer = FacilitatorAgent.FacilitatorAgent(self.dataSetFile,self.classesPlace,self.kFoldNumber)
-		#for i in range(10):
-		return Executer.execute(self.algorithmType,self.function,self.subsetFeatures,self.classifiersType)
+		for i in range(10):
+			ret = Executer.execute(self.algorithmType,self.function,self.subsetFeatures,self.classifiersType)
+			avgScore += ret[0]
+			avgF1Macro += ret[1]
+			avgF1Micro += ret[2]
+			avgF1Weighted += ret[3]
+		avgScore /= 10
+		avgF1Macro /= 10
+		avgF1Micro /= 10
+		avgF1Weighted /= 10
+		return avgScore, avgF1Macro, avgF1Micro, avgF1Weighted
 	
 def main(argv):
 	if (len(argv) < 3):
