@@ -62,14 +62,28 @@ class FacilitatorAgent:
 		avgF1Micro = 0
 		avgF1Weighted = 0
 		for train_index, test_index in skf.split(modelsData[0], self.instancesClasses):
+			resClass=[0] * self.numberOfModels
 			for i in range(self.numberOfModels):
-				#print("TRAIN:", train_index, "TEST:", test_index)
-				vectorProbabilities = classifier.MakeClassification(i,modelsData[i][train_index],self.instancesClasses[train_index],modelsData[i][test_index],"proba",classifiersType)
-				outputProbabilities.update( {i : vectorProbabilities } )
-			rankingsOutput = rankings.makeRankings(outputProbabilities)
-			#print rankingsOutput
-			estimator = socialChoiceEstimator.socialChoiceEstimator(rankingsOutput)
-			resultClasses = estimator.getWinnerClass(combineFunction)
+				
+				if (combineFunction == "Plurality"):
+					resClass[i] = classifier.MakeClassification(i,modelsData[i][train_index],self.instancesClasses[train_index],modelsData[i][test_index],"value",classifiersType)
+				else:
+					#print("TRAIN:", train_index, "TEST:", test_index)
+					vectorProbabilities = classifier.MakeClassification(i,modelsData[i][train_index],self.instancesClasses[train_index],modelsData[i][test_index],"proba",classifiersType)
+					outputProbabilities.update( {i : vectorProbabilities } )
+			if (combineFunction != "Plurality"):
+				rankingsOutput = rankings.makeRankings(outputProbabilities)
+				#print rankingsOutput
+				estimator = socialChoiceEstimator.socialChoiceEstimator(rankingsOutput)
+				resultClasses = estimator.getWinnerClass(combineFunction)
+			else:
+				resultClasses = [0] * len(resClass[0])
+				for i in range(len(resClass[0])):
+					tmpList = list()
+					for j in range(self.numberOfModels):
+						tmpList.append(resClass[j][i])
+					resultClasses[i] = max(set(tmpList), key=tmpList.count)
+				#resultClasses = 
 			#print "Done classification!"
 			avgF1Macro += f1_score(self.instancesClasses[test_index], resultClasses, average='macro')
 			avgF1Micro += f1_score(self.instancesClasses[test_index], resultClasses, average='micro')
