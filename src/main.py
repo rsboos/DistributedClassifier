@@ -16,6 +16,7 @@ class Executer:
 
 	def getAverageAccuracy(self):
 		Executer = FacilitatorAgent.FacilitatorAgent(self.dataSetFile,self.classesPlace,self.kFoldNumber)
+		#for i in range(10):
 		return Executer.execute(self.algorithmType,self.function,self.subsetFeatures,self.classifiersType)
 	
 def main(argv):

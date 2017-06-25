@@ -51,6 +51,7 @@ class FacilitatorAgent:
 	def simulateDistributedClassification(self,combineFunction,classifiersType):
 		modelsData = dataPreparation.divideDataSetInPartitions(self.instancesFeatures)
 		self.numberOfModels = self.getNumberOfModels(modelsData)
+		print "Data loaded!"
 		#print modelsData
 		outputProbabilities = {}
 		skf = StratifiedKFold(n_splits=self.kFolds)
