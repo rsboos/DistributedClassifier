@@ -22,7 +22,7 @@ def MakeClassification(index,instancesData,classesData,instancesTest,type="proba
 			OneVsRestClassifier(sklearn.svm.SVC(probability=1),4),
 			OneVsRestClassifier(DecisionTreeClassifier(random_state=0),4),
 			OneVsRestClassifier(KNeighborsClassifier(),4),
-			OneVsRestClassifier(MLPClassifier(alpha=1),4),
+			OneVsRestClassifier(MLPClassifier(),4),
 			OneVsRestClassifier(sklearn.svm.SVC(probability=1),4)
 		]
 	if (index >= len(classifiers)):
