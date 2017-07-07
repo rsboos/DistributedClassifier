@@ -6,26 +6,30 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
 import numpy as np
-
+import math
 
 class FacilitatorAgent:
-	def __init__(self, dataSetFile, classesPlace, kFolds):
+	def __init__(self, dataSetFile, classesPlace, kFolds,fileToWrite):
 		self.dataSetFile=dataSetFile
+		self.fileToWrite = fileToWrite
 		self.instancesFeatures, self.instancesClasses = dataPreparation.loadDataSetFromFile(self.dataSetFile,classesPlace)
 		self.numberOfModels=0
 		self.algorithmsIndex = { "SVM": 0, "DecisionTree": 1, "KNN": 2, "NN": 3, "NB": 4, "ECOC": 5}
 		self.kFolds = kFolds
 
-	def execute(self,executionType="distributed",function=None,numberOfFeatures=-1,classifiersType = "normal"):
+	def execute(self,executionType="distributed",function=None,isLocalSmall=0,classifiersType = "normal"):
 		if executionType == "distributed":
 			return self.simulateDistributedClassification(function,classifiersType)
 		else:
-			return self.computeAccuracyForSingleModel(function,numberOfFeatures)
+			return self.computeAccuracyForSingleModel(function,isLocalSmall,executionType)
 
 	#if numberOfFeatures == -1, then compute with all of them
-	def computeAccuracyForSingleModel(self,algorithm="SVM",numberOfFeatures=-1):
-		if (numberOfFeatures > 0):
-			instFeatures = dataPreparation.selectNRandomColumns(self.instancesFeatures,numberOfFeatures)
+	def computeAccuracyForSingleModel(self,algorithm="SVM",isLocalSmall=0,execType="normal"):
+		totalFeatures = self.instancesFeatures.shape[1]
+		n = min(5, totalFeatures/2) # as explained in the article, the number of local agents will be 5
+		numberOfFeaturesInEachModel = int( math.ceil (totalFeatures / n) )
+		if (isLocalSmall):
+			instFeatures = dataPreparation.selectNRandomColumns(self.instancesFeatures,numberOfFeaturesInEachModel)
 			#select random numberOfFeatures columns
 		else:
 			instFeatures = np.array(self.instancesFeatures)
@@ -37,10 +41,16 @@ class FacilitatorAgent:
 		avgF1Weighted = 0
 		for train_index, test_index in skf.split(instFeatures, self.instancesClasses):
 			resultClasses = classifier.MakeClassification(self.algorithmsIndex[algorithm],instFeatures[train_index],self.instancesClasses[train_index],instFeatures[test_index],"value")
-			avgF1Macro += f1_score(self.instancesClasses[test_index], resultClasses, average='macro')
-			avgF1Micro += f1_score(self.instancesClasses[test_index], resultClasses, average='micro')
-			avgF1Weighted += f1_score(self.instancesClasses[test_index], resultClasses, average='weighted')
-			avgScore += accuracy_score(self.instancesClasses[test_index],resultClasses)
+			valF1Macro = f1_score(self.instancesClasses[test_index], resultClasses, average='macro')
+			valF1Micro = f1_score(self.instancesClasses[test_index], resultClasses, average='micro')
+			valF1Weighted = f1_score(self.instancesClasses[test_index], resultClasses, average='weighted')
+			valScore = accuracy_score(self.instancesClasses[test_index],resultClasses)
+			avgF1Macro += valF1Macro
+			avgF1Micro += valF1Micro
+			avgF1Weighted += valF1Weighted
+			avgScore += valScore
+			with open(self.fileToWrite, "a") as myfile:
+				myfile.write(str(valF1Macro)+"\t"+str(valF1Micro)+"\t"+str(valF1Weighted)+"\t"+str(valScore)+"\n")
 		avgScore = avgScore / self.kFolds
 		avgF1Macro /= self.kFolds
 		avgF1Weighted /= self.kFolds
@@ -85,10 +95,16 @@ class FacilitatorAgent:
 					resultClasses[i] = max(set(tmpList), key=tmpList.count)
 				#resultClasses = 
 			#print "Done classification!"
-			avgF1Macro += f1_score(self.instancesClasses[test_index], resultClasses, average='macro')
-			avgF1Micro += f1_score(self.instancesClasses[test_index], resultClasses, average='micro')
-			avgF1Weighted += f1_score(self.instancesClasses[test_index], resultClasses, average='weighted')
-			avgScore += accuracy_score(self.instancesClasses[test_index], resultClasses)
+			valF1Macro = f1_score(self.instancesClasses[test_index], resultClasses, average='macro')
+			valF1Micro = f1_score(self.instancesClasses[test_index], resultClasses, average='micro')
+			valF1Weighted = f1_score(self.instancesClasses[test_index], resultClasses, average='weighted')
+			valScore = accuracy_score(self.instancesClasses[test_index],resultClasses)
+			avgF1Macro += valF1Macro
+			avgF1Micro += valF1Micro
+			avgF1Weighted += valF1Weighted
+			avgScore += valScore
+			with open(self.fileToWrite, "a") as myfile:
+				myfile.write(str(valF1Macro)+"\t"+str(valF1Micro)+"\t"+str(valF1Weighted)+"\t"+str(valScore)+"\n")
 		avgScore = avgScore / self.kFolds
 		avgF1Macro /= self.kFolds
 		avgF1Weighted /= self.kFolds
