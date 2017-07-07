@@ -1,0 +1,16 @@
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Borda normal 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Copeland normal 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Dowdall normal 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Plurality normal 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Borda ova 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Copeland ova 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Dowdall ova 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first distributed Plurality ova 10
+python -W ignore main.py ../datasets/soybeanFirst.txt first local SVM normal 10 0
+python -W ignore main.py ../datasets/soybeanFirst.txt first local ECOC normal 10 0
+python -W ignore main.py ../datasets/soybeanFirst.txt first local NN normal 10 0
+python -W ignore main.py ../datasets/soybeanFirst.txt first local SVM normal 10 1
+python -W ignore main.py ../datasets/soybeanFirst.txt first local DecisionTree normal 10 1
+python -W ignore main.py ../datasets/soybeanFirst.txt first local KNN normal 10 1
+python -W ignore main.py ../datasets/soybeanFirst.txt first local NN normal 10 1
+python -W ignore main.py ../datasets/soybeanFirst.txt first local NB normal 10 1
