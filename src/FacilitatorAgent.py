@@ -14,7 +14,7 @@ class FacilitatorAgent:
 		self.fileToWrite = fileToWrite
 		self.instancesFeatures, self.instancesClasses = dataPreparation.loadDataSetFromFile(self.dataSetFile,classesPlace)
 		self.numberOfModels=0
-		self.algorithmsIndex = { "SVM": 0, "DecisionTree": 1, "KNN": 2, "NN": 3, "NB": 4, "ECOC": 5}
+		self.algorithmsIndex = { "OVA": 0, "DecisionTree": 1, "KNN": 2, "Neural": 3, "AVA": 4, "ECOC": 5}
 		self.kFolds = kFolds
 
 	def execute(self,executionType="distributed",function=None,isLocalSmall=0,classifiersType = "normal"):
@@ -50,7 +50,7 @@ class FacilitatorAgent:
 			avgF1Weighted += valF1Weighted
 			avgScore += valScore
 			with open(self.fileToWrite, "a") as myfile:
-				myfile.write(str(valF1Macro)+"\t"+str(valF1Micro)+"\t"+str(valF1Weighted)+"\t"+str(valScore)+"\n")
+				myfile.write(str(valF1Weighted)+"\t"+str(valF1Micro)+"\t"+str(valF1Macro)+"\t"+str(valScore)+"\n")
 		avgScore = avgScore / self.kFolds
 		avgF1Macro /= self.kFolds
 		avgF1Weighted /= self.kFolds
@@ -104,7 +104,7 @@ class FacilitatorAgent:
 			avgF1Weighted += valF1Weighted
 			avgScore += valScore
 			with open(self.fileToWrite, "a") as myfile:
-				myfile.write(str(valF1Macro)+"\t"+str(valF1Micro)+"\t"+str(valF1Weighted)+"\t"+str(valScore)+"\n")
+				myfile.write(str(valF1Weighted)+"\t"+str(valF1Micro)+"\t"+str(valF1Macro)+"\t"+str(valScore)+"\n")
 		avgScore = avgScore / self.kFolds
 		avgF1Macro /= self.kFolds
 		avgF1Weighted /= self.kFolds

@@ -2,7 +2,11 @@ import sys
 from pathlib import Path
 import FacilitatorAgent
 
-from os.path import basename
+import os
+
+def createDir(directory):
+	if not os.path.exists(directory):
+		os.makedirs(directory)
 
 class Executer:
 	#algorithmType = {distributed,local}
@@ -32,7 +36,7 @@ class Executer:
 		avgF1Micro /= 10
 		avgF1Weighted /= 10
 		with open(self.resultsFilename, "a") as myfile:
-			myfile.write(str(avgF1Macro)+"\t"+str(avgF1Micro)+"\t"+str(avgF1Weighted)+"\t"+str(avgScore)+"\n")
+			myfile.write(str(avgF1Weighted)+"\t"+str(avgF1Micro)+"\t"+str(avgF1Macro)+"\t"+str(avgScore)+"\n")
 		return avgScore, avgF1Macro, avgF1Micro, avgF1Weighted
 	
 def main(argv):
@@ -58,12 +62,14 @@ def main(argv):
 		file = Path(dataSetFile)
 		if file.is_file():
 			strLocalModel=""
+			rawName = os.path.basename(dataSetFile)[:-8]
 			if (subsetFeatures == 0):
-				strLocalModel="localComplete_"
+				strLocalModel=rawName+"/localComplete/"
 			else:
-				strLocalModel="localSmall_"
-			totalFilename = algorithm+"_"+function+"_all_"+strLocalModel+basename(dataSetFile)
-			resultsFilename = algorithm+"_"+function+"_results_"+strLocalModel+basename(dataSetFile)
+				strLocalModel=rawName+"/localSmall/"
+			createDir("../results/"+strLocalModel)
+			totalFilename = strLocalModel+algorithm+"_"+function+"_"+classifiersType+"_all_"+os.path.basename(dataSetFile)
+			resultsFilename = strLocalModel+algorithm+"_"+function+"_"+classifiersType+"_results_"+os.path.basename(dataSetFile)
 			flow = Executer(dataSetFile,classesPlace,algorithm,function,classifiersType,kFoldNumber,subsetFeatures,totalFilename,resultsFilename)
 			flow.getAverageAccuracy()
 		else:

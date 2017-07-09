@@ -14,7 +14,7 @@ def MakeClassification(index,instancesData,classesData,instancesTest,type="proba
 	DecisionTreeClassifier(random_state=0),
 	KNeighborsClassifier(n_jobs=4),
 	MLPClassifier(),
-	GaussianNB(),
+	sklearn.svm.SVC(probability=1,decision_function_shape="ovo"),
 	OutputCodeClassifier(LinearSVC(random_state=0),code_size=2, random_state=0)
 	]
 	if (classifiersType == "ova"):
@@ -23,7 +23,7 @@ def MakeClassification(index,instancesData,classesData,instancesTest,type="proba
 			OneVsRestClassifier(DecisionTreeClassifier(random_state=0),4),
 			OneVsRestClassifier(KNeighborsClassifier(),4),
 			OneVsRestClassifier(MLPClassifier(),4),
-			OneVsRestClassifier(sklearn.svm.SVC(probability=1),4)
+			OneVsRestClassifier(GaussianNB(),4)
 		]
 	if (index >= len(classifiers)):
 		print "ERROR. The index is not valid."
