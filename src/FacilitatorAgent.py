@@ -7,6 +7,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
 import numpy as np
 import math
+from collections import Counter
 
 class FacilitatorAgent:
 	def __init__(self, dataSetFile, classesPlace, kFolds,fileToWrite):
@@ -16,6 +17,10 @@ class FacilitatorAgent:
 		self.numberOfModels=0
 		self.algorithmsIndex = { "OVA": 0, "DecisionTree": 1, "KNN": 2, "Neural": 3, "AVA": 4, "ECOC": 5}
 		self.kFolds = kFolds
+
+	def getCountClasses(self):
+		print self.instancesClasses
+		return Counter(self.instancesClasses)
 
 	def execute(self,executionType="distributed",function=None,isLocalSmall=0,classifiersType = "normal"):
 		if executionType == "distributed":
