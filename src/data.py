@@ -9,11 +9,11 @@ class Data():
 	"""Represents the data
 
 	Properties*:
-		data -- instances' attributes
-		target -- instances' classes
-		classes -- list of classes
-		n_columns -- number of columns
-		n_lines -- number of lines
+		data -- instances' attributes (pandas.dataframe)
+		target -- instances' classes (ndarray)
+		classes -- list of classes (ndarray)
+		n_columns -- number of columns (int)
+		n_lines -- number of lines (int)
 	"""
 
 	def __init__(self, filepath, class_column=-1):
@@ -120,8 +120,8 @@ class Dataset():
 	"""Prepares the data
 
 	Properties:
-		trainingset -- Data used by the algorithm for training
-		testset -- Data used for testing the model
+		trainingset -- Data used by the algorithm for training (Data)
+		testset -- Data used for testing the model (Data)
 	"""
 
 	def __init__(self, filepath, for_test=0.3, class_column=-1):
@@ -146,11 +146,11 @@ class Dataset():
 		data = self.trainingset.data 	 # data from one of the copies
 		target = self.trainingset.target # targets from one of the copies
 
-		self.trainingset.data = data[test_ninstances:, :]	  # gets instances n to len(data)
-		self.trainingset.target = target[test_ninstances:, :] # gets targets n to len(target) 
+		self.trainingset.data = data[test_ninstances:, :]  # gets instances n to len(data)
+		self.trainingset.target = target[test_ninstances:] # gets targets n to len(target) 
 
-		self.testset.data = data[:test_ninstances, :]	      # gets instances 0 to n-1
-		self.testset.target = target[:test_ninstances, :]     # gets targets 0 to n-1
+		self.testset.data = data[:test_ninstances, :]	   # gets instances 0 to n-1
+		self.testset.target = target[:test_ninstances]     # gets targets 0 to n-1
 
 
 
