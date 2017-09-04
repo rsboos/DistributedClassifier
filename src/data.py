@@ -35,7 +35,7 @@ class Data():
 		j = n_columns + class_column	# final + 1 (because it's exclusive)
 
 		# Separates the data from the classes (target)
-		x = dataset.ix[:, i:j]			# all lines and all columns (except the class one)
+		x = dataset.ix[:, i:j]			# all lines and all columns (except the class column)
 		y = dataset.ix[:, class_column] # all lines and the class column
 
 		# Normalizes the target
@@ -95,12 +95,12 @@ class Data():
 	@property
 	def n_columns(self):
 		"""Gets the number of columns and returns it"""
-		return self.__data.shape[0] + 1
+		return self.__data.shape[1] + 1
 
 	@property
 	def n_lines(self):
 		"""Gets the number of lines from data and returns it"""
-		return self.__data.shape[1]
+		return self.__data.shape[0]
 
 	def __to_ndarray(self, data):
 		"""Converts a list or copy a ndarray e returns the result
@@ -133,7 +133,7 @@ class Dataset():
 			class_column -- number of the class column [0 -> first column, (default -1) -> last column]
 		"""
 
-		# Get the data to split
+		# Gets the data to split
 		self.trainingset = Data(filepath, class_column)
 
 		# Creates a dataset's copy
@@ -151,8 +151,5 @@ class Dataset():
 
 		self.testset.data = data[:test_ninstances, :]	   # gets instances 0 to n-1
 		self.testset.target = target[:test_ninstances]     # gets targets 0 to n-1
-
-
-
 
 
