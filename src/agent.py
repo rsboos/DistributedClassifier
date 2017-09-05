@@ -1,4 +1,4 @@
-class Agent():
+class Classifier():
 	"""Trains a model given a classifier
 
 	Properties:
