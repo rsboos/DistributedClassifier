@@ -28,6 +28,12 @@ class Classifier():
 		self.classifier = self.classifier.fit(self.dataset.trainingset.data, self.dataset.trainingset.target)
 		self.__fit = True
 
+	def __check_fit(self):
+		"""Check if fit() was executed. If not, executes fit()."""
+		
+		if not self.__fit:
+			self.fit()
+
 	def predict(self):
 		"""Predict classes for the testset on dataset and returns a ndarray as result. 
 		fit() is called before predict, if it was never executed.
@@ -43,9 +49,3 @@ class Classifier():
 
 		self.__check_fit()
 		return self.classifier.predict_proba(self.dataset.testset.data)
-
-	def __check_fit(self):
-		"""Check if fit() was executed. If not, executes fit()."""
-		
-		if not self.__fit:
-			self.fit()
