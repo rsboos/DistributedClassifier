@@ -124,12 +124,12 @@ class Dataset():
 		testset -- Data used for testing the model (Data)
 	"""
 
-	def __init__(self, filepath, for_test=0.3, class_column=-1):
+	def __init__(self, filepath, for_test=0.0, class_column=-1):
 		"""Initiates the data and divides into training and testing sets
 
 		Keywords arguments:
 			filepath -- file's absolute/relative path
-			for_test -- percent of test instances (default 0.3)
+			for_test -- percent of test instances (default 0.0)
 			class_column -- number of the class column [0 -> first column, (default -1) -> last column]
 		"""
 
