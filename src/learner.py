@@ -67,10 +67,14 @@ class Learner():
 		# Initialize an empty list for the scores
 		scores = list()
 
+		# Short names
+		x = self.dataset.trainingset.x # instances
+		y = self.dataset.trainingset.y # classes
+
 		# Begins computing the n_it k-fold cross-validation
 		for i in range(n_it):
 			# Computes one cross-validation
-			score = model_selection.cross_validate(self.classifier, self.dataset.trainingset.x, self.dataset.trainingset.y, cv=folds)
+			score = model_selection.cross_validate(self.classifier, x, y, cv=folds)
 			
 			# Saves the score of one iteration
 			scores.append(score)
