@@ -173,12 +173,16 @@ class FeatureDistributed(Simulator):
 		# Returns the distribution list
 		return distribution
 
-	def cross_validate(self, k_fold=10, n_it=10):
+	def cross_validate(self, k_fold=10, scoring=['accuracy', 'precision'], n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 		
 		Keyword arguments:
 			k_fold -- number of folds
+			scoring -- metrics to be returned (default ['accuracy', 'precision'])*
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
+		
+		*For more information about the returned data and the parameters: 
+		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 		"""
 
 		# Gets a sample of the data for the splitter
@@ -196,8 +200,8 @@ class FeatureDistributed(Simulator):
 
 		# For each learner, runs its cross-validation function
 		for learner in self.learners:
-			score = learner.cross_validate(folds, n_it) # cross-validate with the same folds for everyone
-			scores.append(score)						# saves the learner score
+			score = learner.cross_validate(folds, scoring, n_it)  # cross-validate with the same folds for everyone
+			scores.append(score)								  # saves the learner score
 
 		# Returns the scores
 		return scores
@@ -234,7 +238,7 @@ class InstanceDistributed(Simulator):
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
 					   of parts' common instances. If int, should be less than or equal to the 
 					   number of instances and represents the number of common instances. If list, 
-					   represents the instances ' columns indexes. By default, the value is set to 0.
+					   represents the instances' columns indexes. By default, the value is set to 0.
 		"""
 		
 		pass
