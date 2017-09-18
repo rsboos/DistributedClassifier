@@ -49,7 +49,7 @@ class Learner():
 		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- Data to be predicted. When (default None), testeset is used.
+			data -- data to be predicted. When (default None), testeset is used.
 		"""
 
 		testdata = self.__choose_data(data)  	  # gets the data to be predicted 
@@ -60,7 +60,7 @@ class Learner():
 		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- Data to be predicted. When (default None), testeset is used.
+			data -- data to be predicted. When (default None), testset is used.
 		"""
 
 		testdata = self.__choose_data(data)  			# gets the data to be predicted 
