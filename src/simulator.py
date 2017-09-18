@@ -28,65 +28,9 @@ class Simulator():
 		pass
 
 	@classmethod
-	def slice_data(data, n_learners, overlap=0):
-		"""Vertically slices the data and returns a list of sliced data with length n_learners
-		
-		Keyword arguments:
-			data -- the training set to be sliced (Data)
-			n_learners -- number of learners
-			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
-					   of parts' in common. If int, should be less than or equal to the 
-					   number of features/instances and represents the number of common 
-					   features/instances. If list, represents the features'/instances' 
-					   indexes. By default, the value is set to 0.
-		"""
-
-		# Gets the distributed indexes
-		distribution = cls.get_distribution(data, n_learners, overlap)
-
-		# Uses the indexes to slice the data for each learner
-		return [Data(data.x[:, indexes], data.y) for indexes in distribution]
-
-	@classmethod
 	def load(cls, data, classifers, overlap=0, test_size=0.3):
-		"""Creates n_learners Learner objects and returns a DistributedClassification object
-
-		Keyword arguments:
-			data -- a Data object or a list of Data objects with sliced data
-			classifiers -- a list of classifiers, len(classifiers) define the number of learners
-			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
-					   of parts' in common. If int, should be less than or equal to the 
-					   number of features/instances and represents the number of common 
-					   features/instances. If list, represents the features'/instances' 
-					   indexes. By default, the value is set to 0.
-			test_size -- percent of test instances (default 0.3)
-		"""
-
-		# The number of classifiers define the number of learners
-		n_learners = len(classifiers)
-
-		# Checks the data variable type
-		if type(data) is not list:
-			# It means the data isn't sliced
-			sliced_data = cls.slice_data(data, n_learners, overlap) # slices the data
-
-		else:
-			# It means the data is already sliced
-			sliced_data = data
-
-		# Initialize an empty list for learners
-		learners = list()
-
-		# For each part of the sliced data
-		for i, data in enumerate(sliced_data):
-			dataset = Dataset(data, test_size) 	   # creates a dataset for learner
-			classifier = classifiers[i]			   # gets the classifier
-
-			learner = Learner(dataset, classifier) # creates the learner
-			learners.append(learner)			   # saves the learner
-
-		# Creates a DistributedClassifition simulator
-		return cls(learners)
+		"""Not implemented. Should be implemented in a child class."""
+		pass
 
 	def cross_validate(self, k_fold=10, n_it=10):
 		"""Not implemented. Should be implemented in a child class."""
@@ -173,6 +117,71 @@ class FeatureDistributed(Simulator):
 		# Returns the distribution list
 		return distribution
 
+	@classmethod
+	def load(cls, data, classifers, overlap=0, test_size=0.3):
+		"""Creates n_learners Learner objects and returns a DistributedClassification object
+
+		Keyword arguments:
+			data -- a Data object
+			classifiers -- a list of classifiers, len(classifiers) define the number of learners
+			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
+					   of parts' in common. If int, should be less than or equal to the 
+					   number of features/instances and represents the number of common 
+					   features/instances. If list, represents the features'/instances' 
+					   indexes. By default, the value is set to 0.
+			test_size -- percent of test instances (default 0.3)
+		"""
+
+		# The number of classifiers define the number of learners
+		n_learners = len(classifiers)
+
+		# Train and test split
+		# This guarantees that every learner has the same splits
+		train, test = Dataset.train_test_split(data, test_size)
+
+		# Gets the indexes to slice the data
+		# Because the distribution is vertical, we can use a part
+		# of the data with all features to get the slice indexes
+		indexes = cls.get_distribution(train, n_learners, overlap)
+
+		# Initialize an empty list for learners
+		learners = list()
+
+		# For each learner
+		for i in range(n_learners):
+			features = indexes[i]								 # gets the features indexes
+
+			trainingset = Data(train.x[:, features], train.y)	 # gets the trainingset
+			testset = Data(test.y[:, features], test.y)		     # gets the testset
+
+			dataset = Dataset(trainingset, testset) 	     	 # creates a dataset for learner
+			classifier = classifiers[i]			   			     # gets the classifier
+
+			learner = Learner(dataset, classifier) 			     # creates the learner
+			learners.append(learner)			   			     # saves the learner
+
+		# Creates a DistributedClassifition simulator
+		return cls(learners)
+
+	def predict(self, data=None):
+		"""Predicts using the learner classifier and returns a list of predictions for every learner
+		
+		Keyword arguments:
+			data -- data to be predicted. When (default None), testeset is used.
+		"""
+
+		return [learner.predict(data) for learner in self.learners]
+
+	def predict_proba(self, data=None):
+		"""Predicts the probabilities using the learner classifier 
+		# and returns a list of predictions for every learner
+		
+		Keyword arguments:
+			data -- data to be predicted. When (default None), testeset is used.
+		"""
+
+		return [learner.predict_proba(data) for learner in self.learners]
+
 	def cross_validate(self, k_fold=10, scoring=['accuracy', 'precision'], n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 		
@@ -195,8 +204,12 @@ class FeatureDistributed(Simulator):
 		# The split works with a sample of the data because we *vertically* sliced it
 		folds = skf.split(sample_x, sample_y)  # creates the folds
 
+		# Initializes an empty list for scores
+		scores = list()
+
 		# For each learner, runs its cross-validation function saves its score
-		scores = [learner.cross_validate(folds, scoring, n_it) for learner in self.learners]
+		for learner in self.learners
+			scores.append(learner.cross_validate(folds, scoring, n_it))
 
 		# Returns the scores
 		return scores
