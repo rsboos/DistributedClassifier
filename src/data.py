@@ -84,20 +84,17 @@ class Dataset():
 		n_classes -- number of classes (int)
 	"""
 
-	def __init__(self, data, test_size=0.3):
-		"""Initiates the data and divides into training and testing sets
+	def __init__(self, train, test):
+		"""Sets the properties
 
 		Keyword arguments:
-			data -- a Data object
-			test_size -- percent of test instances (default 0.3)
+			train -- a Data object with training data
+			test -- a Data object with test data
 		"""
 
-		# Splits the data into train and test sets keeping the classes' proportion (stratified)
-		train_data, test_data, train_target, test_target = model_selection.train_test_split(data.x, data.y, test_size=test_size, stratify=data.y)
-
 		# Creates the sets for training and testing with the splitted data
-		self.trainingset = Data(train_data, train_target)
-		self.testset = Data(test_data, test_target)
+		self.trainingset = train
+		self.testset = test
 
 	@classmethod
 	def load(cls, filepath, class_column=-1, test_size=0.3):
@@ -112,5 +109,27 @@ class Dataset():
 		# Loads the data
 		data = Data.load(filepath, class_column)
 
+		# Splits into training and test sets
+		train, test = cls.train_test_split(data, test_size)
+
 		# Creates a Dataset object and returns it
-		return cls(data, n_splits, test_size)
+		return cls(train, test)
+
+	@staticmethod
+	def train_test_split(data, test_size=0.3):
+		"""Splits the data into train and test sets keeping the classes' 
+		proportion (stratified) and returns two data objects (train, test)
+	
+		Keyword arguments:
+			data -- a Data object not splitted
+			test_size -- percent of test instances (default 0.3)
+		"""
+
+		# Splits
+		train_data, test_data, train_target, test_target = model_selection.train_test_split(data.x, data.y, test_size=test_size, stratify=data.y)
+
+		train = Data(train_data, train_target)  # creates a Data object for training
+		test = Data(test_data, test_target)		# creates a Data object for testing
+
+		# Returns the Data objects
+		return train, test
