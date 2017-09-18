@@ -195,13 +195,8 @@ class FeatureDistributed(Simulator):
 		# The split works with a sample of the data because we *vertically* sliced it
 		folds = skf.split(sample_x, sample_y)  # creates the folds
 
-		# Initializes an empty list for scores
-		scores = list()
-
-		# For each learner, runs its cross-validation function
-		for learner in self.learners:
-			score = learner.cross_validate(folds, scoring, n_it)  # cross-validate with the same folds for everyone
-			scores.append(score)								  # saves the learner score
+		# For each learner, runs its cross-validation function saves its score
+		scores = [learner.cross_validate(folds, scoring, n_it) for learner in self.learners]
 
 		# Returns the scores
 		return scores
