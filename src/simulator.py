@@ -174,7 +174,7 @@ class FeatureDistributed(Simulator):
 
 	def predict_proba(self, data=None):
 		"""Predicts the probabilities using the learner classifier 
-		# and returns a list of predictions for every learner
+		and returns a list of predictions for every learner
 		
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testeset is used.
@@ -192,6 +192,9 @@ class FeatureDistributed(Simulator):
 		
 		*For more information about the returned data and the parameters: 
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
+
+		For how to use scoring:
+		http://scikit-learn.org/stable/modules/cross_validation.html
 		"""
 
 		# Gets a sample of the data for the splitter
