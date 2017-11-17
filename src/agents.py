@@ -12,12 +12,12 @@ class Learner():
 		__fit -- A flag to check if the data was fit
 
 	*The classifier should implement fit(), predict() and predict_proba().
-	See the sklearn documentation for more information... 
+	See the sklearn documentation for more information...
 	"""
 
 	def __init__(self, dataset, classifier):
 		"""Sets the properties and fits the data
-		
+
 		Keyword arguments:
 			dataset -- The Dataset used to fit a model (Dataset)
 			classifier -- An instance of a classifier from sklearn library
@@ -45,14 +45,14 @@ class Learner():
 		self.classifier = self.classifier.fit(self.dataset.trainingset.x, self.dataset.trainingset.y)
 
 	def predict(self, data=None):
-		"""Predict classes for the testset on dataset and returns a ndarray as result. 
+		"""Predict classes for the testset on dataset and returns a ndarray as result.
 		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
 
-		testdata = self.__choose_data(data)  	  # gets the data to be predicted 
+		testdata = self.__choose_data(data)  	  # gets the data to be predicted
 		return self.classifier.predict(testdata)  # returns the predictions
 
 	def predict_proba(self, data=None):
@@ -63,7 +63,7 @@ class Learner():
 			data -- data to be predicted. When (default None), testset is used.
 		"""
 
-		testdata = self.__choose_data(data)  			# gets the data to be predicted 
+		testdata = self.__choose_data(data)  			# gets the data to be predicted
 		return self.classifier.predict_proba(testdata)  # returns the predictions
 
 	def cross_validate(self, folds, scoring=['accuracy', 'precision'], n_it=10):
@@ -74,9 +74,11 @@ class Learner():
 			scoring -- metrics to be returned (default ['accuracy', 'precision'])*
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
 
-		*For more information about the returned data and the parameters: 
+		*For more information about the returned data and the parameters:
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 		"""
+		# Fit data
+		self.fit()
 
 		# Initialize an empty list for the scores
 		scores = list()
@@ -89,7 +91,7 @@ class Learner():
 		for i in range(n_it):
 			# Computes one cross-validation
 			score = model_selection.cross_validate(self.classifier, x, y, cv=folds, scoring=scoring)
-			
+
 			# Saves the score of one iteration
 			scores.append(score)
 
@@ -98,7 +100,7 @@ class Learner():
 
 	def __choose_data(self, data):
 		"""Choose the data to be used in prediction.
-		If data is provided by the user, use it. 
+		If data is provided by the user, use it.
 		Otherwise, the testset in dataset property.
 		"""
 
