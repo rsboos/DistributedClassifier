@@ -1,5 +1,6 @@
 import numpy
 
+from metrics import cv_score
 from sklearn import model_selection
 
 
@@ -93,7 +94,7 @@ class Learner():
 			scores.append(score)
 
 		# Returns the scores of each validation
-		return scores
+		return cv_score(scores)
 
 	def __choose_data(self, data):
 		"""Choose the data to be used in prediction.
