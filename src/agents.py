@@ -77,9 +77,6 @@ class Learner():
 		*For more information about the returned data and the parameters:
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 		"""
-		# Fit data
-		self.fit()
-
 		# Initialize an empty list for the scores
 		scores = list()
 
