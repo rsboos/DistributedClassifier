@@ -3,6 +3,7 @@ import copy
 
 from data import Dataset
 from learner import Learner
+from metrics import cv_score
 from sklearn import model_selection
 
 
@@ -196,26 +197,30 @@ class FeatureDistributed(Simulator):
 		For how to use scoring:
 		http://scikit-learn.org/stable/modules/cross_validation.html
 		"""
+		# Initializes an empty dict for scores
+		scores = dict()
 
 		# Gets a sample of the data for the splitter
 		sample_x = self.learners[0].dataset.trainingset.x # instances
 		sample_y = self.learners[0].dataset.trainingset.y # classes
 
-		# Splits into k training and test folds for cross-validation
-		skf = StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
+		# Number of learners
+		n = len(self.learners)
 
-		# The split works with a sample of the data because we *vertically* sliced it
-		folds = skf.split(sample_x, sample_y)  # creates the folds
+		for i in range(n_it):
+			# Splits into k training and test folds for cross-validation
+			skf = StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
 
-		# Initializes an empty list for scores
-		scores = list()
+			# The split works with a sample of the data because we *vertically* sliced it
+			folds = skf.split(sample_x, sample_y)  # creates the folds
 
-		# For each learner, runs its cross-validation function saves its score
-		for learner in self.learners
-			scores.append(learner.cross_validate(folds, scoring, n_it))
+			# For each learner, run its cross-validation function and save its score
+			for j in range(n):
+				score = self.learners[j].cross_validate(folds, scoring)  # compute CV
+				scores[j] = scores.get(j, []).append(score)  			 # save score
 
-		# Returns the scores
-		return scores
+		# Return the aggregated scores as DataFrames for each learner
+		return [cv_score(values) for _, values in scores.items()]
 
 
 class InstanceDistributed(Simulator):
