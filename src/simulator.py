@@ -15,7 +15,7 @@ class Simulator():
 
 	def __init__(self, learners):
 		"""Sets the properties, create the agents, divides the data between the agents
-		
+
 		Keyword arguments:
 			n_learners -- number of agents to be used (must be greater than 1)
 		"""
@@ -49,26 +49,26 @@ class FeatureDistributed(Simulator):
 
 	def __init__(self, learners):
 		"""Sets the properties, create the agents, divides the data between the agents
-		
+
 		Keyword arguments:
 			learners -- list of learners (lenght must be greater than 1)
 		"""
 
 		# Calls __init__ from parent
 		super().__init__(learners)
-		
+
 
 	@staticmethod
 	def get_distribution(data, n, overlap=0):
 		"""Vertically distributes the training data into n parts and returns a list of
-		column indexes for each part 
+		column indexes for each part
 
 		Keyword arguments:
 			data -- the training set to be splitted (Data)
 			n -- number of divisions
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
-					   of parts' common features. If int, should be less than or equal to the 
-					   number of features and represents the number of common features. If list, 
+					   of parts' common features. If int, should be less than or equal to the
+					   number of features and represents the number of common features. If list,
 					   represents the features' columns indexes. By default, the value is set to 0.
 		"""
 
@@ -77,16 +77,16 @@ class FeatureDistributed(Simulator):
 		# common_features is a common features' index's list
 		if type(overlap) is int:
 			common_features = set(numpy.random.choice(data.n_features, overlap))  # gets a n length list with random numbers between 0-n_features
-		
+
 		elif type(overlap) is float:
 			n_common = math.ceil(data.n_features * overlap)						  # calculates the amount of features each part has in common
 			common_features = set(numpy.random.choice(data.n_features, n_common)) # gets a n length list with random numbers between 0-n_features
-		
+
 		elif type(overlap) is list:
 			common_features = set(overlap)
-		
+
 		else: # is neither int, float and list
-			raise TypeError("%s should be a float, an int or a list. %s given." % (str(overlap), type(overlap)))		
+			raise TypeError("%s should be a float, an int or a list. %s given." % (str(overlap), type(overlap)))
 
 		# Calculates the distinct features' indexes
 		distinct_features = list(set(range(data.n_features)) - common_features) # common_features' complement
@@ -125,9 +125,9 @@ class FeatureDistributed(Simulator):
 			data -- a Data object
 			classifiers -- a list of classifiers, len(classifiers) define the number of learners
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
-					   of parts' in common. If int, should be less than or equal to the 
-					   number of features/instances and represents the number of common 
-					   features/instances. If list, represents the features'/instances' 
+					   of parts' in common. If int, should be less than or equal to the
+					   number of features/instances and represents the number of common
+					   features/instances. If list, represents the features'/instances'
 					   indexes. By default, the value is set to 0.
 			test_size -- percent of test instances (default 0.3)
 		"""
@@ -165,7 +165,7 @@ class FeatureDistributed(Simulator):
 
 	def predict(self, data=None):
 		"""Predicts using the learner classifier and returns a list of predictions for every learner
-		
+
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
@@ -173,9 +173,9 @@ class FeatureDistributed(Simulator):
 		return [learner.predict(data) for learner in self.learners]
 
 	def predict_proba(self, data=None):
-		"""Predicts the probabilities using the learner classifier 
+		"""Predicts the probabilities using the learner classifier
 		and returns a list of predictions for every learner
-		
+
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
@@ -184,13 +184,13 @@ class FeatureDistributed(Simulator):
 
 	def cross_validate(self, k_fold=10, scoring=['accuracy', 'precision'], n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
-		
+
 		Keyword arguments:
 			k_fold -- number of folds
 			scoring -- metrics to be returned (default ['accuracy', 'precision'])*
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
-		
-		*For more information about the returned data and the parameters: 
+
+		*For more information about the returned data and the parameters:
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 
 		For how to use scoring:
@@ -202,7 +202,7 @@ class FeatureDistributed(Simulator):
 		sample_y = self.learners[0].dataset.trainingset.y # classes
 
 		# Splits into k training and test folds for cross-validation
-		skf = StratifiedKFold(n_splits=k_fold) # create the 'splitter' object 
+		skf = StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
 
 		# The split works with a sample of the data because we *vertically* sliced it
 		folds = skf.split(sample_x, sample_y)  # creates the folds
@@ -230,7 +230,7 @@ class InstanceDistributed(Simulator):
 
 	def __init__(self, learners):
 		"""Sets the properties, create the agents, divides the data between the agents
-		
+
 		Keyword arguments:
 			learners -- list of learners (lenght must be greater than 1)
 		"""
@@ -241,22 +241,22 @@ class InstanceDistributed(Simulator):
 	@staticmethod
 	def get_distribution(data, n, overlap=0):
 		"""Vertically distributes the training data into n parts and returns a list of
-		column indexes for each part 
+		column indexes for each part
 
 		Keyword arguments:
 			data -- the training set to be splitted (Data)
 			n -- number of divisions
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
-					   of parts' common instances. If int, should be less than or equal to the 
-					   number of instances and represents the number of common instances. If list, 
+					   of parts' common instances. If int, should be less than or equal to the
+					   number of instances and represents the number of common instances. If list,
 					   represents the instances' columns indexes. By default, the value is set to 0.
 		"""
-		
+
 		pass
 
 	def cross_validate(self, k_fold=10, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
-		
+
 		Keyword arguments:
 			k_fold -- number of folds
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
