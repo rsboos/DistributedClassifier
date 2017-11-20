@@ -39,31 +39,6 @@ def cv_score(scores):
 ###############################################################################
 ################################## SCORERS ####################################
 ###############################################################################
-def accuracy():
-    """Return a scorer for accuracy."""
-    return met.accuracy_score
-
-
-def auc():
-    """Return a scorer for AUC."""
-    return met.auc
-
-
-def precision():
-    """Return a scorer for precision."""
-    return met.average_precision_score
-
-
-def f1_score():
-    """Return a scorer for F-score."""
-    return met.f1_score
-
-
-def recall():
-    """Return a scorer for recall."""
-    return met.recall_score
-
-
 def sensitivity_score(y_true, y_pred, **kwargs):
     """Return a sensitivity score (true positive rate)."""
     cm = met.confusion_matrix(y_true, y_pred)
