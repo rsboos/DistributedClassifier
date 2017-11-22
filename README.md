@@ -1,8 +1,70 @@
-# DistributedClassifier
-Final project for bSC Computer Science UFRGS. A distributed multi class classifier.
+# Distributed Classifier
+A distributed classifier for binary and multiclass classification problems.
 
-Execution should be in the format: python main.py dataset.txt classesPlace(first or last) algorithmType ( distributed or local) function (combine function or classify algorithm) classifiersType (optional => normal or ova) kFoldNumber(optional => default = 10) subsetFeatures (optional)
+Research project of Federal University of Rio Grande do Sul (UFRGS).
 
-AlgorithmType = {distributed,local}
-ClassifyAlgorithm = { SVM, DecisionTree, KNN, NN, NB, ECOC }
-SocialChoiceFunction = { Borda, Copeland, Dowdall, Plurality }
+## Usage
+```bash
+usage: main.py [-h] -p PARAMS_FOLDER
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PARAMS_FOLDER, --params PARAMS_FOLDER
+                        Folder where a file params.json is.
+```
+
+## Params structure
+```json
+{
+    // Dataset filepath
+    "dataset": "datasets/seed.csv",
+
+    // Class' column in dataset (default -1)
+    // Possible values: {0, -1}
+    "class_column": -1,
+
+    // Number of cross-Validation iterations (default 10)
+    "iterations": 10,
+
+    // Number of fold for cross-validation (default 10)
+    "k_fold": 10,
+
+    // Percentage of test instances from dataset
+    // 0.2 means 20% of instances
+    "test_size": 0.2,
+
+    // Overlaped features
+    // If float, should be between 0.0 and 1.0 and represents the percentage
+    // of parts' common features. If int, should be less than or equal to the
+    // number of features and represents the number of common features. If list,
+    // represents the features' columns indexes. By default, the value is set to 0.
+    "overlap": 0,
+
+    // Classifiers
+    // {<classifier id>: <full method call, i.e., with parameters>}
+    "classifiers": {
+        "svc": "sklearn.svm.SVC()"
+    },
+
+    // Scorer functions
+    // {<scorer id>: <method call without parameters>}
+    "metrics": {
+        "auc": "src.metrics.auc",
+        "f1": "src.metrics.f1",
+        "recall": "src.metrics.recall",
+        "specificity": "src.metrics.specificity",
+        "sensitivity": "src.metrics.sensitivity",
+        "accuracy": "src.metrics.accuracy",
+        "precision": "src.metrics.precision"
+    }
+}
+```
+
+## Example
+```bash
+python3 main.py -p tests/test01
+```
+The program will save the results in the same folder.
+
+## Sample Datasets
+This project uses a set of data samples for testing. This datasets are in `datasets/` folder.
