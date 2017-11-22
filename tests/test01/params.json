@@ -1,14 +1,21 @@
 {
-    'dataset': 'datasets/glassLast.txt',        // dataset path
-    'class_column': -1,                         // class column in dataset
-    'iterations': 10,                           // number of CV iterations
-    'number_folds': 10,                         // number of folds for CV
-    'testset_p': 20,                            // percentage of test instances
-    'overlap': 0,                               // percentage of overlaped features
-
-    // Classifiers
-    'classifiers': [],
-
-    // Metrics
-    'scorers': []
+    "dataset": "datasets/seed.csv",
+    "class_column": -1,
+    "iterations": 10,
+    "k_fold": 10,
+    "test_size": 0.2,
+    "overlap": 0,
+    "classifiers": {
+        "svc": "sklearn.svm.SVC()"
+    },
+    "metrics": {
+        "auc": "src.metrics.auc",
+        "f1": "src.metrics.f1",
+        "recall": "src.metrics.recall",
+        "specificity": "src.metrics.specificity",
+        "sensitivity": "src.metrics.sensitivity",
+        "accuracy": "src.metrics.accuracy",
+        "precision": "src.metrics.precision"
+    }
 }
+
