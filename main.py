@@ -1,108 +1,111 @@
+import json
 import argparse
 
-
-def main(scorers, classifiers, args):
-    pass
+from src.data import Data
+from src.simulator import FeatureDistributed
 
 
 if __name__ == "__main__":
-    # def abbreviations
-    scorers = {
-        'ac': 'sklearn.metrics.accuracy_score',
-        'rc': 'sklearn.metrics.recall_score',
-        'pr': 'sklearn.metrics.precision_score',  # check for correct name
-        'au': 'sklearn.metrics.auc',
-        'f1': 'sklearn.metrics.f1_score',
-        'sn': 'metrics.sensitivity',
-        'sp': 'metrics.specificity'
-    }
-
-    classifiers = {
-        # Binary classification
-
-
-        # Inherently multiclass:
-        'mcbnb': 'sklearn.naive_bayes.BernoulliNB',
-        'mcdtc': 'sklearn.tree.DecisionTreeClassifier',
-        'mcetc': 'sklearn.tree.ExtraTreeClassifier',
-        'mcets': 'sklearn.ensemble.ExtraTreesClassifier',
-        'mcgnb': 'sklearn.naive_bayes.GaussianNB',
-        'mcknc': 'sklearn.neighbors.KNeighborsClassifier',
-        'mclsv': 'sklearn.svm.LinearSVC',
-        'mclrg': 'sklearn.linear_model.LogisticRegression',
-        'mclrc': 'sklearn.linear_model.LogisticRegressionCV',
-        'mcmlp': 'sklearn.neural_network.MLPClassifier',
-        'mcrfc': 'sklearn.ensemble.RandomForestClassifier',
-
-        #Multiclass as One-Vs-One:
-        'oosvc': 'sklearn.svm.SVC',
-        'oogpc': 'sklearn.gaussian_process.GaussianProcessClassifier',
-
-        # Multiclass as One-Vs-All:
-        'oagbc': 'sklearn.ensemble.GradientBoostingClassifier',
-        'oagap': 'sklearn.gaussian_process.GaussianProcessClassifier',
-        'oalsa': 'sklearn.svm.LinearSVC',
-        'oalrg': 'sklearn.linear_model.LogisticRegression',
-        'oalrc': 'sklearn.linear_model.LogisticRegressionCV',
-
-        # Support multilabel:
-        'mldtc': 'sklearn.tree.DecisionTreeClassifier',
-        'mletc': 'sklearn.tree.ExtraTreeClassifier',
-        'mlets': 'sklearn.ensemble.ExtraTreesClassifier',
-        'mlknc': 'sklearn.neighbors.KNeighborsClassifier',
-        'mlrfc': 'sklearn.ensemble.RandomForestClassifier',
-
-        # Support multiclass-multioutput:
-        'modtc': 'sklearn.tree.DecisionTreeClassifier',
-        'moetc': 'sklearn.tree.ExtraTreeClassifier',
-        'moets': 'sklearn.ensemble.ExtraTreesClassifier',
-        'moknc': 'sklearn.neighbors.KNeighborsClassifier',
-        'morfc': 'sklearn.ensemble.RandomForestClassifier'
-    }
-
+    ###########################################################################
+    # COMMAND LINE PARAMS #####################################################
+    ###########################################################################
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-d", "--dataset",
-                        dest="datasetpath",
-                        help="Path to dataset.",
+    parser.add_argument("-p", "--params",
+                        dest="params_folder",
+                        help="Folder where a file params.json is.",
                         required=True)
 
-    parser.add_argument("-c", "--class-column",
-                        dest="class_column",
-                        default=-1,
-                        help="Class' column in dataset.")
-
-    parser.add_argument("-i", "--iterations",
-                        dest="n_it",
-                        default=10,
-                        help="Number of k-fold CV iterations.")
-
-    parser.add_argument("-f", "--folds",
-                        dest="n_folds",
-                        default=10,
-                        help="Number of folds for CV.")
-
-    parser.add_argument("-t", "--test",
-                        dest="test",
-                        default=20,
-                        help="Percent of test instances.")
-
-    parser.add_argument("-o", "--overlap",
-                        dest="overlap",
-                        default=0,
-                        help="Percent of overlaped features.")
-
-    parser.add_argument("-s", "--scorers",
-                        dest="scorers",
-                        help="Scorers 2-letter-abbreviation. {}. Example for accuracy and precision: ac.pr".format(str(scorers)),
-                        default=list(),
-                        choices=list(scorers.keys()))
-
-    parser.add_argument("-l", "--classifiers",
-                        dest="classifiers",
-                        help="Classifiers 5-letter-abbreviation. {}. Example for DecisionTree and LinearSVC: mclsv.mcdtc".format(str(classifiers)),
-                        required=True,
-                        choices=list(classifiers.keys()))
-
+    # Validate params
     args = parser.parse_args()
-    main(scorers, classifiers, args)
+
+    ###########################################################################
+    # LOAD APP PARAMS #########################################################
+    ###########################################################################
+    print('Loading params...', end=' ')
+
+    params = open("{}/params.json".format(args.params_folder), 'r')
+    p = json.load(params)
+
+    print('OK', end='\n\n')
+
+    # Evaluate classifiers
+    print('Loading classifiers...')
+
+    classifiers = list()
+
+    for c in p['classifiers'].values():                  # for each classfier
+        parts = c.split('.')                             # separate in parts
+
+        i = ['(' in part for part in parts].index(1)     # filter parts
+
+        modules = '.'.join(parts[:i])                    # get modules
+        classifier = '.'.join(parts[i:])                 # get classifier
+
+        i = classifier.find('(')                         # filter classifier
+
+        print("from {} import {}".format(modules, classifier[:i]))
+
+        # Execute import
+        exec("from {} import {}".format(modules, classifier[:i]))
+
+        # Evaluate a classifier
+        classifiers.append(eval(classifier))
+
+    print('Done.', end='\n\n')
+
+    # Evaluate metrics
+    print('Loading metrics...')
+    scorers = dict()
+
+    for n, c in p['metrics'].items():                    # for each metric (name, method)
+        parts = c.split('.')                             # separate in parts
+
+        modules = '.'.join(parts[:-1])                   # get modules
+        metric = ''.join(parts[-1])                      # get metric
+
+        print("from {} import {}".format(modules, metric))
+
+        # Execute import
+        exec("from {} import {}".format(modules, metric))
+
+        # Evaluate a metric
+        scorers[n] = eval(metric)
+
+    print('Done.', end='\n\n')
+
+    ###########################################################################
+    # SIMULATE DISTRIBUTION ###################################################
+    ###########################################################################
+    print('Loading dataset {}...'.format(p['dataset']), end=' ')
+
+    data = Data.load(p['dataset'], p['class_column'])
+
+    print('OK', end='\n\n')
+
+    # Create simulator (agents' manager)
+    print('Simulating distribution...', end=' ')
+
+    simulator = FeatureDistributed.load(data, classifiers, p['overlap'], p['test_size'])
+
+    print('OK', end='\n\n')
+
+    ###########################################################################
+    # CROSS VALIDATION ########################################################
+    ###########################################################################
+    print('Cross validating...', end=' ')
+
+    scores = simulator.cross_validate(p['k_fold'], scorers, p['iterations'])
+
+    print('OK', end='\n\n')
+
+    # Save scores
+    print('Saving scores...', end=' ')
+
+    names = list(p['classifiers'].keys())
+    n = len(names)
+
+    [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
+
+    print('OK', end='\n\n')
+
