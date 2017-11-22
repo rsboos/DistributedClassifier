@@ -43,29 +43,27 @@ def sensitivity_score(y_true, y_pred, **kwargs):
     """Return a sensitivity score (true positive rate)."""
     cm = met.confusion_matrix(y_true, y_pred)
 
-    tp = np.diag(cm).sum()              # sum of diagonal elements
-    fn = cm.sum(axis=1).sum() - tp      # sum of all lines - diagonal
+    tp = cm[1,1]
+    fn = cm[1,0]
 
     return tp / (tp + fn)
-
-
-def sensitivity():
-    """Return a scorer for sensitivity."""
-    return met.make_scorer(sensitivity_score)
 
 
 def specificity_score(y_true, y_pred, **kwargs):
     """Return a specificity score (true negative rate)."""
     cm = met.confusion_matrix(y_true, y_pred)
 
-    tp = np.diag(cm).sum()              # sum of diagonal elements
-    fn = cm.sum(axis=1).sum() - tp      # sum of all lines - diagonal
-    fp = cm.sum(axis=0).sum() - tp      # sum of all columns - diagonal
-    tn = cm.sum() - (fp + fn + tp)      # sum of all - (fp + fn + tp)
+    tp = cm[1,1]
+    fn = cm[1,0]
+    fp = cm[0,1]
+    tn = cm[0,0]
 
     return tn / (tn + fp)
 
-
-def specificity():
-    """Return a scorer for specificity."""
-    return met.make_scorer(specificity_score)
+f1 = met.make_scorer(met.f1_score)
+auc = met.make_scorer(met.roc_auc_score)
+recall = met.make_scorer(met.recall_score)
+accuracy = met.make_scorer(met.accuracy_score)
+precision = met.make_scorer(met.precision_score)
+sensitivity = met.make_scorer(sensitivity_score)
+specificity = met.make_scorer(specificity_score)
