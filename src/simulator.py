@@ -1,9 +1,10 @@
 import numpy
+import math
 import copy
 
-from data import Dataset
-from learner import Learner
-from metrics import cv_score
+from .data import Data, Dataset
+from .agents import Learner
+from .metrics import cv_score
 from sklearn import model_selection
 
 
@@ -96,7 +97,7 @@ class FeatureDistributed(Simulator):
 		common_features = list(common_features)
 
 		# Permutates the distinct features (randomize)
-		distinct_features = numpy.random.permutation(distinct_features)
+		distinct_features = list(numpy.random.permutation(distinct_features))
 
 		# Calculate the number of distinct features per part
 		n_distinct = len(distinct_features)
@@ -119,7 +120,7 @@ class FeatureDistributed(Simulator):
 		return distribution
 
 	@classmethod
-	def load(cls, data, classifers, overlap=0, test_size=0.3):
+	def load(cls, data, classifiers, overlap=0, test_size=0.3):
 		"""Creates n_learners Learner objects and returns a DistributedClassification object
 
 		Keyword arguments:
@@ -145,6 +146,10 @@ class FeatureDistributed(Simulator):
 		# of the data with all features to get the slice indexes
 		indexes = cls.get_distribution(train, n_learners, overlap)
 
+		# Convert to ndarray for slicing
+		train.x, test.x = numpy.array(train.x), numpy.array(test.x)
+		train.y, test.y = numpy.array(train.y), numpy.array(test.y)
+
 		# Initialize an empty list for learners
 		learners = list()
 
@@ -153,7 +158,7 @@ class FeatureDistributed(Simulator):
 			features = indexes[i]								 # gets the features indexes
 
 			trainingset = Data(train.x[:, features], train.y)	 # gets the trainingset
-			testset = Data(test.y[:, features], test.y)		     # gets the testset
+			testset = Data(test.x[:, features], test.y)		     # gets the testset
 
 			dataset = Dataset(trainingset, testset) 	     	 # creates a dataset for learner
 			classifier = classifiers[i]			   			     # gets the classifier
@@ -197,19 +202,19 @@ class FeatureDistributed(Simulator):
 		For how to use scoring:
 		http://scikit-learn.org/stable/modules/cross_validation.html
 		"""
+		# Number of learners
+		n = len(self.learners)
+
 		# Initializes an empty dict for scores
-		scores = dict()
+		scores = {i: list() for i in range(n)}
 
 		# Gets a sample of the data for the splitter
 		sample_x = self.learners[0].dataset.trainingset.x # instances
 		sample_y = self.learners[0].dataset.trainingset.y # classes
 
-		# Number of learners
-		n = len(self.learners)
-
 		for i in range(n_it):
 			# Splits into k training and test folds for cross-validation
-			skf = StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
+			skf = model_selection.StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
 
 			# The split works with a sample of the data because we *vertically* sliced it
 			folds = skf.split(sample_x, sample_y)  # creates the folds
@@ -217,7 +222,7 @@ class FeatureDistributed(Simulator):
 			# For each learner, run its cross-validation function and save its score
 			for j in range(n):
 				score = self.learners[j].cross_validate(folds, scoring)  # compute CV
-				scores[j] = scores.get(j, []).append(score)  			 # save score
+				scores[j].append(score)  					 			 # save score
 
 		# Return the aggregated scores as DataFrames for each learner
 		return [cv_score(values) for _, values in scores.items()]
