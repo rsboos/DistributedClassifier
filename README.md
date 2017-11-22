@@ -13,8 +13,9 @@ optional arguments:
                         Folder where a file params.json is.
 ```
 
-## Params structure
-```json
+## Params file
+A JSON file as follow:
+```javascript
 {
     // Dataset filepath
     "dataset": "datasets/seed.csv",
