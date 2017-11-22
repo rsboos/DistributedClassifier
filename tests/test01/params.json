@@ -1,0 +1,14 @@
+{
+    'dataset': 'datasets/glassLast.txt',        // dataset path
+    'class_column': -1,                         // class column in dataset
+    'iterations': 10,                           // number of CV iterations
+    'number_folds': 10,                         // number of folds for CV
+    'testset_p': 20,                            // percentage of test instances
+    'overlap': 0,                               // percentage of overlaped features
+
+    // Classifiers
+    'classifiers': [],
+
+    // Metrics
+    'scorers': []
+}
