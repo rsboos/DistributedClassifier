@@ -21,13 +21,13 @@ A JSON file as follow:
     "dataset": "datasets/seed.csv",
 
     // Class' column in dataset (default -1)
-    // Possible values: {0, -1}
+    // -1 for last column, 0 for first column
     "class_column": -1,
 
-    // Number of cross-Validation iterations (default 10)
+    // Number of cross-validation iterations (default 10)
     "iterations": 10,
 
-    // Number of fold for cross-validation (default 10)
+    // Number of folds for cross-validation (default 10)
     "k_fold": 10,
 
     // Percentage of test instances from dataset
