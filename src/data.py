@@ -8,7 +8,7 @@ from sklearn import preprocessing, model_selection
 
 class Data():
 	"""Represents the data
-	
+
 	Properties*:
 		x -- instances' attributes (pandas.dataframe)
 		y -- instances' classes (ndarray)
@@ -16,7 +16,7 @@ class Data():
 
 	def __init__(self, x, y):
 		"""Nomalize the data and sets the properties
-		
+
 		Keywords arguments:
 			x -- instances' attributes (pandas.dataframe)
 			y -- instances' classes (ndarray)
@@ -24,7 +24,7 @@ class Data():
 
 		# Normalizes the target
 		preprocess = preprocessing.LabelEncoder() # new LabelEncoder
-		preprocess.fit(y)				 	  # inserts the labels
+		preprocess.fit(y)				 	      # inserts the labels
 
 		self.x = x						   # sets the instances
 		self.y = preprocess.transform(y)   # transforms labels into integers (indexes for classes)
@@ -48,7 +48,7 @@ class Data():
 	@classmethod
 	def load(cls, filepath, class_column=-1):
 		"""Loads a CSV file and returns a tuple with instances' features and classes (x,y)
-		
+
 		Keyword arguments:
 			filepath -- file's absolute/relative path
 			class_column -- number of the class column [0 -> first column, (default -1) -> last column]
@@ -99,7 +99,7 @@ class Dataset():
 	@classmethod
 	def load(cls, filepath, class_column=-1, test_size=0.3):
 		"""Loads a CSV file, creates a Data object and returns a Dataset object
-		
+
 		Keyword arguments:
 			filepath -- file's absolute/relative path
 			class_column -- number of the class column [0 -> first column, (default -1) -> last column]
@@ -117,9 +117,9 @@ class Dataset():
 
 	@staticmethod
 	def train_test_split(data, test_size=0.3):
-		"""Splits the data into train and test sets keeping the classes' 
+		"""Splits the data into train and test sets keeping the classes'
 		proportion (stratified) and returns two data objects (train, test)
-	
+
 		Keyword arguments:
 			data -- a Data object not splitted
 			test_size -- percent of test instances (default 0.3)
