@@ -30,16 +30,6 @@ class Learner():
 		# Fits the data
 		self.fit()
 
-	@property
-	def predictions(self):
-		"""Returns a predictions's ndarray copy"""
-		return numpy.array(self.__predictions)
-
-	@property
-	def proba_predictions(self):
-		"""Returns a proba_predictions's ndarray copy"""
-		return numpy.array(self.__proba_predictions)
-
 	def fit(self):
 		"""Fits the model using the class dataset and classifier"""
 		self.classifier = self.classifier.fit(self.dataset.trainingset.x, self.dataset.trainingset.y)
