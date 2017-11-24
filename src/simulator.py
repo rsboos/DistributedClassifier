@@ -228,10 +228,13 @@ class FeatureDistributed(Simulator):
 			skf = model_selection.StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
 
 			# The split works with a sample of the data because we *vertically* sliced it
-			folds = skf.split(sample_x, sample_y)  # creates the folds
+			g_folds = skf.split(sample_x, sample_y)  # creates the folds' generator
+			i_folds = iter(g_folds)					 # create the folds' iterator
+			l_folds = list(i_folds)				     # list of folds
 
 			# For each learner, run its cross-validation function and save its score
 			for j in range(n):
+				folds = copy.deepcopy(l_folds)							 # create a copy
 				score = self.learners[j].cross_validate(folds, scoring)  # compute CV
 				scores[j].append(score)  					 			 # save score
 
