@@ -39,11 +39,36 @@ class Learner():
 		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- data to be predicted. When (default None), testeset is used.
+			data -- data to be predicted. When (default None), testset is used.
 		"""
 
 		testdata = self.__choose_data(data)  	  # gets the data to be predicted
 		return self.classifier.predict(testdata)  # returns the predictions
+
+	def predict_score(self, scoring, x=None, y=None):
+		"""Calculate predictions' metrics and return a dict with metrics.
+
+		Keyword arguments:
+			scoring -- a dict as {<score name>: <scorer func>}
+			x -- data to be predicted. When (default None), testset is used.
+			y -- true pedictions. When (default None), testset is used.
+		"""
+		# Get predictions
+		y_true = self.dataset.testset.y if y is None else y
+		y_pred = self.predict(x)
+
+		# Init dict
+		scores = dict()
+
+		# For each metric...
+		for k in scoring:
+			# Get the scorer function
+			scorer = scoring[k]
+
+			# Calculate and save score
+			scores['test_' + k] = scorer._score_func(y_true, y_pred)
+
+		return scores
 
 	def predict_proba(self, data=None):
 		"""Predict the probabilities for the testset on dataset and returns a ndarray as result.

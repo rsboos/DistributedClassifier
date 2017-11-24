@@ -178,6 +178,17 @@ class FeatureDistributed(Simulator):
 
 		return [learner.predict(data) for learner in self.learners]
 
+	def predict_score(self, scoring, x=None, y=None):
+		"""Calculate scores for each learner prediction.
+
+		Keyword arguments:
+			scoring -- a dict as {<score name>: <scorer func>}
+			x -- data to be predicted. When (default None), testeset is used.
+			y -- true pedictions. When (default None), testset is used.
+		"""
+		scores = [learner.predict_score(scoring, x, y) for learner in self.learners]
+		return cv_score(scores)
+
 	def predict_proba(self, data=None):
 		"""Predicts the probabilities using the learner classifier
 		and returns a list of predictions for every learner

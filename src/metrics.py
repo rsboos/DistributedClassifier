@@ -17,8 +17,11 @@ def cv_score(scores):
     for score in scores:
 
         # Delete unwanted data
-        del score['fit_time']
-        del score['score_time']
+        try:
+            del score['fit_time']
+            del score['score_time']
+        except KeyError:
+            pass
 
         # For each test score...
         for key, values in score.items():

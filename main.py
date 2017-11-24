@@ -99,6 +99,15 @@ if __name__ == "__main__":
 
     print('OK', end='\n\n')
 
+    ###########################################################################
+    # TEST ####################################################################
+    ###########################################################################
+    print('Testing models...', end=' ')
+
+    score = simulator.predict_score(scorers)
+
+    print('OK', end='\n\n')
+
     # Save scores
     print('Saving scores...', end=' ')
 
@@ -107,5 +116,8 @@ if __name__ == "__main__":
 
     [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
 
-    print('OK', end='\n\n')
+    # Save test scores
+    score.index = names    # line names as classifers' names
+    score.to_csv('{}/test_scores.csv'.format(args.params_folder))
 
+    print('OK', end='\n\n')
