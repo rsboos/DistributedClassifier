@@ -65,7 +65,13 @@ A JSON file as follow:
 ```bash
 python3 main.py -p tests/test01
 ```
-The program will save the results in the same folder.
+The program will save the **results** in the same folder.
+
+## Results
+Result files saved in *test folder*. You can find examples in `tests` folder.
+- **cv_scores_<classifier>.csv**: scores for each Cross-Validation's iteration
+- **model_<classifier>.pkl**: a pickel file to persist the created models
+- **test_scores.csv**: testset's prediction scores
 
 ## Sample Datasets
 This project uses a set of data samples for testing. This datasets are in `datasets/` folder.
