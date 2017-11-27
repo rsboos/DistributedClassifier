@@ -2,6 +2,7 @@ import json
 import argparse
 
 from src.data import Data
+from sklearn.externals import joblib
 from src.simulator import FeatureDistributed
 
 
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     params = open("{}/params.json".format(args.params_folder), 'r')
     p = json.load(params)
 
-    print('OK', end='\n\n')
+    print('OK')
 
     # Evaluate classifiers
     print('Loading classifiers...')
@@ -52,7 +53,7 @@ if __name__ == "__main__":
         # Evaluate a classifier
         classifiers.append(eval(classifier))
 
-    print('Done.', end='\n\n')
+    print('Done.')
 
     # Evaluate metrics
     print('Loading metrics...')
@@ -72,7 +73,7 @@ if __name__ == "__main__":
         # Evaluate a metric
         scorers[n] = eval(metric)
 
-    print('Done.', end='\n\n')
+    print('Done.')
 
     ###########################################################################
     # SIMULATE DISTRIBUTION ###################################################
@@ -81,14 +82,14 @@ if __name__ == "__main__":
 
     data = Data.load(p['dataset'], p['class_column'])
 
-    print('OK', end='\n\n')
+    print('OK')
 
     # Create simulator (agents' manager)
     print('Simulating distribution...', end=' ')
 
     simulator = FeatureDistributed.load(data, classifiers, p['overlap'], p['test_size'])
 
-    print('OK', end='\n\n')
+    print('OK')
 
     ###########################################################################
     # CROSS VALIDATION ########################################################
@@ -97,7 +98,7 @@ if __name__ == "__main__":
 
     scores = simulator.cross_validate(p['k_fold'], scorers, p['iterations'])
 
-    print('OK', end='\n\n')
+    print('OK')
 
     ###########################################################################
     # TEST ####################################################################
@@ -106,18 +107,34 @@ if __name__ == "__main__":
 
     score = simulator.predict_score(scorers)
 
-    print('OK', end='\n\n')
+    print('OK')
 
-    # Save scores
-    print('Saving scores...', end=' ')
+    ###########################################################################
+    # SAVE RESULTS ############################################################
+    ###########################################################################
+    # Save CV scores
+    print('Saving CV scores...', end=' ')
 
     names = list(p['classifiers'].keys())
     n = len(names)
 
     [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
 
+    print('OK')
+
     # Save test scores
+    print('Saving test scores...', end=' ')
+
     score.index = names    # line names as classifers' names
     score.to_csv('{}/test_scores.csv'.format(args.params_folder))
 
-    print('OK', end='\n\n')
+    print('OK')
+
+    # Save models
+    print('Saving models...', end=' ')
+
+    for i in range(n):
+        learner = simulator.learners[i]
+        joblib.dump(learner.classifier, '{}/model_{}.pkl'.format(args.params_folder, names[i]))
+
+    print('OK')
