@@ -3,6 +3,7 @@ import argparse
 
 from src.data import Data
 from sklearn.externals import joblib
+from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
 
 
@@ -45,10 +46,12 @@ if __name__ == "__main__":
 
         i = classifier.find('(')                         # filter classifier
 
-        print("from {} import {}".format(modules, classifier[:i]))
+        str_eval = "from {} import {}".format(modules, classifier[:i])
+
+        print(str_eval)
 
         # Execute import
-        exec("from {} import {}".format(modules, classifier[:i]))
+        exec(str_eval)
 
         # Evaluate a classifier
         classifiers.append(eval(classifier))
@@ -62,16 +65,26 @@ if __name__ == "__main__":
     for n, c in p['metrics'].items():                    # for each metric (name, method)
         parts = c.split('.')                             # separate in parts
 
-        modules = '.'.join(parts[:-1])                   # get modules
-        metric = ''.join(parts[-1])                      # get metric
+        i = ['(' in part for part in parts].index(1)     # filter parts
 
-        print("from {} import {}".format(modules, metric))
+        modules = '.'.join(parts[:i])                    # get modules
+        metric = '.'.join(parts[i:])                     # get metric
+
+        i = metric.find('(')                             # filter score func
+        params = metric[i + 1:-1]                        # get score func params (without '()')
+        metric = metric[:i]                              # get score func name
+
+        str_eval_import = "from {} import {}".format(modules, metric)
+        str_eval_scorer = "make_scorer({}, {})".format(metric, params)
+
+        print(str_eval_import)
+        print(str_eval_scorer)
 
         # Execute import
-        exec("from {} import {}".format(modules, metric))
+        exec(str_eval_import)
 
         # Evaluate a metric
-        scorers[n] = eval(metric)
+        scorers[n] = eval(str_eval_scorer)
 
     print('Done.')
 

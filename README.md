@@ -48,15 +48,15 @@ A JSON file as follow:
     },
 
     // Scorer functions
-    // {<scorer id>: <method call without parameters>}
+    // {<scorer id>: <method call with parameters>}
     "metrics": {
-        "auc": "src.metrics.auc",
-        "f1": "src.metrics.f1",
-        "recall": "src.metrics.recall",
-        "specificity": "src.metrics.specificity",
-        "sensitivity": "src.metrics.sensitivity",
-        "accuracy": "src.metrics.accuracy",
-        "precision": "src.metrics.precision"
+        "auc": "sklearn.metrics.roc_auc_score()",
+        "f1": "sklearn.metrics.f1_score(average='binary')",
+        "recall": "sklearn.metrics.recall_score()",
+        "specificity": "src.metrics.specificity_score()",
+        "sensitivity": "src.metrics.sensitivity_score()",
+        "accuracy": "sklearn.metrics.accuracy_score()",
+        "precision": "sklearn.metrics.precision_score()"
     }
 }
 ```

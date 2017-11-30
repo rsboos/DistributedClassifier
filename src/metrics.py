@@ -62,11 +62,3 @@ def specificity_score(y_true, y_pred, **kwargs):
     tn = cm[0,0]
 
     return tn / (tn + fp)
-
-f1 = met.make_scorer(met.f1_score)
-auc = met.make_scorer(met.roc_auc_score)
-recall = met.make_scorer(met.recall_score)
-accuracy = met.make_scorer(met.accuracy_score)
-precision = met.make_scorer(met.precision_score)
-sensitivity = met.make_scorer(sensitivity_score)
-specificity = met.make_scorer(specificity_score)
