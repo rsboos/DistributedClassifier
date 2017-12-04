@@ -70,9 +70,17 @@ def summary(scores):
 ###############################################################################
 ################################## SCORERS ####################################
 ###############################################################################
+def confusion_matrix(y_true, y_pred, **kwargs):
+    """Return the confusion matrix according to a label order."""
+    labels = labels if 'labels' in kwargs else list(set(y_true))
+    labels = sorted(range(len(labels)), key=lambda k: labels[k])
+
+    return met.confusion_matrix(y_true, y_pred, labels=labels)
+
+
 def sensitivity_score(y_true, y_pred, **kwargs):
     """Return a sensitivity score (true positive rate)."""
-    cm = met.confusion_matrix(y_true, y_pred)
+    cm = confusion_matrix(y_true, y_pred, labels=kwargs.get('labels', []))
 
     tp = cm[1,1]
     fn = cm[1,0]
@@ -82,7 +90,7 @@ def sensitivity_score(y_true, y_pred, **kwargs):
 
 def specificity_score(y_true, y_pred, **kwargs):
     """Return a specificity score (true negative rate)."""
-    cm = met.confusion_matrix(y_true, y_pred)
+    cm = confusion_matrix(y_true, y_pred, labels=kwargs.get('labels', []))
 
     tp = cm[1,1]
     fn = cm[1,0]

@@ -53,8 +53,8 @@ A JSON file as follow:
         "auc": "sklearn.metrics.roc_auc_score()",
         "f1": "sklearn.metrics.f1_score(average='binary')",
         "recall": "sklearn.metrics.recall_score()",
-        "specificity": "src.metrics.specificity_score()",
-        "sensitivity": "src.metrics.sensitivity_score()",
+        "specificity": "src.metrics.specificity_score(labels=['Target', 'Non-Target'])",
+        "sensitivity": "src.metrics.sensitivity_score(labels=['Target', 'Non-Target'])",
         "accuracy": "sklearn.metrics.accuracy_score()",
         "precision": "sklearn.metrics.precision_score()"
     }
