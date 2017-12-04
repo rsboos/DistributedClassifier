@@ -2,6 +2,7 @@ import json
 import argparse
 
 from src.data import Data
+from src.metrics import summary
 from sklearn.externals import joblib
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
@@ -149,5 +150,14 @@ if __name__ == "__main__":
     for i in range(n):
         learner = simulator.learners[i]
         joblib.dump(learner.classifier, '{}/model_{}.pkl'.format(args.params_folder, names[i]))
+
+    print('OK')
+
+    # Create CV summary
+    print('Creating CV summary...', end=' ')
+
+    means = summary(scores)  # create summary
+    means.index = names      # line names as classifers' names
+    means.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')

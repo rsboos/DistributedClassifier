@@ -39,6 +39,34 @@ def cv_score(scores):
     # keys are columns
     return DataFrame.from_dict(score_matrix)
 
+
+def summary(scores):
+    """Average scores from Cross-Validation.
+
+    Keyword arguments:
+        scores -- DataFrame or list of DataFrames
+    """
+    # Make score as list of DataFrames
+    scores = scores if type(scores) is list else [scores]
+
+    # Mean matrix
+    means = dict()
+
+    # For each CV scores, calculate mean...
+    for i in range(len(scores)):
+        score = scores[i]
+        columns = score.columns
+
+        # ... and append to mean matrix
+        mean = score.mean(0)
+
+        means[i] = list(mean.iloc[:])
+
+    df = DataFrame.from_dict(means).T
+    df.columns = columns
+
+    return df
+
 ###############################################################################
 ################################## SCORERS ####################################
 ###############################################################################

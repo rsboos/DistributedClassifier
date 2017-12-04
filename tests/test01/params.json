@@ -1,5 +1,5 @@
 {
-    "dataset": "datasets/seed.csv",
+    "dataset": "datasets/cancer.data.process",
     "class_column": -1,
     "iterations": 10,
     "k_fold": 10,
