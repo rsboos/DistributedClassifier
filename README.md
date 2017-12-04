@@ -72,6 +72,7 @@ Result files saved in *test folder*. You can find examples in `tests` folder.
 - **cv_scores_\<classifier\>.csv**: scores for each Cross-Validation's iteration
 - **model_\<classifier\>.pkl**: a pickel file to persist the created models
 - **test_scores.csv**: testset's prediction scores
+- **cv_summary.csv**: average scores from all *cv_scores_\<classifier\>.csv*
 
 ## Sample Datasets
 This project uses a set of data samples for testing. This datasets are in `datasets/` folder.
