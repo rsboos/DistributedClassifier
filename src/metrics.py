@@ -72,7 +72,7 @@ def summary(scores):
 ###############################################################################
 def confusion_matrix(y_true, y_pred, **kwargs):
     """Return the confusion matrix according to a label order."""
-    labels = labels if 'labels' in kwargs else list(set(y_true))
+    labels = kwargs.get('labels', list(set(y_true)))
     labels = sorted(range(len(labels)), key=lambda k: labels[k])
 
     return met.confusion_matrix(y_true, y_pred, labels=labels)
@@ -80,21 +80,21 @@ def confusion_matrix(y_true, y_pred, **kwargs):
 
 def sensitivity_score(y_true, y_pred, **kwargs):
     """Return a sensitivity score (true positive rate)."""
-    cm = confusion_matrix(y_true, y_pred, labels=kwargs.get('labels', []))
+    cm = confusion_matrix(y_true, y_pred, **kwargs)
 
-    tp = cm[1,1]
-    fn = cm[1,0]
+    tp = cm[0,0]
+    fn = cm[0,1]
 
     return tp / (tp + fn)
 
 
 def specificity_score(y_true, y_pred, **kwargs):
     """Return a specificity score (true negative rate)."""
-    cm = confusion_matrix(y_true, y_pred, labels=kwargs.get('labels', []))
+    cm = confusion_matrix(y_true, y_pred, **kwargs)
 
-    tp = cm[1,1]
-    fn = cm[1,0]
-    fp = cm[0,1]
-    tn = cm[0,0]
+    tp = cm[0,0]
+    fn = cm[0,1]
+    fp = cm[1,0]
+    tn = cm[1,1]
 
     return tn / (tn + fp)
