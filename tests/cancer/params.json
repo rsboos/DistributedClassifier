@@ -6,8 +6,10 @@
     "test_size": 0.2,
     "overlap": 0,
     "classifiers": {
-        "svc": "sklearn.svm.SVC()",
-        "lin_svc": "sklearn.svm.LinearSVC()"
+        "nb": "sklearn.naive_bayes.GaussianNB()",
+        "svc": "sklearn.svm.SVC(probability=True)",
+        "dtree": "sklearn.tree.DecisionTreeClassifier()",
+        "knn": "sklearn.neighbors.KNeighborsClassifier()"
     },
     "metrics": {
         "auc": "sklearn.metrics.roc_auc_score()",
@@ -17,6 +19,14 @@
         "sensitivity": "src.metrics.sensitivity_score(labels=['Positive', 'Negative'])",
         "accuracy": "sklearn.metrics.accuracy_score()",
         "precision": "sklearn.metrics.precision_score()"
+    },
+    "social_functions": {
+        "borda": "borda",
+        "copeland": "copeland",
+        "dowdall": "dowdall",
+        "plurality": "plurality",
+        "schulze": "schulze",
+        "simpson": "simpson"
     }
 }
 

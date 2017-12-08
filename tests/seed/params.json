@@ -1,0 +1,32 @@
+{
+    "dataset": "datasets/seed.csv",
+    "class_column": -1,
+    "iterations": 10,
+    "k_fold": 10,
+    "test_size": 0.2,
+    "overlap": 0,
+    "classifiers": {
+        "nb": "sklearn.naive_bayes.GaussianNB()",
+        "svc": "sklearn.svm.SVC(probability=True)",
+        "dtree": "sklearn.tree.DecisionTreeClassifier()",
+        "knn": "sklearn.neighbors.KNeighborsClassifier()"
+    },
+    "metrics": {
+        "auc": "sklearn.metrics.roc_auc_score()",
+        "f1": "sklearn.metrics.f1_score(average='binary')",
+        "recall": "sklearn.metrics.recall_score()",
+        "specificity": "src.metrics.specificity_score(labels=['Target', 'Non-Target'])",
+        "sensitivity": "src.metrics.sensitivity_score(labels=['Target', 'Non-Target'])",
+        "accuracy": "sklearn.metrics.accuracy_score()",
+        "precision": "sklearn.metrics.precision_score()"
+    },
+    "social_functions": {
+        "borda": "borda",
+        "copeland": "copeland",
+        "dowdall": "dowdall",
+        "plurality": "plurality",
+        "schulze": "schulze",
+        "simpson": "simpson"
+    }
+}
+
