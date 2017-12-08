@@ -156,12 +156,8 @@ if __name__ == "__main__":
     # Create CV summary
     print('Creating CV summary...', end=' ')
 
-    means = summary(scores)  # create summary
-    means.index = names      # line names as classifers' names
-    means.to_csv('{}/cv_summary.csv'.format(args.params_folder))
+    stats = summary(scores)     # create summary
+    stats.index = names         # line names as classifers' names
+    stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')
-
-    ###########################################################################
-    # AGGREGATE RANKINGS ######################################################
-    ###########################################################################

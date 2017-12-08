@@ -1,6 +1,6 @@
 import numpy as np
 
-from pandas import DataFrame
+from pandas import DataFrame, concat
 from sklearn import metrics as met
 
 
@@ -51,6 +51,7 @@ def summary(scores):
 
     # Mean matrix
     means = dict()
+    stds = dict()
 
     # For each CV scores, calculate mean...
     for i in range(len(scores)):
@@ -59,13 +60,18 @@ def summary(scores):
 
         # ... and append to mean matrix
         mean = score.mean(0)
+        std = score.std(0)
 
         means[i] = list(mean.iloc[:])
+        stds[i] = list(std.iloc[:])
 
-    df = DataFrame.from_dict(means).T
-    df.columns = columns
+    mean = DataFrame.from_dict(means).T
+    mean.columns = columns
 
-    return df
+    std = DataFrame.from_dict(stds).T
+    std.columns = columns
+
+    return concat([mean, std], keys=['mean', 'std'], axis=1, copy=False)
 
 ###############################################################################
 ################################## SCORERS ####################################
