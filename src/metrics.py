@@ -1,5 +1,6 @@
 import numpy as np
 
+from math import fsum
 from pandas import DataFrame, concat
 from sklearn import metrics as met
 
@@ -77,30 +78,120 @@ def summary(scores):
 ################################## SCORERS ####################################
 ###############################################################################
 def confusion_matrix(y_true, y_pred, **kwargs):
-    """Return the confusion matrix according to a label order."""
+    """Return the confusion matrix according to a label order.
+
+    Keyword arguments:
+        y_true -- true values
+        y_pred -- prediction values
+        labels -- list of labels to index matrix (default set(y_true))
+    """
     labels = kwargs.get('labels', list(set(y_true)))
     labels = sorted(range(len(labels)), key=lambda k: labels[k])
 
     return met.confusion_matrix(y_true, y_pred, labels=labels)
 
 
+def macro(a):
+    """Calculate the arithmetic mean.
+
+    Keyword arguments:
+        a -- a list of numbers
+    """
+    n = len(a)
+    return fsum(a) / float(n)
+
+
+def micro(a, b):
+    """Calculate the micro average.
+
+    Keyword arguments:
+        values -- a list of numbers
+    """
+    return fsum(a) / fsum(b)
+
+
+def average(values, avg, func):
+    """Calculate average according to type.
+
+    Keyword arguments:
+        values -- a list of tuples
+        avg -- {'macro', 'micro'}
+        func -- score function as func(a, b) -> c
+    """
+    if avg == 'macro':
+        # Calculate scores using func
+        scores = list(map(lambda x: func(x[0], x[1]), values))
+
+        # Return macro avg
+        return macro(scores)
+    elif avg == 'micro':
+        # Separate values
+        a, b = zip(*values)
+        a, b = list(a), list(b)
+
+        # Return micro avg
+        return micro(a, a + b)
+    else:
+        raise ValueError('{} is not a valid average.'.format(avg))
+
+
 def sensitivity_score(y_true, y_pred, **kwargs):
-    """Return a sensitivity score (true positive rate)."""
-    cm = confusion_matrix(y_true, y_pred, **kwargs)
+    """Return a sensitivity score (true positive rate).
 
-    tp = cm[0,0]
-    fn = cm[0,1]
+    Keyword arguments:
+        y_true -- true values
+        y_pred -- prediction values
+        labels -- list of labels to index matrix (default set(y_true))
+        average -- {(default 'macro'), 'micro'}. For multiclass, only.
+    """
+    cm = confusion_matrix(y_true, y_pred, **kwargs)  # confusion matrix
+    sens = lambda tp, fn: tp / (tp + fn)             # sensitivity function
+    n, _ = cm.shape                                  # matrix dimension = # classes
 
-    return tp / (tp + fn)
+    # If it is binary...
+    if n == 2:
+        # Return TP / (TP + FN)
+        return sens(cm[0, 0], cm[0, 1])
+    else:
+        # Average type
+        avg = kwargs.get('average', 'macro')
 
+        # (TP, FN) list
+        values = [(cm[i, i], cm.sum(axis=1)[i] - cm[i, i]) for i in range(n)]
+
+        # Return calculated avg
+        return average(values, avg, sens)
 
 def specificity_score(y_true, y_pred, **kwargs):
-    """Return a specificity score (true negative rate)."""
-    cm = confusion_matrix(y_true, y_pred, **kwargs)
+    """Return a specificity score (true negative rate).
 
-    tp = cm[0,0]
-    fn = cm[0,1]
-    fp = cm[1,0]
-    tn = cm[1,1]
+    Keyword arguments:
+        y_true -- true values
+        y_pred -- prediction values
+        labels -- list of labels to index matrix (default set(y_true))
+        average -- {(default 'macro'), 'micro'}. For multiclass, only.
+    """
+    cm = confusion_matrix(y_true, y_pred, **kwargs)  # confusion matrix
+    spec = lambda tn, fp: tn / (tn + fp)             # sensitivity function
+    n, _ = cm.shape                                  # matrix dimension = # classes
 
-    return tn / (tn + fp)
+    # If it is binary...
+    if n == 2:
+        # Return TN / (TN + FP)
+        return spec(cm[1,1], cm[1,0])
+    else:
+        # Average type
+        avg = kwargs.get('average', 'macro')
+
+        # (TN, FP) list
+        values = list()
+
+        for i in range(n):
+            tp = cm[i, i]                       # true positive
+            fn = cm.sum(axis=1)[i] - tp         # false negative
+            fp = cm.sum(axis=0)[i] - tp         # false positive
+            tn = cm.sum() - (tp + fn + fp)      # true negative
+            values.append((tn, fp))             # save (tn, fp)
+
+        # Return calculated avg
+        return average(values, avg, spec)
