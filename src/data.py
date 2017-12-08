@@ -71,6 +71,15 @@ class Data():
 		# Creates a Data object and returns it
 		return cls(x, y)
 
+	def map_classes(self, predictions):
+		"""Map predictions indexes to classes.
+
+		Keyword argument:
+			predictions -- a list of predictions
+		"""
+		pred = map(lambda i: self.classes[i], predictions)
+		return list(pred)
+
 
 class Dataset():
 	"""Prepares the data
