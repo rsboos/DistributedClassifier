@@ -45,31 +45,6 @@ class Learner():
 		testdata = self.__choose_data(data)  	  # gets the data to be predicted
 		return self.classifier.predict(testdata)  # returns the predictions
 
-	def predict_score(self, scoring, x=None, y=None):
-		"""Calculate predictions' metrics and return a dict with metrics.
-
-		Keyword arguments:
-			scoring -- a dict as {<score name>: <scorer func>}
-			x -- data to be predicted. When (default None), testset is used.
-			y -- true pedictions. When (default None), testset is used.
-		"""
-		# Get predictions
-		y_true = self.dataset.testset.y if y is None else y
-		y_pred = self.predict(x)
-
-		# Init dict
-		scores = dict()
-
-		# For each metric...
-		for k in scoring:
-			# Get the scorer function
-			scorer = scoring[k]
-
-			# Calculate and save score
-			scores['test_' + k] = scorer._score_func(y_true, y_pred)
-
-		return scores
-
 	def predict_proba(self, data=None):
 		"""Predict the probabilities for the testset on dataset and returns a ndarray as result.
 		fit() is called before predict, if it was never executed.
@@ -77,36 +52,40 @@ class Learner():
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testset is used.
 		"""
-
 		testdata = self.__choose_data(data)  			# gets the data to be predicted
 		return self.classifier.predict_proba(testdata)  # returns the predictions
 
-	def cross_validate(self, folds, scoring=['accuracy', 'precision']):
-		"""Computes a len(folds)-fold cross-validation and returns a list of dicts of float arrays*
+	def run_fold(self, train_i, test_i):
+		"""Generate cross-validated for an input data point.
 
 		Keyword arguments:
-			folds -- train and test splits to cross-validate*
-			scoring -- metrics to be returned (default ['accuracy', 'precision'])*
+			train_i -- train instances' index
+			test_i -- test instances' index
 
 		*For more information about the returned data and the parameters:
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 		"""
-		# Short names
-		x = self.dataset.trainingset.x # instances
-		y = self.dataset.trainingset.y # classes
+		# Get training data
+		train_x = self.dataset.trainingset.x[train_i, :]
+		train_y = self.dataset.trainingset.y[train_i]
 
-		# Compute cross-validation and return its score
-		return model_selection.cross_validate(self.classifier, x, y, cv=folds, scoring=scoring)
+		# Get test data
+		test_x = self.dataset.trainingset.x[test_i, :]
+		test_y = self.dataset.trainingset.y[test_i]
+
+		# Train model
+		self.classifier.fit(train_x, train_y)
+
+		# Get model's predictions
+		predi = self.classifier.predict(test_x)
+		proba = self.classifier.predict_proba(test_x)
+
+		# Transpose of proba to divide probabilities by class
+		return predi, proba.T
 
 	def __choose_data(self, data):
 		"""Choose the data to be used in prediction.
 		If data is provided by the user, use it.
 		Otherwise, the testset in dataset property.
 		"""
-
-		# If data is not provided...
-		if data is None:
-			return self.dataset.testset.x
-
-		# Data was provided
-		return data
+		return self.dataset.testset.x if data is None else data

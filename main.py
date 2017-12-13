@@ -1,6 +1,7 @@
 import json
 import argparse
 
+from pandas import DataFrame
 from src.data import Data
 from src.metrics import summary
 from sklearn.externals import joblib
@@ -87,6 +88,9 @@ if __name__ == "__main__":
         # Evaluate a metric
         scorers[n] = eval(str_eval_scorer)
 
+    scf_name, scf_callable = zip(*p['social_functions'].items())
+    scf_name, scf_callable = list(scf_name), list(scf_callable)
+
     print('Done.')
 
     ###########################################################################
@@ -110,18 +114,18 @@ if __name__ == "__main__":
     ###########################################################################
     print('Cross validating...', end=' ')
 
-    scores = simulator.cross_validate(p['k_fold'], scorers, p['iterations'])
+    ranks, scores = simulator.cross_validate(scf_callable, p['k_fold'], scorers, p['iterations'])
 
     print('OK')
 
     ###########################################################################
     # TEST ####################################################################
     ###########################################################################
-    print('Testing models...', end=' ')
+    # print('Testing models...', end=' ')
 
-    score = simulator.predict_score(scorers)
+    # score = simulator.predict_score(scorers)
 
-    print('OK')
+    # print('OK')
 
     ###########################################################################
     # SAVE RESULTS ############################################################
@@ -129,23 +133,32 @@ if __name__ == "__main__":
     # Save CV scores
     print('Saving CV scores...', end=' ')
 
-    names = list(p['classifiers'].keys())
-    n = len(names)
+    n = len(scf_name)
+    [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, scf_name[i])) for i in range(n)]
 
-    [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
+    print('OK')
+
+    # Save rankings
+    print('Saving CV ranks...', end=' ')
+
+    [DataFrame(ranks[scf]).to_csv('{}/cv_ranks_{}.csv'.format(args.params_folder, scf))
+        for scf in ranks]
 
     print('OK')
 
     # Save test scores
-    print('Saving test scores...', end=' ')
+    # print('Saving test scores...', end=' ')
 
-    score.index = names    # line names as classifers' names
-    score.to_csv('{}/test_scores.csv'.format(args.params_folder))
+    # score.index = names    # line names as classifers' names
+    # score.to_csv('{}/test_scores.csv'.format(args.params_folder))
 
-    print('OK')
+    # print('OK')
 
     # Save models
     print('Saving models...', end=' ')
+
+    names = list(p['classifiers'].keys())
+    n = len(names)
 
     for i in range(n):
         learner = simulator.learners[i]
@@ -157,7 +170,7 @@ if __name__ == "__main__":
     print('Creating CV summary...', end=' ')
 
     stats = summary(scores)     # create summary
-    stats.index = names         # line names as classifers' names
+    stats.index = scf_name      # line names as social choice functions' names
     stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')

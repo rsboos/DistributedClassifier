@@ -1,8 +1,8 @@
 import numpy as np
 
 from math import fsum
-from pandas import DataFrame, concat
 from sklearn import metrics as met
+from pandas import DataFrame, concat
 
 
 def cv_score(scores):
@@ -17,24 +17,11 @@ def cv_score(scores):
     # For each iteration of CV...
     for score in scores:
 
-        # Delete unwanted data
-        try:
-            del score['fit_time']
-            del score['score_time']
-        except KeyError:
-            pass
-
         # For each test score...
         for key, values in score.items():
-
-            # Filter scores. Get just the test scores
-            if key.startswith('test_'):
-                # Delete test_ prefix
-                scorer = key.replace('test_', '')
-
-                # Append scores to the scorer
-                arr = score_matrix.get(scorer, [])
-                score_matrix[scorer] = np.append(arr, values)
+            # Append scores to the scorer
+            arr = score_matrix.get(key, [])
+            score_matrix[key] = np.append(arr, values)
 
     # Convert dict to DataFrame where
     # keys are columns
@@ -74,9 +61,58 @@ def summary(scores):
 
     return concat([mean, std], keys=['mean', 'std'], axis=1, copy=False)
 
+
+def join_ranks(rankings):
+    """Receive one rank per class and join them by score.
+
+    Keyword arguments:
+        rankings -- a list of class ranks
+
+    Return: a list with classes.
+    """
+    classes = list()                # dict of classes' indexes by scf
+    n_ranks = len(rankings)         # # of classes = # of ranks
+    rank_size = len(rankings[0])    # # of instances = length of a rank
+
+    # For each instance i...
+    for i in range(rank_size):
+        b = 0  # 0 = class with the biggest value
+
+        # For each class rank, get class with highest score
+        for j in range(1, n_ranks):
+            b = j if rankings[j][i][1] > rankings[b][i][1] else b
+
+        # Save class
+        classes.append(b)
+
+    return classes
+
+
 ###############################################################################
 ################################## SCORERS ####################################
 ###############################################################################
+def score(y_true, y_pred, scoring):
+    """Calculate predictions' metrics and return a dict with metrics.
+
+    Keyword arguments:
+        scoring -- a dict as {<score name>: <scorer func>}
+        y_true -- true data
+        y_pred -- predicted data
+    """
+    # Init dict
+    scores = dict()
+
+    # For each metric...
+    for k in scoring:
+        # Get the scorer function
+        scorer = scoring[k]
+
+        # Calculate and save score
+        scores[k] = scorer._score_func(y_true, y_pred)
+
+    return scores
+
+
 def confusion_matrix(y_true, y_pred, **kwargs):
     """Return the confusion matrix according to a label order.
 

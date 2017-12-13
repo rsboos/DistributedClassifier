@@ -2,10 +2,11 @@ import numpy
 import math
 import copy
 
-from .data import Data, Dataset
 from .agents import Learner
-from .metrics import cv_score
+from .data import Data, Dataset
 from sklearn import model_selection
+from .metrics import cv_score, score, join_ranks
+from social_choice.profile import Profile
 
 
 class Simulator():
@@ -175,19 +176,7 @@ class FeatureDistributed(Simulator):
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
-
 		return [learner.predict(data) for learner in self.learners]
-
-	def predict_score(self, scoring, x=None, y=None):
-		"""Calculate scores for each learner prediction.
-
-		Keyword arguments:
-			scoring -- a dict as {<score name>: <scorer func>}
-			x -- data to be predicted. When (default None), testeset is used.
-			y -- true pedictions. When (default None), testset is used.
-		"""
-		scores = [learner.predict_score(scoring, x, y) for learner in self.learners]
-		return cv_score(scores)
 
 	def predict_proba(self, data=None):
 		"""Predicts the probabilities using the learner classifier
@@ -196,15 +185,15 @@ class FeatureDistributed(Simulator):
 		Keyword arguments:
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
-
 		return [learner.predict_proba(data) for learner in self.learners]
 
-	def cross_validate(self, k_fold=10, scoring=['accuracy', 'precision'], n_it=10):
+	def cross_validate(self, sc_functions, k_fold=10, scoring={}, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 
 		Keyword arguments:
-			k_fold -- number of folds
-			scoring -- metrics to be returned (default ['accuracy', 'precision'])*
+			sc_functions -- a list with social choice functions' names
+			k_fold -- number of folds (default 10)
+			scoring -- metrics to be returned (default {})*
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
 
 		*For more information about the returned data and the parameters:
@@ -216,8 +205,9 @@ class FeatureDistributed(Simulator):
 		# Number of learners
 		n = len(self.learners)
 
-		# Initializes an empty dict for scores
-		scores = {i: list() for i in range(n)}
+		# Initializes an empty dict for scores and rankings
+		scores = dict()
+		ranks = dict()
 
 		# Gets a sample of the data for the splitter
 		sample_x = self.learners[0].dataset.trainingset.x # instances
@@ -227,19 +217,53 @@ class FeatureDistributed(Simulator):
 			# Splits into k training and test folds for cross-validation
 			skf = model_selection.StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
 
-			# The split works with a sample of the data because we *vertically* sliced it
-			g_folds = skf.split(sample_x, sample_y)  # creates the folds' generator
-			i_folds = iter(g_folds)					 # create the folds' iterator
-			l_folds = list(i_folds)				     # list of folds
+			# Create folds and iterate
+			for train_i, test_i in skf.split(sample_x, sample_y):
+				# Initialize empty list for probabilities
+				probabilities = dict()
+				predictions = list()
 
-			# For each learner, run its cross-validation function and save its score
-			for j in range(n):
-				folds = copy.deepcopy(l_folds)							 # create a copy
-				score = self.learners[j].cross_validate(folds, scoring)  # compute CV
-				scores[j].append(score)  					 			 # save score
+				# For each learner...
+				for j in range(n):
+					# Compute a fold
+					pred, proba = self.learners[j].run_fold(train_i, test_i)
+
+					# Save predictions
+					predictions.append(pred)
+
+					# Save proba by k-class rank
+					for k in range(len(proba)):
+						probabilities.setdefault(k, [])
+						probabilities[k].append(proba[k])
+
+				# Aggregate probabilities
+				# rankings = a rank by class by social choice function
+				rankings = dict()
+				for k in probabilities:
+					sc_ranks = Profile.aggr_rank(probabilities[k], sc_functions, predictions)
+
+					for scf, r in sc_ranks.items():
+						rankings.setdefault(scf, [])
+						rankings[scf].append(r)
+
+				# Get true test classes
+				y_true = sample_y[test_i]
+
+				# Get winners
+				for k in rankings:
+					winners = join_ranks(rankings[k])
+					metrics = score(y_true, winners, scoring)
+
+					# Save ranks
+					ranks.setdefault(k, [])
+					ranks[k].append(winners)
+
+					# Save scores
+					scores.setdefault(k, [])
+					scores[k].append(metrics)
 
 		# Return the aggregated scores as DataFrames for each learner
-		return [cv_score(values) for _, values in scores.items()]
+		return ranks, [cv_score(scores[k]) for k in scores]
 
 
 class InstanceDistributed(Simulator):
