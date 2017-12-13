@@ -187,6 +187,78 @@ class FeatureDistributed(Simulator):
 		"""
 		return [learner.predict_proba(data) for learner in self.learners]
 
+	def run_tests(self, sc_functions, scoring):
+		"""Run tests using learners testset. Return ranks and scores.
+
+		Keyword arguments:
+			sc_function -- list of social choice functions name
+			scoring -- a dict of scorers
+		"""
+		# Number of learners
+		n = len(self.learners)
+
+		# Initialize empty list for probabilities
+		probabilities = dict()
+		predictions = list()
+
+		# For each learner...
+		for j in range(n):
+			self.learners[j].fit()  					# train model
+			y_pred = self.learners[j].predict()			# predicted classes
+			proba = self.learners[j].predict_proba()    # probabilities of each class
+			proba = proba.T 							# split by class
+
+			# Save predictions
+			predictions.append(y_pred)
+
+			# Save proba by k-class rank
+			for k in range(len(proba)):
+				probabilities.setdefault(k, [])
+				probabilities[k].append(proba[k])
+
+		# Get true test classes
+		y_true = self.learners[0].dataset.testset.y
+
+		# Aggregate probabilities
+		aggr_r, aggr_s = self.aggr_probabilities(probabilities, sc_functions, y_true, predictions, scoring)
+
+		return aggr_r, aggr_s
+
+	def aggr_probabilities(self, proba, sc_functions, y_true, y_pred, scoring):
+		"""Aggregate probabilities and return aggregated ranks and scores.
+
+		Keyword arguments:
+			proba -- dict of probabilities split in classes
+			sc_function -- list of social choice functions name
+			y_true -- true classes
+			y_pred -- predicted classes
+			scoring -- a dict of scorers
+		"""
+		# rankings = a rank by class by social choice function
+		class_ranks = dict()
+		scores = dict()
+		ranks = dict()
+
+		# k = class' index
+		for k in proba:
+			sc_ranks = Profile.aggr_rank(proba[k], sc_functions, y_pred)
+
+			# Join ranks by social choice function
+			for scf, r in sc_ranks.items():
+				class_ranks.setdefault(scf, [])
+				class_ranks[scf].append(r)
+
+		# Get winners
+		# k = social choice function
+		for k in class_ranks:
+			winners = join_ranks(class_ranks[k])
+			metrics = score(y_true, winners, scoring)
+
+			ranks[k] = winners	 # save ranks
+			scores[k] = metrics  # save scores
+
+		return ranks, scores
+
 	def cross_validate(self, sc_functions, k_fold=10, scoring={}, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 
@@ -236,33 +308,23 @@ class FeatureDistributed(Simulator):
 						probabilities.setdefault(k, [])
 						probabilities[k].append(proba[k])
 
-				# Aggregate probabilities
-				# rankings = a rank by class by social choice function
-				rankings = dict()
-				for k in probabilities:
-					sc_ranks = Profile.aggr_rank(probabilities[k], sc_functions, predictions)
-
-					for scf, r in sc_ranks.items():
-						rankings.setdefault(scf, [])
-						rankings[scf].append(r)
-
 				# Get true test classes
 				y_true = sample_y[test_i]
 
-				# Get winners
-				for k in rankings:
-					winners = join_ranks(rankings[k])
-					metrics = score(y_true, winners, scoring)
+				# Aggregate probabilities
+				aggr_r, aggr_s = self.aggr_probabilities(probabilities, sc_functions, y_true, predictions, scoring)
 
-					# Save ranks
+				# Save ranks
+				for k in aggr_r:
 					ranks.setdefault(k, [])
-					ranks[k].append(winners)
+					ranks[k].append(aggr_r[k])
 
-					# Save scores
+				# Save scores
+				for k in aggr_s:
 					scores.setdefault(k, [])
-					scores[k].append(metrics)
+					scores[k].append(aggr_s[k])
 
-		# Return the aggregated scores as DataFrames for each learner
+		# Return the ranks and aggregated scores as DataFrames for each learner
 		return ranks, [cv_score(scores[k]) for k in scores]
 
 

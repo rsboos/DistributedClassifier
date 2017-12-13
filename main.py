@@ -121,11 +121,11 @@ if __name__ == "__main__":
     ###########################################################################
     # TEST ####################################################################
     ###########################################################################
-    # print('Testing models...', end=' ')
+    print('Testing models...', end=' ')
 
-    # score = simulator.predict_score(scorers)
+    test_ranks, test_scores = simulator.run_tests(scf_callable, scorers)
 
-    # print('OK')
+    print('OK')
 
     ###########################################################################
     # SAVE RESULTS ############################################################
@@ -147,12 +147,14 @@ if __name__ == "__main__":
     print('OK')
 
     # Save test scores
-    # print('Saving test scores...', end=' ')
+    print('Saving test ranks and scores...', end=' ')
 
-    # score.index = names    # line names as classifers' names
-    # score.to_csv('{}/test_scores.csv'.format(args.params_folder))
+    test_ranks, test_scores = DataFrame(test_ranks).T, DataFrame(test_scores).T
 
-    # print('OK')
+    test_ranks.to_csv('{}/test_ranks.csv'.format(args.params_folder))
+    test_scores.to_csv('{}/test_scores.csv'.format(args.params_folder))
+
+    print('OK')
 
     # Save models
     print('Saving models...', end=' ')
