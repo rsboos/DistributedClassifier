@@ -7,6 +7,7 @@
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
+        "svc": "sklearn.svm.SVC(probability=True)",
         "dtree": "sklearn.tree.DecisionTreeClassifier()",
         "knn": "sklearn.neighbors.KNeighborsClassifier()"
     },
