@@ -23,10 +23,7 @@
     "social_functions": {
         "borda": "borda",
         "copeland": "copeland",
-        "dowdall": "dowdall",
-        "plurality": "plurality",
-        "schulze": "schulze",
-        "simpson": "simpson"
+        "dowdall": "dowdall"
     }
 }
 
