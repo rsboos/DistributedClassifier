@@ -170,43 +170,24 @@ class FeatureDistributed(Simulator):
 		# Creates a DistributedClassifition simulator
 		return cls(learners)
 
-	def predict(self, data=None):
-		"""Predicts using the learner classifier and returns a list of predictions for every learner
+	def predict(self, scf, scoring={}, data=None):
+		"""Predicts using the learners' classifiers.
 
 		Keyword arguments:
+			scf -- social choice functions as list of strings
+			scoring -- a dict of scorers (default {})
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
-		return [learner.predict(data) for learner in self.learners]
-
-	def predict_proba(self, data=None):
-		"""Predicts the probabilities using the learner classifier
-		and returns a list of predictions for every learner
-
-		Keyword arguments:
-			data -- data to be predicted. When (default None), testeset is used.
-		"""
-		return [learner.predict_proba(data) for learner in self.learners]
-
-	def run_tests(self, sc_functions, scoring):
-		"""Run tests using learners testset. Return ranks and scores.
-
-		Keyword arguments:
-			sc_function -- list of social choice functions name
-			scoring -- a dict of scorers
-		"""
-		# Number of learners
-		n = len(self.learners)
-
 		# Initialize empty list for probabilities
 		probabilities = dict()
 		predictions = list()
 
 		# For each learner...
-		for j in range(n):
-			self.learners[j].fit()  					# train model
-			y_pred = self.learners[j].predict()			# predicted classes
-			proba = self.learners[j].predict_proba()    # probabilities of each class
-			proba = proba.T 							# split by class
+		for learner in self.learners:
+			learner.fit()  							# train model
+			y_pred = learner.predict(data)			# predicted classes
+			proba = learner.predict_proba(data)     # probabilities of each class
+			proba = proba.T 						# split by class
 
 			# Save predictions
 			predictions.append(y_pred)
@@ -220,11 +201,20 @@ class FeatureDistributed(Simulator):
 		y_true = self.learners[0].dataset.testset.y
 
 		# Aggregate probabilities
-		aggr_r, aggr_s = self.aggr_probabilities(probabilities, sc_functions, y_true, predictions, scoring)
+		rank, score = self.aggr_probabilities(probabilities, scf, y_true, predictions, scoring)
 
-		return aggr_r, aggr_s
+		return rank, score
 
-	def aggr_probabilities(self, proba, sc_functions, y_true, y_pred, scoring):
+	def predict_proba(self, data=None):
+		"""Predicts the probabilities using the learner classifier
+		and returns a list of predictions for every learner
+
+		Keyword arguments:
+			data -- data to be predicted. When (default None), testeset is used.
+		"""
+		return [learner.predict_proba(data).T for learner in self.learners]
+
+	def aggr_probabilities(self, proba, sc_functions, y_true, y_pred, scoring={}):
 		"""Aggregate probabilities and return aggregated ranks and scores.
 
 		Keyword arguments:
@@ -232,7 +222,7 @@ class FeatureDistributed(Simulator):
 			sc_function -- list of social choice functions name
 			y_true -- true classes
 			y_pred -- predicted classes
-			scoring -- a dict of scorers
+			scoring -- a dict of scorers (default {})
 		"""
 		# rankings = a rank by class by social choice function
 		class_ranks = dict()
