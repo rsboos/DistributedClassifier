@@ -1,7 +1,7 @@
 import json
 import argparse
 
-from pandas import DataFrame
+from pandas import DataFrame, concat
 from src.data import Data
 from src.metrics import summary
 from sklearn.externals import joblib
@@ -114,7 +114,8 @@ if __name__ == "__main__":
     ###########################################################################
     print('Cross validating...', end=' ')
 
-    ranks, scores = simulator.cross_validate(scf_callable, p['k_fold'], scorers, p['iterations'])
+    ranks, classif_scores, rank_scores = simulator.cross_validate(scf_callable, p['k_fold'],
+                                                                  scorers, p['iterations'])
 
     print('OK')
 
@@ -124,7 +125,7 @@ if __name__ == "__main__":
     print('Testing models...', end=' ')
 
     simulator.fit()
-    test_ranks, test_scores = simulator.predict(scf_callable, scorers)
+    test_ranks, test_cscores, test_rscores = simulator.predict(scf_callable, scorers)
 
     print('OK')
 
@@ -134,8 +135,12 @@ if __name__ == "__main__":
     # Save CV scores
     print('Saving CV scores...', end=' ')
 
+    names = list(p['classifiers'].keys())
+    n = len(names)
+    [classif_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
+
     n = len(scf_name)
-    [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, scf_name[i])) for i in range(n)]
+    [rank_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, scf_name[i])) for i in range(n)]
 
     print('OK')
 
@@ -150,7 +155,12 @@ if __name__ == "__main__":
     # Save test scores
     print('Saving test ranks and scores...', end=' ')
 
-    test_ranks, test_scores = DataFrame(test_ranks).T, DataFrame(test_scores).T
+    test_ranks = DataFrame(test_ranks).T
+    test_cscores = DataFrame(test_cscores).T
+    test_rscores = DataFrame(test_rscores).T
+
+    test_cscores.index = names
+    test_scores = concat([test_cscores, test_rscores], keys=['classifiers', 'social_functions'], axis=0, copy=False)
 
     test_ranks.to_csv('{}/test_ranks.csv'.format(args.params_folder))
     test_scores.to_csv('{}/test_scores.csv'.format(args.params_folder))
@@ -172,8 +182,8 @@ if __name__ == "__main__":
     # Create CV summary
     print('Creating CV summary...', end=' ')
 
-    stats = summary(scores)     # create summary
-    stats.index = scf_name      # line names as social choice functions' names
+    stats = summary(classif_scores + rank_scores)     # create summary
+    stats.index = names + scf_name                    # line names as social choice functions' names
     stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')
