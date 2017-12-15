@@ -108,7 +108,7 @@ def score(y_true, y_pred, scoring):
         scorer = scoring[k]
 
         # Calculate and save score
-        scores[k] = scorer._score_func(y_true, y_pred)
+        scores[k] = scorer._score_func(y_true, y_pred, **scorer._kwargs)
 
     return scores
 
@@ -169,17 +169,6 @@ def average(values, avg, func):
         return micro(a, a + b)
     else:
         raise ValueError('{} is not a valid average.'.format(avg))
-
-def recall_score(y_true, y_pred, **kwargs):
-    """Return a sensitivity score (true positive rate).
-
-    Keyword arguments:
-        y_true -- true values
-        y_pred -- prediction values
-        labels -- list of labels to index matrix (default set(y_true))
-        average -- {(default 'macro'), 'micro'}. For multiclass, only.
-    """
-    return sensitivity_score(y_true, y_pred, **kwargs)
 
 def sensitivity_score(y_true, y_pred, **kwargs):
     """Return a sensitivity score (true positive rate).
