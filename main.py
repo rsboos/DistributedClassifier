@@ -123,6 +123,7 @@ if __name__ == "__main__":
     ###########################################################################
     print('Testing models...', end=' ')
 
+    simulator.fit()
     test_ranks, test_scores = simulator.predict(scf_callable, scorers)
 
     print('OK')

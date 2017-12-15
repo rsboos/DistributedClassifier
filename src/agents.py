@@ -27,9 +27,6 @@ class Learner():
 		self.dataset = dataset
 		self.classifier = classifier
 
-		# Fits the data
-		self.fit()
-
 	def fit(self):
 		"""Fits the model using the class dataset and classifier"""
 		self.classifier = self.classifier.fit(self.dataset.trainingset.x, self.dataset.trainingset.y)

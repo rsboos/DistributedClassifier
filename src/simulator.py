@@ -25,6 +25,19 @@ class Simulator():
 
 		self.learners = learners
 
+	def fit(self):
+		"""Train model with trainingset for each learner."""
+		[learner.fit() for learner in self.learners]
+
+	def predict_proba(self, data=None):
+		"""Predicts the probabilities using the learner classifier
+		and returns a list of predictions for every learner
+
+		Keyword arguments:
+			data -- data to be predicted. When (default None), testeset is used.
+		"""
+		return [learner.predict_proba(data).T for learner in self.learners]
+
 	@staticmethod
 	def get_distribution(data, n, overlap=0):
 		"""Not implemented. Should be implemented in a child class."""
@@ -184,7 +197,6 @@ class FeatureDistributed(Simulator):
 
 		# For each learner...
 		for learner in self.learners:
-			learner.fit()  							# train model
 			y_pred = learner.predict(data)			# predicted classes
 			proba = learner.predict_proba(data)     # probabilities of each class
 			proba = proba.T 						# split by class
@@ -204,15 +216,6 @@ class FeatureDistributed(Simulator):
 		rank, score = self.aggr_probabilities(probabilities, scf, y_true, predictions, scoring)
 
 		return rank, score
-
-	def predict_proba(self, data=None):
-		"""Predicts the probabilities using the learner classifier
-		and returns a list of predictions for every learner
-
-		Keyword arguments:
-			data -- data to be predicted. When (default None), testeset is used.
-		"""
-		return [learner.predict_proba(data).T for learner in self.learners]
 
 	def aggr_probabilities(self, proba, sc_functions, y_true, y_pred, scoring={}):
 		"""Aggregate probabilities and return aggregated ranks and scores.
