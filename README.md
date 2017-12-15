@@ -86,7 +86,8 @@ The program will save the **results** in the same folder.
 ## Results
 Result files saved in *test folder*. You can find examples in `tests` folder.
 - **cv_ranks_\<scf\>.csv**: aggregated ranks for each Cross-Validation's iteration
-- **cv_scores_\<scf\>.csv**: scores for each Cross-Validation's iteration
+- **cv_scores_\<scf\>.csv**: scores for each Cross-Validation's iteration for a social function
+- **cv_scores_\<classifier\>.csv**: scores for each Cross-Validation's iteration for a classifier
 - **model_\<classifier\>.pkl**: a pickel file to persist the created models
 - **test_ranks.csv**: aggregated ranks for predictions with testset
 - **test_scores.csv**: testset's prediction scores
