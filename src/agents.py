@@ -1,5 +1,6 @@
 import numpy
 
+from .metrics import score
 from sklearn import model_selection
 
 
@@ -52,12 +53,13 @@ class Learner():
 		testdata = self.__choose_data(data)  			# gets the data to be predicted
 		return self.classifier.predict_proba(testdata)  # returns the predictions
 
-	def run_fold(self, train_i, test_i):
+	def run_fold(self, train_i, test_i, scoring={}):
 		"""Generate cross-validated for an input data point.
 
 		Keyword arguments:
 			train_i -- train instances' index
 			test_i -- test instances' index
+			scoring -- a dict of scorers {<'scorer_name'>: <scorer_callable>}
 
 		*For more information about the returned data and the parameters:
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
@@ -77,8 +79,11 @@ class Learner():
 		predi = self.classifier.predict(test_x)
 		proba = self.classifier.predict_proba(test_x)
 
+		# Get scores
+		scores = score(test_y, predi, scoring)
+
 		# Transpose of proba to divide probabilities by class
-		return predi, proba.T
+		return predi, proba.T, scores
 
 	def __choose_data(self, data):
 		"""Choose the data to be used in prediction.

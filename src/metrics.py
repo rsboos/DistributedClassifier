@@ -95,9 +95,9 @@ def score(y_true, y_pred, scoring):
     """Calculate predictions' metrics and return a dict with metrics.
 
     Keyword arguments:
-        scoring -- a dict as {<score name>: <scorer func>}
         y_true -- true data
         y_pred -- predicted data
+        scoring -- a dict as {<score name>: <scorer func>}
     """
     # Init dict
     scores = dict()

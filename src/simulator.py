@@ -192,30 +192,33 @@ class FeatureDistributed(Simulator):
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
 		# Initialize empty list for probabilities
+		classif_scores = dict()
 		probabilities = dict()
 		predictions = list()
 
 		# For each learner...
-		for learner in self.learners:
-			y_pred = learner.predict(data)			# predicted classes
-			proba = learner.predict_proba(data)     # probabilities of each class
-			proba = proba.T 						# split by class
+		for i in range(len(self.learners)):
+			y_pred = self.learners[i].predict(data)			# predicted classes
+			proba = self.learners[i].predict_proba(data)     # probabilities of each class
+			proba = proba.T 								# split by class
 
 			# Save predictions
 			predictions.append(y_pred)
+
+			# Get and save score
+			y_true = self.learners[i].dataset.testset.y
+			metrics = score(y_true, y_pred, scoring)
+			classif_scores[i] = metrics
 
 			# Save proba by k-class rank
 			for k in range(len(proba)):
 				probabilities.setdefault(k, [])
 				probabilities[k].append(proba[k])
 
-		# Get true test classes
-		y_true = self.learners[0].dataset.testset.y
-
 		# Aggregate probabilities
-		rank, score = self.aggr_probabilities(probabilities, scf, y_true, predictions, scoring)
+		rank, rank_score = self.aggr_probabilities(probabilities, scf, y_true, predictions, scoring)
 
-		return rank, score
+		return rank, classif_scores, rank_score
 
 	def aggr_probabilities(self, proba, sc_functions, y_true, y_pred, scoring={}):
 		"""Aggregate probabilities and return aggregated ranks and scores.
@@ -271,7 +274,8 @@ class FeatureDistributed(Simulator):
 		n = len(self.learners)
 
 		# Initializes an empty dict for scores and rankings
-		scores = dict()
+		classif_scores = dict()
+		rank_scores = dict()
 		ranks = dict()
 
 		# Gets a sample of the data for the splitter
@@ -291,7 +295,7 @@ class FeatureDistributed(Simulator):
 				# For each learner...
 				for j in range(n):
 					# Compute a fold
-					pred, proba = self.learners[j].run_fold(train_i, test_i)
+					pred, proba, metrics = self.learners[j].run_fold(train_i, test_i, scoring)
 
 					# Save predictions
 					predictions.append(pred)
@@ -300,6 +304,10 @@ class FeatureDistributed(Simulator):
 					for k in range(len(proba)):
 						probabilities.setdefault(k, [])
 						probabilities[k].append(proba[k])
+
+					# Save score
+					classif_scores.setdefault(j, [])
+					classif_scores[j].append(metrics)
 
 				# Get true test classes
 				y_true = sample_y[test_i]
@@ -314,11 +322,11 @@ class FeatureDistributed(Simulator):
 
 				# Save scores
 				for k in aggr_s:
-					scores.setdefault(k, [])
-					scores[k].append(aggr_s[k])
+					rank_scores.setdefault(k, [])
+					rank_scores[k].append(aggr_s[k])
 
 		# Return the ranks and aggregated scores as DataFrames for each learner
-		return ranks, [cv_score(scores[k]) for k in scores]
+		return ranks, [cv_score(classif_scores[k]) for k in classif_scores], [cv_score(rank_scores[k]) for k in rank_scores]				# ranks' scores
 
 
 class InstanceDistributed(Simulator):
