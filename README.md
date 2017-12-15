@@ -3,7 +3,7 @@ A distributed classifier for binary and multiclass classification problems.
 
 Research project of Federal University of Rio Grande do Sul (UFRGS).
 
-## Usage
+## Command Line Usage
 ```bash
 usage: main.py [-h] -p PARAMS_FOLDER
 
@@ -12,6 +12,9 @@ optional arguments:
   -p PARAMS_FOLDER, --params PARAMS_FOLDER
                         Folder where a file params.json is.
 ```
+
+## .py Usage
+For programming, you can see an example in `example.py`.
 
 ## Params file
 A JSON file as follow:
