@@ -80,10 +80,14 @@ n = len(social_functions)
 [r_scores[i].to_csv('{}/cv_scores_{}.csv'.format(results, social_functions[i])) for i in range(n)]
 
 # Save rankings
-[DataFrame(ranks[scf]).to_csv('{}/cv_ranks_{}.csv'.format(results, scf))
-    for scf in ranks]
+for scf in ranks:
+    n_rank = list(map(lambda x: data.map_classes(x), ranks[scf]))
+    DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(results, scf))
 
 # Save test scores
+for scf in test_ranks:
+    test_ranks[scf] = data.map_classes(test_ranks[scf])
+
 test_ranks = DataFrame(test_ranks).T
 test_cscores = DataFrame(test_cscores).T
 test_rscores = DataFrame(test_rscores).T

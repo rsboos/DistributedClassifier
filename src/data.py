@@ -77,7 +77,7 @@ class Data():
 		Keyword argument:
 			predictions -- a list of predictions
 		"""
-		pred = map(lambda i: self.classes[i], predictions)
+		pred = map(lambda x: self.classes[x], predictions)
 		return list(pred)
 
 

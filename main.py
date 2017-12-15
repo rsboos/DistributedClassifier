@@ -147,15 +147,19 @@ if __name__ == "__main__":
     # Save rankings
     print('Saving CV ranks...', end=' ')
 
-    [DataFrame(ranks[scf]).to_csv('{}/cv_ranks_{}.csv'.format(args.params_folder, scf))
-        for scf in ranks]
+    for scf in ranks:
+        n_rank = list(map(lambda x: data.map_classes(x), ranks[scf]))
+        DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(args.params_folder, scf))
 
     print('OK')
 
     # Save test scores
     print('Saving test ranks and scores...', end=' ')
 
-    test_ranks = DataFrame(test_ranks).T
+    for scf in test_ranks:
+        test_ranks[scf] = data.map_classes(test_ranks[scf])
+
+    test_ranks = DataFrame(n_rank).T
     test_cscores = DataFrame(test_cscores).T
     test_rscores = DataFrame(test_rscores).T
 
