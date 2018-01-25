@@ -93,12 +93,12 @@ class Dataset():
 		n_classes -- number of classes (int)
 	"""
 
-	def __init__(self, train, test):
+	def __init__(self, train, test=None):
 		"""Sets the properties
 
 		Keyword arguments:
 			train -- a Data object with training data
-			test -- a Data object with test data
+			test -- a Data object with test data (default None)
 		"""
 
 		# Creates the sets for training and testing with the splitted data

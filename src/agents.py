@@ -1,6 +1,7 @@
 import numpy
 
 from .metrics import score
+from .data import Data, Dataset
 from sklearn import model_selection
 
 
@@ -91,3 +92,109 @@ class Learner():
 		Otherwise, the testset in dataset property.
 		"""
 		return self.dataset.testset.x if data is None else data
+
+
+class Voter():
+    """Aggregate classifiers predictions by voting."""
+
+    def __init__(self, methods):
+        """Set properties.
+
+        Keyword arguments:
+            methods -- social choice function's methods
+        """
+        self.methods = methods
+
+    def aggr(self, **kwargs):
+        """Aggregate probabilities and return aggregated ranks and scores.
+
+        Keyword arguments:
+            proba -- dict of probabilities split in classes
+            y_true -- true classes
+            y_pred -- predicted classes
+            scoring -- a dict of scorers (default {})
+        """
+        # Get params
+        proba = kwargs['proba']
+        y_true = kwargs['y_true']
+        y_pred = kwargs['y_pred']
+        scoring = kwargs.get('scoring', {})
+
+        # rankings = a rank by class by social choice function
+        class_ranks = dict()
+        scores = dict()
+        ranks = dict()
+
+        # k = class' index
+        for k in proba:
+            sc_ranks = Profile.aggr_rank(proba[k], self.methods, y_pred)
+
+            # Join ranks by social choice function
+            for scf, r in sc_ranks.items():
+                class_ranks.setdefault(scf, [])
+                class_ranks[scf].append(r)
+
+        # Get winners
+        # k = social choice function
+        for k in class_ranks:
+            winners = join_ranks(class_ranks[k])
+            metrics = score(y_true, winners, scoring)
+
+            ranks[k] = winners   # save ranks
+            scores[k] = metrics  # save scores
+
+        return ranks, scores
+
+
+class Combiner():
+    """Aggregate classifiers predictions by training another classifier (combiner)."""
+
+    def __init__(self, classifier):
+        """Set properties.
+
+        Keyword arguments:
+            classifier -- classifier to be trained with classes
+        """
+        self.classifier = classifier
+
+    def aggr(self, **kwargs):
+        """Aggregate probabilities and return aggregated ranks and scores.
+
+        Keyword arguments:
+            y_true -- true classes
+            y_pred -- predicted classes
+            scoring -- a dict of scorers (default {})
+        """
+        # Get params
+        y_true = kwargs['y_true']
+        y_pred = kwargs['y_pred']
+        scoring = kwargs.get('scoring', {})
+
+        # Scores and ranks by classifier
+        scores = dict()
+        ranks = dict()
+
+        # Transpose y_pred to get one-instance predictions in line
+        y_pred = numpy.array(y_pred)
+        y_pred = y_pred.T
+
+        # Create a learner
+        data = Data(y_pred, y_true)
+        dataset = Dataset(data)
+        learner = Learner(dataset, self.classifier)
+
+        # Train learner
+        learner.fit()
+
+        # Predict
+        # PREDICT WITH WHICH DATA??????
+        predictions = None
+
+        ranks['combiner'] = predictions
+        scores['combiner'] = score(y_true, predictions, scoring)
+
+        return ranks, scores
+
+
+class Arbiter():
+	pass

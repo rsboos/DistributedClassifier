@@ -16,14 +16,15 @@ class Simulator():
 		learners -- a list of learners
 	"""
 
-	def __init__(self, learners):
-		"""Sets the properties, create the agents, divides the data between the agents
+	def __init__(self, learners, aggr):
+		"""Sets the properties, create the agents, divides the data between the agents.
 
 		Keyword arguments:
 			n_learners -- number of agents to be used (must be greater than 1)
+			aggr -- an aggregator (Voter, Combiner, Arbiter)
 		"""
-
 		self.learners = learners
+		self.aggregator = aggr
 
 	def fit(self):
 		"""Train model with trainingset for each learner."""
@@ -39,16 +40,16 @@ class Simulator():
 		return [learner.predict_proba(data).T for learner in self.learners]
 
 	@staticmethod
-	def get_distribution(data, n, overlap=0):
+	def get_distribution(**kwargs):
 		"""Not implemented. Should be implemented in a child class."""
 		pass
 
 	@classmethod
-	def load(cls, data, classifers, overlap=0, test_size=0.3):
+	def load(cls, **kwargs):
 		"""Not implemented. Should be implemented in a child class."""
 		pass
 
-	def cross_validate(self, k_fold=10, n_it=10):
+	def cross_validate(self, **kwargs):
 		"""Not implemented. Should be implemented in a child class."""
 		pass
 
@@ -62,17 +63,6 @@ class FeatureDistributed(Simulator):
 
 	Also see: Simulator class documentation.
 	"""
-
-	def __init__(self, learners):
-		"""Sets the properties, create the agents, divides the data between the agents
-
-		Keyword arguments:
-			learners -- list of learners (lenght must be greater than 1)
-		"""
-
-		# Calls __init__ from parent
-		super().__init__(learners)
-
 
 	@staticmethod
 	def get_distribution(data, n, overlap=0):
@@ -183,11 +173,10 @@ class FeatureDistributed(Simulator):
 		# Creates a DistributedClassifition simulator
 		return cls(learners)
 
-	def predict(self, scf, scoring={}, data=None):
+	def predict(self, scoring={}, data=None):
 		"""Predicts using the learners' classifiers.
 
 		Keyword arguments:
-			scf -- social choice functions as list of strings
 			scoring -- a dict of scorers (default {})
 			data -- data to be predicted. When (default None), testeset is used.
 		"""
@@ -199,7 +188,7 @@ class FeatureDistributed(Simulator):
 		# For each learner...
 		for i in range(len(self.learners)):
 			y_pred = self.learners[i].predict(data)			# predicted classes
-			proba = self.learners[i].predict_proba(data)     # probabilities of each class
+			proba = self.learners[i].predict_proba(data)    # probabilities of each class
 			proba = proba.T 								# split by class
 
 			# Save predictions
@@ -216,50 +205,17 @@ class FeatureDistributed(Simulator):
 				probabilities[k].append(proba[k])
 
 		# Aggregate probabilities
-		rank, rank_score = self.aggr_probabilities(probabilities, scf, y_true, predictions, scoring)
+		rank, rank_score = self.aggregator.aggr(proba=probabilities,
+		                                        y_true=y_true,
+		                                        y_pred=predictions,
+		                                        scoring=scoring)
 
 		return rank, classif_scores, rank_score
 
-	def aggr_probabilities(self, proba, sc_functions, y_true, y_pred, scoring={}):
-		"""Aggregate probabilities and return aggregated ranks and scores.
-
-		Keyword arguments:
-			proba -- dict of probabilities split in classes
-			sc_function -- list of social choice functions name
-			y_true -- true classes
-			y_pred -- predicted classes
-			scoring -- a dict of scorers (default {})
-		"""
-		# rankings = a rank by class by social choice function
-		class_ranks = dict()
-		scores = dict()
-		ranks = dict()
-
-		# k = class' index
-		for k in proba:
-			sc_ranks = Profile.aggr_rank(proba[k], sc_functions, y_pred)
-
-			# Join ranks by social choice function
-			for scf, r in sc_ranks.items():
-				class_ranks.setdefault(scf, [])
-				class_ranks[scf].append(r)
-
-		# Get winners
-		# k = social choice function
-		for k in class_ranks:
-			winners = join_ranks(class_ranks[k])
-			metrics = score(y_true, winners, scoring)
-
-			ranks[k] = winners	 # save ranks
-			scores[k] = metrics  # save scores
-
-		return ranks, scores
-
-	def cross_validate(self, sc_functions, k_fold=10, scoring={}, n_it=10):
+	def cross_validate(self, k_fold=10, scoring={}, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 
 		Keyword arguments:
-			sc_functions -- a list with social choice functions' names
 			k_fold -- number of folds (default 10)
 			scoring -- metrics to be returned (default {})*
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
@@ -313,7 +269,10 @@ class FeatureDistributed(Simulator):
 				y_true = sample_y[test_i]
 
 				# Aggregate probabilities
-				aggr_r, aggr_s = self.aggr_probabilities(probabilities, sc_functions, y_true, predictions, scoring)
+				aggr_r, aggr_s = self.aggregator.aggr(proba=probabilities,
+				                                      y_true=y_true,
+				                                      y_pred=predictions,
+				                                      scoring=scoring)
 
 				# Save ranks
 				for k in aggr_r:
@@ -338,16 +297,6 @@ class InstanceDistributed(Simulator):
 
 	Also see: Simulator class documentation.
 	"""
-
-	def __init__(self, learners):
-		"""Sets the properties, create the agents, divides the data between the agents
-
-		Keyword arguments:
-			learners -- list of learners (lenght must be greater than 1)
-		"""
-
-		# Calls __init__ from parent
-		super().__init__(learners)
 
 	@staticmethod
 	def get_distribution(data, n, overlap=0):
