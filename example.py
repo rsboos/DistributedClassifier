@@ -3,6 +3,7 @@ from src.data import Data
 from pandas import DataFrame, concat
 from sklearn.externals import joblib
 from src.simulator import FeatureDistributed
+from src.agents import Voter, Combiner, Arbiter
 
 # Classifiers
 from sklearn.svm import SVC
@@ -25,6 +26,7 @@ iterations = 10
 class_column = -1
 results = 'tests/example/'
 dataset = 'datasets/seed.csv'
+aggr = Voter(['borda', 'copeland', 'dowdall', 'plurality'])
 
 classifiers = {
     'gaussian_nb': GaussianNB(),
@@ -43,8 +45,6 @@ scorers = {
     'precision': make_scorer(precision_score)
 }
 
-social_functions = ['borda', 'copeland', 'dowdall', 'plurality']
-
 ###############################################################################
 # Application
 ###############################################################################
@@ -53,14 +53,14 @@ data = Data.load(dataset, class_column)
 
 # Simulate distribution
 classif_call = list(classifiers.values())
-simulator = FeatureDistributed.load(data, classif_call, overlap, test_size)
+simulator = FeatureDistributed.load(data, classif_call, aggr, overlap, test_size)
 
 # Run Cross-Validation
-ranks, c_scores, r_scores = simulator.cross_validate(social_functions, k_fold, scorers, iterations)
+ranks, c_scores, r_scores = simulator.cross_validate(k_fold, scorers, iterations)
 
 # Run tests
 simulator.fit()
-test_ranks, test_cscores, test_rscores = simulator.predict(social_functions, scorers)
+test_ranks, test_cscores, test_rscores = simulator.predict(scorers)
 
 # Here, we had evaluated the model with social choice functions, but you can
 # use the simulator model to predict using your own testset, like:
@@ -76,24 +76,33 @@ names = list(classifiers.keys())
 n = len(names)
 [c_scores[i].to_csv('{}/cv_scores_{}.csv'.format(results, names[i])) for i in range(n)]
 
-n = len(social_functions)
-[r_scores[i].to_csv('{}/cv_scores_{}.csv'.format(results, social_functions[i])) for i in range(n)]
+if type(aggr) is Voter:
+    aggr_names = aggr.methods
+elif type(aggr) is Combiner:
+    aggr_names = [aggr.name]
+elif type(aggr) is Arbiter:
+    aggr_names = ['arb']
+else:
+    aggr_names = []
+
+n = len(aggr_names)
+[r_scores[i].to_csv('{}/cv_scores_{}.csv'.format(results, aggr_names[i])) for i in range(n)]
 
 # Save rankings
-for scf in ranks:
-    n_rank = list(map(lambda x: data.map_classes(x), ranks[scf]))
-    DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(results, scf))
+for k in ranks:
+    n_rank = list(map(lambda x: data.map_classes(x), ranks[k]))
+    DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(results, k))
 
 # Save test scores
-for scf in test_ranks:
-    test_ranks[scf] = data.map_classes(test_ranks[scf])
+for k in test_ranks:
+    test_ranks[k] = data.map_classes(test_ranks[k])
 
 test_ranks = DataFrame(test_ranks).T
 test_cscores = DataFrame(test_cscores).T
 test_rscores = DataFrame(test_rscores).T
 
 test_cscores.index = names
-test_scores = concat([test_cscores, test_rscores], keys=['classifiers', 'social_functions'], axis=0, copy=False)
+test_scores = concat([test_cscores, test_rscores], keys=['classifiers', 'aggregators'], axis=0, copy=False)
 
 test_ranks.to_csv('{}/test_ranks.csv'.format(results))
 test_scores.to_csv('{}/test_scores.csv'.format(results))
@@ -107,5 +116,5 @@ for i in range(n):
 
 # Create CV summary
 stats = summary(c_scores + r_scores)             # create summary
-stats.index = names + social_functions           # line names as social choice functions' names
+stats.index = names + aggr_names                 # line names as social choice functions' names
 stats.to_csv('{}/cv_summary.csv'.format(results))

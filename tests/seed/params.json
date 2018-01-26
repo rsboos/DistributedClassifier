@@ -20,10 +20,6 @@
         "accuracy": "sklearn.metrics.accuracy_score()",
         "precision": "sklearn.metrics.precision_score()"
     },
-    "social_functions": {
-        "borda": "borda",
-        "copeland": "copeland",
-        "dowdall": "dowdall"
-    }
+    "aggregator": "Voter(['borda', 'copeland', 'dowdall'])"
 }
 

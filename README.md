@@ -65,15 +65,13 @@ A JSON file as follow:
         "precision": "sklearn.metrics.precision_score()"
     },
 
-    // For rank aggregation, social choice functions
-    // See available functions in
+    // For rank aggregation, the possible classes are:
+    // Voter(<list of social choice function methods*>)
+    // Combiner(<a sklearn classifier>)
+    // Arbiter ... not yet defined
+    // * See available functions in
     // https://github.com/btrevizan/pyscf#methods
-    // {<scf's label>: <scf's name>}
-    "social_functions": {
-        "borda": "borda",
-        "copeland": "copeland",
-        "plurality": "plurality"
-    }
+    "aggregator": "Voter(['dowdall', 'schulze', 'simpson'])"
 }
 ```
 
@@ -85,8 +83,8 @@ The program will save the **results** in the same folder.
 
 ## Results
 Result files saved in *test folder*. You can find examples in `tests` folder.
-- **cv_ranks_\<scf\>.csv**: aggregated ranks for each Cross-Validation's iteration
-- **cv_scores_\<scf\>.csv**: scores for each Cross-Validation's iteration for a social function
+- **cv_ranks_\<aggr\>.csv**: aggregated ranks for each Cross-Validation's iteration
+- **cv_scores_\<aggr\>.csv**: scores for each Cross-Validation's iteration for a aggregator
 - **cv_scores_\<classifier\>.csv**: scores for each Cross-Validation's iteration for a classifier
 - **model_\<classifier\>.pkl**: a pickel file to persist the created models
 - **test_ranks.csv**: aggregated ranks for predictions with testset

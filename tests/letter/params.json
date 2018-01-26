@@ -24,10 +24,6 @@
         "precision_macro": "sklearn.metrics.precision_score(average='macro')",
         "precision_micro": "sklearn.metrics.precision_score(average='micro')"
     },
-    "social_functions": {
-        "dowdall": "dowdall",
-        "schulze": "schulze",
-        "simpson": "simpson"
-    }
+    "aggregator": "Voter(['dowdall', 'schulze', 'simpson'])"
 }
 

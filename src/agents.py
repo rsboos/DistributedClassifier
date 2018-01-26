@@ -3,6 +3,8 @@ import numpy
 from .metrics import score
 from .data import Data, Dataset
 from sklearn import model_selection
+from .metrics import score, join_ranks
+from social_choice.profile import Profile
 
 
 class Learner():
@@ -157,6 +159,13 @@ class Combiner():
         """
         self.classifier = classifier
 
+    @property
+    def name(self):
+        name = str(self.classifier)
+        i = name.index('(')
+
+        return name[:i].lower()
+
     def aggr(self, **kwargs):
         """Aggregate probabilities and return aggregated ranks and scores.
 
@@ -190,8 +199,9 @@ class Combiner():
         # PREDICT WITH WHICH DATA??????
         predictions = None
 
-        ranks['combiner'] = predictions
-        scores['combiner'] = score(y_true, predictions, scoring)
+        k = self.name
+        ranks[k] = predictions
+        scores[k] = score(y_true, predictions, scoring)
 
         return ranks, scores
 

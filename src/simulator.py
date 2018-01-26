@@ -6,7 +6,6 @@ from .agents import Learner
 from .data import Data, Dataset
 from sklearn import model_selection
 from .metrics import cv_score, score, join_ranks
-from social_choice.profile import Profile
 
 
 class Simulator():
@@ -14,6 +13,7 @@ class Simulator():
 
 	Properties:
 		learners -- a list of learners
+		aggregator -- an Aggegator class (Voter, Combiner, Arbiter)
 	"""
 
 	def __init__(self, learners, aggr):
@@ -124,12 +124,13 @@ class FeatureDistributed(Simulator):
 		return distribution
 
 	@classmethod
-	def load(cls, data, classifiers, overlap=0, test_size=0.3):
+	def load(cls, data, classifiers, aggr, overlap=0, test_size=0.3):
 		"""Creates n_learners Learner objects and returns a DistributedClassification object
 
 		Keyword arguments:
 			data -- a Data object
 			classifiers -- a list of classifiers, len(classifiers) define the number of learners
+			aggr -- an aggregator (Voter, Combiner, Arbiter)
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
 					   of parts' in common. If int, should be less than or equal to the
 					   number of features/instances and represents the number of common
@@ -171,7 +172,7 @@ class FeatureDistributed(Simulator):
 			learners.append(learner)			   			     # saves the learner
 
 		# Creates a DistributedClassifition simulator
-		return cls(learners)
+		return cls(learners, aggr)
 
 	def predict(self, scoring={}, data=None):
 		"""Predicts using the learners' classifiers.

@@ -1,12 +1,13 @@
 import json
 import argparse
 
-from pandas import DataFrame, concat
 from src.data import Data
 from src.metrics import summary
 from sklearn.externals import joblib
+from pandas import DataFrame, concat
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
+from src.agents import Voter, Combiner, Arbiter
 
 
 if __name__ == "__main__":
@@ -88,11 +89,22 @@ if __name__ == "__main__":
         # Evaluate a metric
         scorers[n] = eval(str_eval_scorer)
 
-    scf_name, scf_callable = zip(*p['social_functions'].items())
-    scf_name, scf_callable = list(scf_name), list(scf_callable)
-
     print('Done.')
 
+    # Evaluate aggregator
+    print('Loading aggregator...', end=' ')
+    aggr = eval(p['aggregator'])
+
+    if 'Voter' in p['aggregator']:
+        aggr_names = aggr.methods
+    elif 'Combiner' in p['aggregator']:
+        aggr_names = [aggr.name]
+    elif 'Arbiter' in p['aggregator']:
+        aggr_names = ['arb']
+    else:
+        aggr_names = []
+
+    print('OK')
     ###########################################################################
     # SIMULATE DISTRIBUTION ###################################################
     ###########################################################################
@@ -105,7 +117,7 @@ if __name__ == "__main__":
     # Create simulator (agents' manager)
     print('Simulating distribution...', end=' ')
 
-    simulator = FeatureDistributed.load(data, classifiers, p['overlap'], p['test_size'])
+    simulator = FeatureDistributed.load(data, classifiers, aggr, p['overlap'], p['test_size'])
 
     print('OK')
 
@@ -114,8 +126,9 @@ if __name__ == "__main__":
     ###########################################################################
     print('Cross validating...', end=' ')
 
-    ranks, classif_scores, rank_scores = simulator.cross_validate(scf_callable, p['k_fold'],
-                                                                  scorers, p['iterations'])
+    ranks, classif_scores, rank_scores = simulator.cross_validate(p['k_fold'],
+                                                                  scorers,
+                                                                  p['iterations'])
 
     print('OK')
 
@@ -125,7 +138,7 @@ if __name__ == "__main__":
     print('Testing models...', end=' ')
 
     simulator.fit()
-    test_ranks, test_cscores, test_rscores = simulator.predict(scf_callable, scorers)
+    test_ranks, test_cscores, test_rscores = simulator.predict(scorers)
 
     print('OK')
 
@@ -139,32 +152,32 @@ if __name__ == "__main__":
     n = len(names)
     [classif_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
 
-    n = len(scf_name)
-    [rank_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, scf_name[i])) for i in range(n)]
+    n = len(aggr_names)
+    [rank_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, aggr_names[i])) for i in range(n)]
 
     print('OK')
 
     # Save rankings
     print('Saving CV ranks...', end=' ')
 
-    for scf in ranks:
-        n_rank = list(map(lambda x: data.map_classes(x), ranks[scf]))
-        DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(args.params_folder, scf))
+    for k in ranks:
+        n_rank = list(map(lambda x: data.map_classes(x), ranks[k]))
+        DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(args.params_folder, k))
 
     print('OK')
 
     # Save test scores
     print('Saving test ranks and scores...', end=' ')
 
-    for scf in test_ranks:
-        test_ranks[scf] = data.map_classes(test_ranks[scf])
+    for k in test_ranks:
+        test_ranks[k] = data.map_classes(test_ranks[k])
 
     test_ranks = DataFrame(n_rank).T
     test_cscores = DataFrame(test_cscores).T
     test_rscores = DataFrame(test_rscores).T
 
     test_cscores.index = names
-    test_scores = concat([test_cscores, test_rscores], keys=['classifiers', 'social_functions'], axis=0, copy=False)
+    test_scores = concat([test_cscores, test_rscores], keys=['classifiers', 'aggregators'], axis=0, copy=False)
 
     test_ranks.to_csv('{}/test_ranks.csv'.format(args.params_folder))
     test_scores.to_csv('{}/test_scores.csv'.format(args.params_folder))
@@ -187,7 +200,7 @@ if __name__ == "__main__":
     print('Creating CV summary...', end=' ')
 
     stats = summary(classif_scores + rank_scores)     # create summary
-    stats.index = names + scf_name                    # line names as social choice functions' names
+    stats.index = names + aggr_names                  # line names as social choice functions' names
     stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')

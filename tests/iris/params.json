@@ -22,10 +22,6 @@
         "precision_macro": "sklearn.metrics.precision_score(average='macro')",
         "precision_micro": "sklearn.metrics.precision_score(average='micro')"
     },
-    "social_functions": {
-        "borda": "borda",
-        "plurality": "plurality",
-        "simpson": "simpson"
-    }
+    "aggregator": "Voter(['borda', 'simpson', 'plurality'])"
 }
 
