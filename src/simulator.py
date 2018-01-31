@@ -2,10 +2,10 @@ import numpy
 import math
 import copy
 
-from .agents import Learner
 from .data import Data, Dataset
 from sklearn import model_selection
 from .metrics import cv_score, score, join_ranks
+from .agents import Learner, Voter, Combiner, Arbiter
 
 
 class Simulator():
@@ -13,18 +13,21 @@ class Simulator():
 
 	Properties:
 		learners -- a list of learners
-		aggregator -- an Aggegator class (Voter, Combiner, Arbiter)
+		voter -- a Voter object
+		combiner -- a Combiner object
 	"""
 
-	def __init__(self, learners, aggr):
+	def __init__(self, learners, **kwargs):
 		"""Sets the properties, create the agents, divides the data between the agents.
 
 		Keyword arguments:
 			n_learners -- number of agents to be used (must be greater than 1)
-			aggr -- an aggregator (Voter, Combiner, Arbiter)
+			voter -- a Voter object with social choice functions (default None)
+			combiner -- a Combiner object with a list of classifiers (default None)
 		"""
 		self.learners = learners
-		self.aggregator = aggr
+		self.voter = kwargs.get('voter', Voter())
+		self.combiner = kwargs.get('combiner', Combiner())
 
 	def fit(self):
 		"""Train model with trainingset for each learner."""
@@ -124,19 +127,20 @@ class FeatureDistributed(Simulator):
 		return distribution
 
 	@classmethod
-	def load(cls, data, classifiers, aggr, overlap=0, test_size=0.3):
+	def load(cls, data, classifiers, overlap=0, test_size=0, **kwargs):
 		"""Creates n_learners Learner objects and returns a DistributedClassification object
 
 		Keyword arguments:
 			data -- a Data object
 			classifiers -- a list of classifiers, len(classifiers) define the number of learners
-			aggr -- an aggregator (Voter, Combiner, Arbiter)
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
 					   of parts' in common. If int, should be less than or equal to the
 					   number of features/instances and represents the number of common
 					   features/instances. If list, represents the features'/instances'
 					   indexes. By default, the value is set to 0.
 			test_size -- percent of test instances (default 0.3)
+			voter -- a Voter object with social choice functions (default None)
+			combiner -- a Combiner object with a list of classifiers (default None)
 		"""
 
 		# The number of classifiers define the number of learners
@@ -172,46 +176,7 @@ class FeatureDistributed(Simulator):
 			learners.append(learner)			   			     # saves the learner
 
 		# Creates a DistributedClassifition simulator
-		return cls(learners, aggr)
-
-	def predict(self, scoring={}, data=None):
-		"""Predicts using the learners' classifiers.
-
-		Keyword arguments:
-			scoring -- a dict of scorers (default {})
-			data -- data to be predicted. When (default None), testeset is used.
-		"""
-		# Initialize empty list for probabilities
-		classif_scores = dict()
-		probabilities = dict()
-		predictions = list()
-
-		# For each learner...
-		for i in range(len(self.learners)):
-			y_pred = self.learners[i].predict(data)			# predicted classes
-			proba = self.learners[i].predict_proba(data)    # probabilities of each class
-			proba = proba.T 								# split by class
-
-			# Save predictions
-			predictions.append(y_pred)
-
-			# Get and save score
-			y_true = self.learners[i].dataset.testset.y
-			metrics = score(y_true, y_pred, scoring)
-			classif_scores[i] = metrics
-
-			# Save proba by k-class rank
-			for k in range(len(proba)):
-				probabilities.setdefault(k, [])
-				probabilities[k].append(proba[k])
-
-		# Aggregate probabilities
-		rank, rank_score = self.aggregator.aggr(proba=probabilities,
-		                                        y_true=y_true,
-		                                        y_pred=predictions,
-		                                        scoring=scoring)
-
-		return rank, classif_scores, rank_score
+		return cls(learners, **kwargs)
 
 	def cross_validate(self, k_fold=10, scoring={}, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores

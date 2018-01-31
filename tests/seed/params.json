@@ -3,7 +3,6 @@
     "class_column": -1,
     "iterations": 10,
     "k_fold": 10,
-    "test_size": 0.2,
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
@@ -20,6 +19,14 @@
         "accuracy": "sklearn.metrics.accuracy_score()",
         "precision": "sklearn.metrics.precision_score()"
     },
-    "aggregator": "Voter(['borda', 'copeland', 'dowdall'])"
+    "voter": {
+        "borda": "borda",
+        "dowdall": "dowdall",
+        "copeland":  "copeland"
+    },
+    "combiner": {
+        "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()",
+        "cmb_svc": "sklearn.svm.SVC(probability=True)"
+    }
 }
 

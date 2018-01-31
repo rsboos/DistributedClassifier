@@ -106,7 +106,7 @@ class Dataset():
 		self.testset = test
 
 	@classmethod
-	def load(cls, filepath, class_column=-1, test_size=0.3):
+	def load(cls, filepath, class_column=-1, test_size=0):
 		"""Loads a CSV file, creates a Data object and returns a Dataset object
 
 		Keyword arguments:
@@ -125,7 +125,7 @@ class Dataset():
 		return cls(train, test)
 
 	@staticmethod
-	def train_test_split(data, test_size=0.3):
+	def train_test_split(data, test_size=0):
 		"""Splits the data into train and test sets keeping the classes'
 		proportion (stratified) and returns two data objects (train, test)
 

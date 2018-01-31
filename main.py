@@ -3,11 +3,42 @@ import argparse
 
 from src.data import Data
 from src.metrics import summary
-from sklearn.externals import joblib
 from pandas import DataFrame, concat
+from sklearn.externals import joblib
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
 from src.agents import Voter, Combiner, Arbiter
+
+
+def load_imports(imports):
+    objs = list()
+
+    for c in imports.values():                           # for each classfier
+        i, modules, obj = split_parts(c)                 # separate in parts
+
+        str_eval = "from {} import {}".format(modules, obj[:i])
+
+        print(str_eval)
+
+        # Execute import
+        exec(str_eval)
+
+        # Evaluate a classifier
+        objs.append(eval(obj))
+
+    return objs
+
+
+def split_parts(label):
+    parts = label.split('.')                         # separate in parts
+
+    i = ['(' in part for part in parts].index(1)     # filter parts
+
+    modules = '.'.join(parts[:i])                    # get modules
+    obj = '.'.join(parts[i:])                        # get obj
+    i = obj.find('(')                                # filter obj
+
+    return i, modules, obj
 
 
 if __name__ == "__main__":
@@ -37,27 +68,7 @@ if __name__ == "__main__":
     # Evaluate classifiers
     print('Loading classifiers...')
 
-    classifiers = list()
-
-    for c in p['classifiers'].values():                  # for each classfier
-        parts = c.split('.')                             # separate in parts
-
-        i = ['(' in part for part in parts].index(1)     # filter parts
-
-        modules = '.'.join(parts[:i])                    # get modules
-        classifier = '.'.join(parts[i:])                 # get classifier
-
-        i = classifier.find('(')                         # filter classifier
-
-        str_eval = "from {} import {}".format(modules, classifier[:i])
-
-        print(str_eval)
-
-        # Execute import
-        exec(str_eval)
-
-        # Evaluate a classifier
-        classifiers.append(eval(classifier))
+    classifiers = load_imports(p['classifiers'])
 
     print('Done.')
 
@@ -66,14 +77,8 @@ if __name__ == "__main__":
     scorers = dict()
 
     for n, c in p['metrics'].items():                    # for each metric (name, method)
-        parts = c.split('.')                             # separate in parts
+        i, modules, metric = split_parts(c)              # separate in parts
 
-        i = ['(' in part for part in parts].index(1)     # filter parts
-
-        modules = '.'.join(parts[:i])                    # get modules
-        metric = '.'.join(parts[i:])                     # get metric
-
-        i = metric.find('(')                             # filter score func
         params = metric[i + 1:-1]                        # get score func params (without '()')
         metric = metric[:i]                              # get score func name
 
@@ -92,17 +97,10 @@ if __name__ == "__main__":
     print('Done.')
 
     # Evaluate aggregator
-    print('Loading aggregator...', end=' ')
-    aggr = eval(p['aggregator'])
+    print('Loading aggregators...', end=' ')
 
-    if 'Voter' in p['aggregator']:
-        aggr_names = aggr.methods
-    elif 'Combiner' in p['aggregator']:
-        aggr_names = [aggr.name]
-    elif 'Arbiter' in p['aggregator']:
-        aggr_names = ['arb']
-    else:
-        aggr_names = []
+    voter = Voter(list(p['voter'].values()))
+    combiner = Combiner(load_imports(p['combiner']))
 
     print('OK')
     ###########################################################################
@@ -117,7 +115,7 @@ if __name__ == "__main__":
     # Create simulator (agents' manager)
     print('Simulating distribution...', end=' ')
 
-    simulator = FeatureDistributed.load(data, classifiers, aggr, p['overlap'], p['test_size'])
+    simulator = FeatureDistributed.load(data, classifiers, p['overlap'], voter=voter, combiner=combiner)
 
     print('OK')
 
@@ -133,16 +131,6 @@ if __name__ == "__main__":
     print('OK')
 
     ###########################################################################
-    # TEST ####################################################################
-    ###########################################################################
-    print('Testing models...', end=' ')
-
-    simulator.fit()
-    test_ranks, test_cscores, test_rscores = simulator.predict(scorers)
-
-    print('OK')
-
-    ###########################################################################
     # SAVE RESULTS ############################################################
     ###########################################################################
     # Save CV scores
@@ -151,6 +139,10 @@ if __name__ == "__main__":
     names = list(p['classifiers'].keys())
     n = len(names)
     [classif_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
+
+    voter_names = list(p['voter'].keys())
+    combiner_names = list(p['combiner'].keys())
+    aggr_names = voter_names + combiner_names
 
     n = len(aggr_names)
     [rank_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, aggr_names[i])) for i in range(n)]
@@ -166,41 +158,11 @@ if __name__ == "__main__":
 
     print('OK')
 
-    # Save test scores
-    print('Saving test ranks and scores...', end=' ')
-
-    for k in test_ranks:
-        test_ranks[k] = data.map_classes(test_ranks[k])
-
-    test_ranks = DataFrame(n_rank).T
-    test_cscores = DataFrame(test_cscores).T
-    test_rscores = DataFrame(test_rscores).T
-
-    test_cscores.index = names
-    test_scores = concat([test_cscores, test_rscores], keys=['classifiers', 'aggregators'], axis=0, copy=False)
-
-    test_ranks.to_csv('{}/test_ranks.csv'.format(args.params_folder))
-    test_scores.to_csv('{}/test_scores.csv'.format(args.params_folder))
-
-    print('OK')
-
-    # Save models
-    print('Saving models...', end=' ')
-
-    names = list(p['classifiers'].keys())
-    n = len(names)
-
-    for i in range(n):
-        learner = simulator.learners[i]
-        joblib.dump(learner.classifier, '{}/model_{}.pkl'.format(args.params_folder, names[i]))
-
-    print('OK')
-
     # Create CV summary
     print('Creating CV summary...', end=' ')
 
     stats = summary(classif_scores + rank_scores)     # create summary
-    stats.index = names + aggr_names                  # line names as social choice functions' names
+    stats.index = names + aggr_names                  # line names as aggregators' names
     stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')

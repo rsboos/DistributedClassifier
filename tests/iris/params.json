@@ -3,7 +3,6 @@
     "class_column": -1,
     "iterations": 10,
     "k_fold": 10,
-    "test_size": 0.2,
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
@@ -22,6 +21,13 @@
         "precision_macro": "sklearn.metrics.precision_score(average='macro')",
         "precision_micro": "sklearn.metrics.precision_score(average='micro')"
     },
-    "aggregator": "Voter(['borda', 'simpson', 'plurality'])"
+    "voter": {
+        "borda": "borda",
+        "simpson": "simpson",
+        "plurality":  "plurality"
+    },
+    "combiner": {
+        "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()"
+    }
 }
 

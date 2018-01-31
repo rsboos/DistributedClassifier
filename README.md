@@ -33,10 +33,6 @@ A JSON file as follow:
     // Number of folds for cross-validation (default 10)
     "k_fold": 10,
 
-    // Percentage of test instances from dataset
-    // 0.2 means 20% of instances
-    "test_size": 0.2,
-
     // Overlaped features
     // If float, should be between 0.0 and 1.0 and represents the percentage
     // of parts' common features. If int, should be less than or equal to the
@@ -65,13 +61,26 @@ A JSON file as follow:
         "precision": "sklearn.metrics.precision_score()"
     },
 
-    // For rank aggregation, the possible classes are:
-    // Voter(<list of social choice function methods*>)
-    // Combiner(<a sklearn classifier>)
-    // Arbiter ... not yet defined
-    // * See available functions in
+    //
+    // Aggregators
+    //
+
+    // For rank aggregation by voting...
+    // {<scf's label>: <method's callable label>}
+    // See available methods in
     // https://github.com/btrevizan/pyscf#methods
-    "aggregator": "Voter(['dowdall', 'schulze', 'simpson'])"
+    "voter": {
+        "borda": "borda",
+        "copeland": "copeland",
+        "plurality":  "plurality"
+    },
+
+    // For rank aggregation by combination...
+    // {<combiner's label>: <full method call, i.e., with parameters>}
+    "combiner": {
+        "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
+        "cmb_svc": "sklearn.svm.SVC(probability=True)"
+    }
 }
 ```
 
@@ -87,8 +96,6 @@ Result files saved in *test folder*. You can find examples in `tests` folder.
 - **cv_scores_\<aggr\>.csv**: scores for each Cross-Validation's iteration for a aggregator
 - **cv_scores_\<classifier\>.csv**: scores for each Cross-Validation's iteration for a classifier
 - **model_\<classifier\>.pkl**: a pickel file to persist the created models
-- **test_ranks.csv**: aggregated ranks for predictions with testset
-- **test_scores.csv**: testset's prediction scores
 - **cv_summary.csv**: average scores from all *cv_scores_\<classifier\>.csv*
 
 ## Sample Datasets
