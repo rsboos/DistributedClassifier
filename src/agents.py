@@ -1,7 +1,7 @@
 import numpy
 
 from .metrics import score
-from .data import Data, Dataset
+from .data import Data
 from sklearn import model_selection
 from .metrics import score, join_ranks
 from social_choice.profile import Profile
@@ -11,7 +11,7 @@ class Learner():
 	"""Trains a model given a classifier
 
 	Properties:
-		dataset -- A Dataset for training and testing the model (Dataset)
+		dataset -- A Data for training and testing the model
 		classifier -- Algorithm used for training the model (an instance from sklearn library*)
 		__fit -- A flag to check if the data was fit
 
@@ -23,7 +23,7 @@ class Learner():
 		"""Sets the properties and fits the data
 
 		Keyword arguments:
-			dataset -- The Dataset used to fit a model (Dataset)
+			dataset -- The Data used to fit a model
 			classifier -- An instance of a classifier from sklearn library
 		"""
 
@@ -33,28 +33,25 @@ class Learner():
 
 	def fit(self):
 		"""Fits the model using the class dataset and classifier"""
-		self.classifier = self.classifier.fit(self.dataset.trainingset.x, self.dataset.trainingset.y)
+		self.classifier = self.classifier.fit(self.dataset.x, self.dataset.y)
 
-	def predict(self, data=None):
+	def predict(self, data):
 		"""Predict classes for the testset on dataset and returns a ndarray as result.
 		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- data to be predicted. When (default None), testset is used.
+			data -- data to be predicted
 		"""
+		return self.classifier.predict(data)  # returns the predictions
 
-		testdata = self.__choose_data(data)  	  # gets the data to be predicted
-		return self.classifier.predict(testdata)  # returns the predictions
-
-	def predict_proba(self, data=None):
+	def predict_proba(self, data):
 		"""Predict the probabilities for the testset on dataset and returns a ndarray as result.
 		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- data to be predicted. When (default None), testset is used.
+			data -- data to be predicted
 		"""
-		testdata = self.__choose_data(data)  			# gets the data to be predicted
-		return self.classifier.predict_proba(testdata)  # returns the predictions
+		return self.classifier.predict_proba(data)  # returns the predictions
 
 	def run_fold(self, train_i, test_i, scoring={}):
 		"""Generate cross-validated for an input data point.
@@ -68,12 +65,12 @@ class Learner():
 		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 		"""
 		# Get training data
-		train_x = self.dataset.trainingset.x[train_i, :]
-		train_y = self.dataset.trainingset.y[train_i]
+		train_x = self.dataset.x[train_i, :]
+		train_y = self.dataset.y[train_i]
 
 		# Get test data
-		test_x = self.dataset.trainingset.x[test_i, :]
-		test_y = self.dataset.trainingset.y[test_i]
+		test_x = self.dataset.x[test_i, :]
+		test_y = self.dataset.y[test_i]
 
 		# Train model
 		self.classifier.fit(train_x, train_y)
@@ -87,13 +84,6 @@ class Learner():
 
 		# Transpose of proba to divide probabilities by class
 		return predi, proba, scores
-
-	def __choose_data(self, data):
-		"""Choose the data to be used in prediction.
-		If data is provided by the user, use it.
-		Otherwise, the testset in dataset property.
-		"""
-		return self.dataset.testset.x if data is None else data
 
 
 class Voter():

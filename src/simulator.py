@@ -2,7 +2,7 @@ import numpy
 import math
 import copy
 
-from .data import Data, Dataset
+from .data import Data
 from sklearn import model_selection
 from .metrics import cv_score, score, join_ranks
 from .agents import Learner, Voter, Combiner, Arbiter
@@ -33,14 +33,14 @@ class Simulator():
 		"""Train model with trainingset for each learner."""
 		[learner.fit() for learner in self.learners]
 
-	def predict_proba(self, data=None):
+	def predict_proba(self, data):
 		"""Predicts the probabilities using the learner classifier
 		and returns a list of predictions for every learner
 
 		Keyword arguments:
-			data -- data to be predicted. When (default None), testeset is used.
+			data -- data to be predicted
 		"""
-		return [learner.predict_proba(data).T for learner in self.learners]
+		return [learner.predict_proba(data) for learner in self.learners]
 
 	@staticmethod
 	def get_distribution(**kwargs):
@@ -127,7 +127,7 @@ class FeatureDistributed(Simulator):
 		return distribution
 
 	@classmethod
-	def load(cls, data, classifiers, overlap=0, test_size=0, **kwargs):
+	def load(cls, data, classifiers, overlap=0, **kwargs):
 		"""Creates n_learners Learner objects and returns a DistributedClassification object
 
 		Keyword arguments:
@@ -138,7 +138,6 @@ class FeatureDistributed(Simulator):
 					   number of features/instances and represents the number of common
 					   features/instances. If list, represents the features'/instances'
 					   indexes. By default, the value is set to 0.
-			test_size -- percent of test instances (default 0.3)
 			voter -- a Voter object with social choice functions (default None)
 			combiner -- a Combiner object with a list of classifiers (default None)
 		"""
@@ -146,18 +145,13 @@ class FeatureDistributed(Simulator):
 		# The number of classifiers define the number of learners
 		n_learners = len(classifiers)
 
-		# Train and test split
-		# This guarantees that every learner has the same splits
-		train, test = Dataset.train_test_split(data, test_size)
-
 		# Gets the indexes to slice the data
 		# Because the distribution is vertical, we can use a part
 		# of the data with all features to get the slice indexes
-		indexes = cls.get_distribution(train, n_learners, overlap)
+		indexes = cls.get_distribution(data, n_learners, overlap)
 
 		# Convert to ndarray for slicing
-		train.x, test.x = numpy.array(train.x), numpy.array(test.x)
-		train.y, test.y = numpy.array(train.y), numpy.array(test.y)
+		data.x, data.y = numpy.array(data.x), numpy.array(data.y)
 
 		# Initialize an empty list for learners
 		learners = list()
@@ -166,10 +160,7 @@ class FeatureDistributed(Simulator):
 		for i in range(n_learners):
 			features = indexes[i]								 # gets the features indexes
 
-			trainingset = Data(train.x[:, features], train.y)	 # gets the trainingset
-			testset = Data(test.x[:, features], test.y)		     # gets the testset
-
-			dataset = Dataset(trainingset, testset) 	     	 # creates a dataset for learner
+			dataset = Data(data.x[:, features], data.y)		 	 # gets the trainingset
 			classifier = classifiers[i]			   			     # gets the classifier
 
 			learner = Learner(dataset, classifier) 			     # creates the learner
@@ -218,6 +209,7 @@ class FeatureDistributed(Simulator):
 				for j in range(n):
 					# Compute a fold
 					pred, proba, metrics = self.learners[j].run_fold(train_i, test_i, scoring)
+					import pdb; pdb.set_trace()  # breakpoint 1d9656ad //
 
 					# Save predictions and probabilities
 					predictions.append(pred)
@@ -247,7 +239,7 @@ class FeatureDistributed(Simulator):
 					rank_scores[k].append(aggr_s[k])
 
 		# Return the ranks and aggregated scores as DataFrames for each learner
-		return ranks, [cv_score(classif_scores[k]) for k in classif_scores], [cv_score(rank_scores[k]) for k in rank_scores]				# ranks' scores
+		return ranks, [cv_score(classif_scores[k]) for k in classif_scores], [cv_score(rank_scores[k]) for k in rank_scores]
 
 
 class InstanceDistributed(Simulator):
