@@ -86,10 +86,25 @@ class Learner():
 		return predi, proba, scores
 
 
-class Voter():
+class Aggregator():
+    """Aggregate classifiers predictions."""
+
+    def __init__(self, methods=[]):
+        """Set properties.
+
+        Keyword arguments:
+            methods -- a list
+        """
+        self.methods = methods
+
+    def aggr(self, **kwargs):
+        pass
+
+
+class Voter(Aggregator):
     """Aggregate classifiers predictions by voting."""
 
-    def __init__(self, methods):
+    def __init__(self, methods=[]):
         """Set properties.
 
         Keyword arguments:
@@ -117,14 +132,15 @@ class Voter():
         scores = dict()
         ranks = dict()
 
-        n_learners = len(y_proba)       # # of learners = length of proba
-        n_classes = len(y_proba[0])     # # of classes =
+        n_learners = len(y_proba)        # # of learners = length of proba
+        _, n_classes = y_proba[0].shape  # # of classes = # of columns
 
-        # for i in range(n_learners):
+        for c in range(n_classes):
+            # Get class c's probabilities
+            proba = [y_proba[i][:, c] for i in range(n_learners)]
 
-        # k = class' index
-        for k in proba:
-            sc_ranks = Profile.aggr_rank(proba[k], self.methods, y_pred)
+            # Aggregate ranks
+            sc_ranks = Profile.aggr_rank(proba, self.methods, y_pred)
 
             # Join ranks by social choice function
             for scf, r in sc_ranks.items():
@@ -143,16 +159,8 @@ class Voter():
         return ranks, scores
 
 
-class Combiner():
+class Combiner(Aggregator):
     """Aggregate classifiers predictions by training another classifier (combiner)."""
-
-    def __init__(self, methods):
-        """Set properties.
-
-        Keyword arguments:
-            methods -- a list of classifiers
-        """
-        self.methods = methods
 
     def aggr(self, **kwargs):
         """Aggregate probabilities and return aggregated ranks and scores.
@@ -174,26 +182,28 @@ class Combiner():
         scores = dict()
         ranks = dict()
 
-        # k = class' index
-        for k in proba:
-            sc_ranks = Profile.aggr_rank(proba[k], self.methods, y_pred)
+        # # k = class' index
+        # for k in proba:
+        #     sc_ranks = Profile.aggr_rank(proba[k], self.methods, y_pred)
 
-            # Join ranks by social choice function
-            for scf, r in sc_ranks.items():
-                class_ranks.setdefault(scf, [])
-                class_ranks[scf].append(r)
+        #     # Join ranks by social choice function
+        #     for scf, r in sc_ranks.items():
+        #         class_ranks.setdefault(scf, [])
+        #         class_ranks[scf].append(r)
 
-        # Get winners
-        # k = social choice function
-        for k in class_ranks:
-            winners = join_ranks(class_ranks[k])
-            metrics = score(y_true, winners, scoring)
+        # # Get winners
+        # # k = social choice function
+        # for k in class_ranks:
+        #     winners = join_ranks(class_ranks[k])
+        #     metrics = score(y_true, winners, scoring)
 
-            ranks[k] = winners   # save ranks
-            scores[k] = metrics  # save scores
+        #     ranks[k] = winners   # save ranks
+        #     scores[k] = metrics  # save scores
 
-        return ranks, scores
+        # return ranks, scores
 
 
-class Arbiter():
-	pass
+class Arbiter(Aggregator):
+
+    def aggr(self, **kwargs):
+        pass

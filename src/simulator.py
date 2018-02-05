@@ -141,7 +141,6 @@ class FeatureDistributed(Simulator):
 			voter -- a Voter object with social choice functions (default None)
 			combiner -- a Combiner object with a list of classifiers (default None)
 		"""
-
 		# The number of classifiers define the number of learners
 		n_learners = len(classifiers)
 
@@ -192,8 +191,8 @@ class FeatureDistributed(Simulator):
 		ranks = dict()
 
 		# Gets a sample of the data for the splitter
-		sample_x = self.learners[0].dataset.trainingset.x # instances
-		sample_y = self.learners[0].dataset.trainingset.y # classes
+		sample_x = self.learners[0].dataset.x  # instances
+		sample_y = self.learners[0].dataset.y  # classes
 
 		for i in range(n_it):
 			# Splits into k training and test folds for cross-validation
@@ -209,7 +208,6 @@ class FeatureDistributed(Simulator):
 				for j in range(n):
 					# Compute a fold
 					pred, proba, metrics = self.learners[j].run_fold(train_i, test_i, scoring)
-					import pdb; pdb.set_trace()  # breakpoint 1d9656ad //
 
 					# Save predictions and probabilities
 					predictions.append(pred)
@@ -223,10 +221,17 @@ class FeatureDistributed(Simulator):
 				y_true = sample_y[test_i]
 
 				# Aggregate probabilities
-				aggr_r, aggr_s = self.aggregator.aggr(proba=probabilities,
-				                                      y_true=y_true,
-				                                      y_pred=predictions,
-				                                      scoring=scoring)
+				vaggr_r, vaggr_s = self.voter.aggr(y_proba=probabilities,
+				                                   y_true=y_true,
+				                                   y_pred=predictions,
+				                                   scoring=scoring)
+
+				caggr_r, caggr_s = self.combiner.aggr(y_proba=probabilities,
+				                                 	  y_true=y_true,
+				                                	  y_pred=predictions,
+				                                 	  scoring=scoring)
+
+				aggr_r, aggr_s = vaggr_r.update(caggr_r), vaggr_s.update(caggr_s)
 
 				# Save ranks
 				for k in aggr_r:
