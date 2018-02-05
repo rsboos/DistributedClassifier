@@ -211,7 +211,7 @@ class FeatureDistributed(Simulator):
 			# Create folds and iterate
 			for train_i, test_i in skf.split(sample_x, sample_y):
 				# Initialize empty list for probabilities
-				probabilities = dict()
+				probabilities = list()
 				predictions = list()
 
 				# For each learner...
@@ -219,13 +219,9 @@ class FeatureDistributed(Simulator):
 					# Compute a fold
 					pred, proba, metrics = self.learners[j].run_fold(train_i, test_i, scoring)
 
-					# Save predictions
+					# Save predictions and probabilities
 					predictions.append(pred)
-
-					# Save proba by k-class rank
-					for k in range(len(proba)):
-						probabilities.setdefault(k, [])
-						probabilities[k].append(proba[k])
+					probabilities.append(proba)
 
 					# Save score
 					classif_scores.setdefault(j, [])
