@@ -86,7 +86,7 @@ class Learner():
 		scores = score(test_y, predi, scoring)
 
 		# Transpose of proba to divide probabilities by class
-		return predi, proba.T, scores
+		return predi, proba, scores
 
 	def __choose_data(self, data):
 		"""Choose the data to be used in prediction.
@@ -111,13 +111,70 @@ class Voter():
         """Aggregate probabilities and return aggregated ranks and scores.
 
         Keyword arguments:
-            proba -- dict of probabilities split in classes
+            y_proba -- dict of probabilities split in classes
             y_true -- true classes
             y_pred -- predicted classes
             scoring -- a dict of scorers (default {})
         """
         # Get params
-        proba = kwargs['proba']
+        y_proba = kwargs['y_proba']
+        y_true = kwargs['y_true']
+        y_pred = kwargs['y_pred']
+        scoring = kwargs.get('scoring', {})
+
+        # rankings = a rank by class by social choice function
+        class_ranks = dict()
+        scores = dict()
+        ranks = dict()
+
+        n_learners = len(y_proba)       # # of learners = length of proba
+        n_classes = len(y_proba[0])     # # of classes =
+
+        # for i in range(n_learners):
+
+        # k = class' index
+        for k in proba:
+            sc_ranks = Profile.aggr_rank(proba[k], self.methods, y_pred)
+
+            # Join ranks by social choice function
+            for scf, r in sc_ranks.items():
+                class_ranks.setdefault(scf, [])
+                class_ranks[scf].append(r)
+
+        # Get winners
+        # k = social choice function
+        for k in class_ranks:
+            winners = join_ranks(class_ranks[k])
+            metrics = score(y_true, winners, scoring)
+
+            ranks[k] = winners   # save ranks
+            scores[k] = metrics  # save scores
+
+        return ranks, scores
+
+
+class Combiner():
+    """Aggregate classifiers predictions by training another classifier (combiner)."""
+
+    def __init__(self, methods):
+        """Set properties.
+
+        Keyword arguments:
+            methods -- a list of classifiers
+        """
+        self.methods = methods
+
+    def aggr(self, **kwargs):
+        """Aggregate probabilities and return aggregated ranks and scores.
+
+        Keyword arguments:
+            y_proba -- dict of probabilities split in classes
+            y_true -- true classes
+            y_pred -- predicted classes
+            scoring -- a dict of scorers (default {})
+        """
+        # Get params
+        y_proba = kwargs['y_proba']
         y_true = kwargs['y_true']
         y_pred = kwargs['y_pred']
         scoring = kwargs.get('scoring', {})
@@ -144,64 +201,6 @@ class Voter():
 
             ranks[k] = winners   # save ranks
             scores[k] = metrics  # save scores
-
-        return ranks, scores
-
-
-class Combiner():
-    """Aggregate classifiers predictions by training another classifier (combiner)."""
-
-    def __init__(self, classifier):
-        """Set properties.
-
-        Keyword arguments:
-            classifier -- classifier to be trained with classes
-        """
-        self.classifier = classifier
-
-    @property
-    def name(self):
-        name = str(self.classifier)
-        i = name.index('(')
-
-        return name[:i].lower()
-
-    def aggr(self, **kwargs):
-        """Aggregate probabilities and return aggregated ranks and scores.
-
-        Keyword arguments:
-            y_true -- true classes
-            y_pred -- predicted classes
-            scoring -- a dict of scorers (default {})
-        """
-        # Get params
-        y_true = kwargs['y_true']
-        y_pred = kwargs['y_pred']
-        scoring = kwargs.get('scoring', {})
-
-        # Scores and ranks by classifier
-        scores = dict()
-        ranks = dict()
-
-        # Transpose y_pred to get one-instance predictions in line
-        y_pred = numpy.array(y_pred)
-        y_pred = y_pred.T
-
-        # Create a learner
-        data = Data(y_pred, y_true)
-        dataset = Dataset(data)
-        learner = Learner(dataset, self.classifier)
-
-        # Train learner
-        learner.fit()
-
-        # Predict
-        # PREDICT WITH WHICH DATA??????
-        predictions = None
-
-        k = self.name
-        ranks[k] = predictions
-        scores[k] = score(y_true, predictions, scoring)
 
         return ranks, scores
 
