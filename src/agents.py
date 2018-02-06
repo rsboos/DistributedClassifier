@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 from .metrics import score
 from .data import Data
@@ -79,11 +79,7 @@ class Learner():
 		predi = self.classifier.predict(test_x)
 		proba = self.classifier.predict_proba(test_x)
 
-		# Get scores
-		scores = score(test_y, predi, scoring)
-
-		# Transpose of proba to divide probabilities by class
-		return predi, proba, scores
+		return predi, proba
 
 
 class Aggregator():
@@ -172,35 +168,39 @@ class Combiner(Aggregator):
             scoring -- a dict of scorers (default {})
         """
         # Get params
-        y_proba = kwargs['y_proba']
+        x = kwargs['x']
+        y = kwargs['y']
+        testset = kwargs['testset']
         y_true = kwargs['y_true']
-        y_pred = kwargs['y_pred']
         scoring = kwargs.get('scoring', {})
 
-        # rankings = a rank by class by social choice function
-        class_ranks = dict()
+        # Prep X
+        n = len(x)
+        X = x[0]
+
+        for i in range(1, n):
+            X = np.append(X, x[i], axis=1)
+
+        # Prep testset
+        n = len(testset)
+        test = testset[0]
+
+        for i in range(1, n):
+            test = np.append(test, testset[i], axis=1)
+
+        n = len(self.methods)
+        predictions = dict()
         scores = dict()
-        ranks = dict()
 
-        # # k = class' index
-        # for k in proba:
-        #     sc_ranks = Profile.aggr_rank(proba[k], self.methods, y_pred)
+        # For each combiner...
+        for i in range(n):
+            self.methods[i].fit(X, y)
+            y_pred = self.methods[i].predict(test)
 
-        #     # Join ranks by social choice function
-        #     for scf, r in sc_ranks.items():
-        #         class_ranks.setdefault(scf, [])
-        #         class_ranks[scf].append(r)
+            predictions[i] = y_pred
+            scores[i] = score(y_true, y_pred, scoring)
 
-        # # Get winners
-        # # k = social choice function
-        # for k in class_ranks:
-        #     winners = join_ranks(class_ranks[k])
-        #     metrics = score(y_true, winners, scoring)
-
-        #     ranks[k] = winners   # save ranks
-        #     scores[k] = metrics  # save scores
-
-        # return ranks, scores
+        return predictions, scores
 
 
 class Arbiter(Aggregator):
