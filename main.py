@@ -124,9 +124,7 @@ if __name__ == "__main__":
     ###########################################################################
     print('Cross validating...', end=' ')
 
-    ranks, classif_scores, rank_scores = simulator.cross_validate(p['k_fold'],
-                                                                  scorers,
-                                                                  p['iterations'])
+    ranks, scores = simulator.cross_validate(p['k_fold'], scorers, p['iterations'])
 
     print('OK')
 
@@ -136,16 +134,14 @@ if __name__ == "__main__":
     # Save CV scores
     print('Saving CV scores...', end=' ')
 
-    names = list(p['classifiers'].keys())
-    n = len(names)
-    [classif_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
-
-    voter_names = list(p['voter'].keys())
+    classif_names = list(p['classifiers'].keys())
     combiner_names = list(p['combiner'].keys())
-    aggr_names = voter_names + combiner_names
+    voter_names = list(p['voter'].keys())
 
-    n = len(aggr_names)
-    [rank_scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, aggr_names[i])) for i in range(n)]
+    names = classif_names + voter_names + combiner_names
+    n = len(names)
+
+    [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
 
     print('OK')
 
@@ -161,8 +157,8 @@ if __name__ == "__main__":
     # Create CV summary
     print('Creating CV summary...', end=' ')
 
-    stats = summary(classif_scores + rank_scores)     # create summary
-    stats.index = names + aggr_names                  # line names as aggregators' names
+    stats = summary(scores)
+    stats.index = names
     stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
 
     print('OK')

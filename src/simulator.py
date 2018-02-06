@@ -3,7 +3,7 @@ import math
 import copy
 
 from .data import Data
-from sklearn import model_selection
+from .split import P3StratifiedKFold
 from .metrics import cv_score, score, join_ranks
 from .agents import Learner, Voter, Combiner, Arbiter
 
@@ -186,49 +186,61 @@ class FeatureDistributed(Simulator):
 		n = len(self.learners)
 
 		# Initializes an empty dict for scores and rankings
-		classif_scores = dict()
-		rank_scores = dict()
+		scores = dict()
 		ranks = dict()
 
 		# Gets a sample of the data for the splitter
 		sample_x = self.learners[0].dataset.x  # instances
 		sample_y = self.learners[0].dataset.y  # classes
 
-		for i in range(n_it):
-			# Splits into k training and test folds for cross-validation
-			skf = model_selection.StratifiedKFold(n_splits=k_fold) # create the 'splitter' object
+		# Splits into k training and test folds for cross-validation
+		skf = P3StratifiedKFold(n_splits=k_fold)  # create the 'splitter' object
 
+		for i in range(n_it):
 			# Create folds and iterate
-			for train_i, test_i in skf.split(sample_x, sample_y):
+			for train_i, val_i, test_i in skf.split(sample_x, sample_y):
 				# Initialize empty list for probabilities
+				combiner_input = list()
 				probabilities = list()
 				predictions = list()
 
 				# For each learner...
 				for j in range(n):
 					# Compute a fold
-					pred, proba, metrics = self.learners[j].run_fold(train_i, test_i, scoring)
+					_, proba = self.learners[j].run_fold(train_i, val_i, scoring)
+
+					# Save for combiner
+					combiner_input.append(proba)
+
+					# Get test data
+					test_x = self.learners[j].dataset.x[test_i, :]
+					test_y = self.learners[j].dataset.y[test_i]
+
+					# Get model's predictions
+					predi = self.learners[j].predict(test_x)
+					proba = self.learners[j].predict_proba(test_x)
+
+					# Get scores
+					metrics = score(test_y, predi, scoring)
 
 					# Save predictions and probabilities
-					predictions.append(pred)
+					predictions.append(predi)
 					probabilities.append(proba)
 
 					# Save score
-					classif_scores.setdefault(j, [])
-					classif_scores[j].append(metrics)
+					scores.setdefault(j, [])
+					scores[j].append(metrics)
 
-				# Get true test classes
-				y_true = sample_y[test_i]
-
-				# Aggregate probabilities
-				vaggr_r, vaggr_s = self.voter.aggr(y_proba=probabilities,
-				                                   y_true=y_true,
+				# Aggregate probabilities with different methods
+				vaggr_r, vaggr_s = self.voter.aggr(y_true=sample_y[test_i],
 				                                   y_pred=predictions,
+				                                   y_proba=probabilities,
 				                                   scoring=scoring)
 
-				caggr_r, caggr_s = self.combiner.aggr(y_proba=probabilities,
-				                                 	  y_true=y_true,
-				                                	  y_pred=predictions,
+				caggr_r, caggr_s = self.combiner.aggr(x=combiner_input,
+													  y=sample_y[val_i],
+													  testset=probabilities,
+													  y_true=sample_y[test_i],
 				                                 	  scoring=scoring)
 
 				aggr_r, aggr_s = vaggr_r.update(caggr_r), vaggr_s.update(caggr_s)
@@ -240,11 +252,11 @@ class FeatureDistributed(Simulator):
 
 				# Save scores
 				for k in aggr_s:
-					rank_scores.setdefault(k, [])
-					rank_scores[k].append(aggr_s[k])
+					scores.setdefault(k, [])
+					scores[k].append(aggr_s[k])
 
 		# Return the ranks and aggregated scores as DataFrames for each learner
-		return ranks, [cv_score(classif_scores[k]) for k in classif_scores], [cv_score(rank_scores[k]) for k in rank_scores]
+		return ranks, [cv_score(scores[k]) for k in scores]
 
 
 class InstanceDistributed(Simulator):
