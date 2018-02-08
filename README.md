@@ -13,9 +13,6 @@ optional arguments:
                         Folder where a file params.json is.
 ```
 
-## .py Usage
-For programming, you can see an example in `example.py`.
-
 ## Params file
 A JSON file as follow:
 ```javascript
