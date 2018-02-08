@@ -3,7 +3,7 @@ import math
 import copy
 
 from .data import Data
-from sklearn import model_selection
+from .split import P3StratifiedKFold
 from .metrics import cv_score, score, join_ranks
 from .agents import Learner, Voter, Combiner, Arbiter
 
@@ -200,16 +200,11 @@ class FeatureDistributed(Simulator):
 		n_samples = sample_y.shape[0]
 
 		# Splits into k training and test folds for cross-validation
-		skf = model_selection.StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
+		skf = P3StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for i in range(n_it):
 			# Create folds and iterate
-			for train_i, test_i in skf.split(sample_x, sample_y):
-				# Get validation indices
-				j = len(test_i) * 2
-				val_i = train_i[:j]
-				train_i = train_i[j:]
-
+			for train_i, val_i, test_i in skf.split(sample_x, sample_y):
 				# Initialize empty list for probabilities
 				combiner_input = list()
 				probabilities = list()
@@ -243,10 +238,10 @@ class FeatureDistributed(Simulator):
 					scores[j].append(metrics)
 
 				# Aggregate probabilities with different methods
-				vaggr_r, vaggr_s = self.voter.aggr(y_true=sample_y[test_i],
-				                                   y_pred=predictions,
-				                                   y_proba=probabilities,
-				                                   scoring=scoring)
+				aggr_r, aggr_s = self.voter.aggr(y_true=sample_y[test_i],
+				                                 y_pred=predictions,
+				                                 y_proba=probabilities,
+				                                 scoring=scoring)
 
 				caggr_r, caggr_s = self.combiner.aggr(x=combiner_input,
 													  y=sample_y[val_i],
@@ -254,7 +249,8 @@ class FeatureDistributed(Simulator):
 													  y_true=sample_y[test_i],
 				                                 	  scoring=scoring)
 
-				aggr_r, aggr_s = vaggr_r.update(caggr_r), vaggr_s.update(caggr_s)
+				aggr_r.update(caggr_r)
+				aggr_s.update(caggr_s)
 
 				# Save ranks
 				for k in aggr_r:
