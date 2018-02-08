@@ -92,10 +92,8 @@ The program will save the **results** in the same folder.
 
 ## Results
 Result files saved in *test folder*. You can find examples in `tests` folder.
-- **cv_ranks_\<aggr\>.csv**: aggregated ranks for each Cross-Validation's iteration
 - **cv_scores_\<aggr\>.csv**: scores for each Cross-Validation's iteration for a aggregator
 - **cv_scores_\<classifier\>.csv**: scores for each Cross-Validation's iteration for a classifier
-- **model_\<classifier\>.pkl**: a pickel file to persist the created models
 - **cv_summary.csv**: average scores from all *cv_scores_\<classifier\>.csv*
 
 ## Sample Datasets
