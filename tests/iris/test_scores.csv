@@ -1,6 +1,0 @@
-,,accuracy,f1_macro,f1_micro,precision_macro,precision_micro,recall_macro,recall_micro,sensitivity_macro,sensitivity_micro,specificity_macro,specificity_micro
-classifiers,nb,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-classifiers,dtree,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-social_functions,borda,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-social_functions,plurality,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-social_functions,simpson,0.5,0.4554334554334554,0.5,0.7999999999999999,0.5,0.5,0.5,0.5,0.5,0.75,0.75
