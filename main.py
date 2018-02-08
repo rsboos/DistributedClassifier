@@ -145,15 +145,6 @@ if __name__ == "__main__":
 
     print('OK')
 
-    # Save rankings
-    print('Saving CV ranks...', end=' ')
-
-    for k in ranks:
-        n_rank = list(map(lambda x: data.map_classes(x), ranks[k]))
-        DataFrame(n_rank).to_csv('{}/cv_ranks_{}.csv'.format(args.params_folder, k))
-
-    print('OK')
-
     # Create CV summary
     print('Creating CV summary...', end=' ')
 
