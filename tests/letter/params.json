@@ -2,7 +2,7 @@
     "dataset": "datasets/letterFirst.txt",
     "class_column": 0,
     "iterations": 10,
-    "k_fold": 10,
+    "random_state": 3,
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",

@@ -2,7 +2,7 @@
     "dataset": "datasets/irisLast.txt",
     "class_column": -1,
     "iterations": 10,
-    "k_fold": 10,
+    "random_state": 2,
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",

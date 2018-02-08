@@ -30,8 +30,8 @@ A JSON file as follow:
     // Number of cross-validation iterations (default 10)
     "iterations": 10,
 
-    // Number of folds for cross-validation (default 10)
-    "k_fold": 10,
+    // Random state to secure same randomness in different runs (seed)
+    "random_state": 1,
 
     // Overlaped features
     // If float, should be between 0.0 and 1.0 and represents the percentage

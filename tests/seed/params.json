@@ -2,7 +2,7 @@
     "dataset": "datasets/seed.csv",
     "class_column": -1,
     "iterations": 10,
-    "k_fold": 10,
+    "random_state": 4,
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
