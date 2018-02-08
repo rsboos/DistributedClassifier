@@ -197,8 +197,10 @@ class Combiner(Aggregator):
             self.methods[i].fit(X, y)
             y_pred = self.methods[i].predict(test)
 
-            predictions[i] = y_pred
-            scores[i] = score(y_true, y_pred, scoring)
+            k = 'cmb_' + str(i)
+
+            predictions[k] = y_pred
+            scores[k] = score(y_true, y_pred, scoring)
 
         return predictions, scores
 
