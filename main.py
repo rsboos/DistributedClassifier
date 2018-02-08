@@ -124,7 +124,7 @@ if __name__ == "__main__":
     ###########################################################################
     print('Cross validating...', end=' ')
 
-    ranks, scores = simulator.cross_validate(p['k_fold'], scorers, p['iterations'])
+    ranks, scores = simulator.repeated_cv(scorers, p['random_state'], p['iterations'])
 
     print('OK')
 

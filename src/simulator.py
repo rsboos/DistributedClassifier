@@ -3,7 +3,7 @@ import math
 import copy
 
 from .data import Data
-from .split import P3StratifiedKFold
+from sklearn import model_selection
 from .metrics import cv_score, score, join_ranks
 from .agents import Learner, Voter, Combiner, Arbiter
 
@@ -168,20 +168,24 @@ class FeatureDistributed(Simulator):
 		# Creates a DistributedClassifition simulator
 		return cls(learners, **kwargs)
 
-	def cross_validate(self, k_fold=10, scoring={}, n_it=10):
+	def repeated_cv(self, scoring={}, random_state=None, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 
 		Keyword arguments:
-			k_fold -- number of folds (default 10)
 			scoring -- metrics to be returned (default {})*
+			random_state -- int, RandomState instance or None, optional, default=None
+		        If int, random_state is the seed used by the random number generator;
+		        If RandomState instance, random_state is the random number generator;
+		        If None, the random number generator is the RandomState instance used
+		        by `np.random`. Used when ``shuffle`` == True.
 			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
-
-		*For more information about the returned data and the parameters:
-		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
 
 		For how to use scoring:
 		http://scikit-learn.org/stable/modules/cross_validation.html
 		"""
+		# Number of folds
+		k_fold = 10
+
 		# Number of learners
 		n = len(self.learners)
 
@@ -193,12 +197,19 @@ class FeatureDistributed(Simulator):
 		sample_x = self.learners[0].dataset.x  # instances
 		sample_y = self.learners[0].dataset.y  # classes
 
+		n_samples = sample_y.shape[0]
+
 		# Splits into k training and test folds for cross-validation
-		skf = P3StratifiedKFold(n_splits=k_fold)  # create the 'splitter' object
+		skf = model_selection.StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for i in range(n_it):
 			# Create folds and iterate
-			for train_i, val_i, test_i in skf.split(sample_x, sample_y):
+			for train_i, test_i in skf.split(sample_x, sample_y):
+				# Get validation indices
+				j = len(test_i) * 2
+				val_i = train_i[:j]
+				train_i = train_i[j:]
+
 				# Initialize empty list for probabilities
 				combiner_input = list()
 				probabilities = list()
