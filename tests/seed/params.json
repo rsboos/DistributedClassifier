@@ -27,6 +27,9 @@
     "combiner": {
         "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()",
         "cmb_svc": "sklearn.svm.SVC(probability=True)"
+    },
+    "mathematician": {
+        "max": ["mean", "median"]
     }
 }
 

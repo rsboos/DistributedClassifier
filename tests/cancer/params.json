@@ -27,6 +27,9 @@
     "combiner": {
         "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
         "cmb_svc": "sklearn.svm.SVC(probability=True)"
+    },
+    "mathematician": {
+        "max": ["mean", "median"]
     }
 }
 

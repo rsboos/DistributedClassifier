@@ -28,6 +28,9 @@
     },
     "combiner": {
         "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()"
+    },
+    "mathematician": {
+        "max": ["mean", "median"]
     }
 }
 

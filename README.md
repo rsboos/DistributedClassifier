@@ -77,6 +77,15 @@ A JSON file as follow:
     "combiner": {
         "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
         "cmb_svc": "sklearn.svm.SVC(probability=True)"
+    },
+
+    // For rank aggregation by math operations...
+    // {<max/min>: <list of math operations from numpy>}
+    // max: get the maximum value in mean and median
+    // min: get the minimum value in std
+    "mathematician": {
+        "max": ["mean", "median"],
+        "min": ["std"]
     }
 }
 ```

@@ -31,6 +31,9 @@
     "combiner": {
         "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()",
         "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()"
+    },
+    "mathematician": {
+        "max": ["mean", "median"]
     }
 }
 
