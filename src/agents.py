@@ -112,7 +112,7 @@ class Voter(Aggregator):
         """Aggregate probabilities and return aggregated ranks and scores.
 
         Keyword arguments:
-            y_proba -- dict of probabilities split in classes
+            y_proba -- learners' probabilities
             y_true -- true classes
             y_pred -- predicted classes
             scoring -- a dict of scorers (default {})
@@ -162,9 +162,10 @@ class Combiner(Aggregator):
         """Aggregate probabilities and return aggregated ranks and scores.
 
         Keyword arguments:
-            y_proba -- dict of probabilities split in classes
-            y_true -- true classes
-            y_pred -- predicted classes
+            x -- combiner input
+            y -- target of x
+            testset -- test instances
+            y_true -- true classes (for score)
             scoring -- a dict of scorers (default {})
         """
         # Get params
@@ -209,3 +210,51 @@ class Arbiter(Aggregator):
 
     def aggr(self, **kwargs):
         pass
+
+
+class Mathematician(Aggregator):
+    """Aggregate classifiers prediction by average."""
+
+    def aggr(self, **kwargs):
+        """Aggregate probabilities and return aggregated ranks and scores.
+
+        Keyword arguments:
+            y_proba -- learners' probabilities
+            y_true -- true classes
+            scoring -- a dict of scorers (default {})
+        """
+        # Get params
+        y_proba = kwargs['y_proba']
+        y_true = kwargs['y_true']
+        scoring = kwargs.get('scoring', {})
+
+        predictions = dict()
+        results = dict()
+        scores = dict()
+
+        n_learners = len(y_proba)        # # of learners = length of proba
+        _, n_classes = y_proba[0].shape  # # of classes = # of columns
+
+        methods = self.methods.items()
+
+        for c in range(n_classes):
+            # Get class c's probabilities
+            proba = [y_proba[i][:, c] for i in range(n_learners)]
+            proba = np.array(proba)
+
+            for _, operations in methods:
+
+                for op in operations:
+                    result = eval('np.{}(proba, axis=0)'.format(op))
+
+                    results.setdefault(op, [])
+                    results[op].append(result)
+
+        for aux, operations in methods:
+
+            for op in operations:
+                results[op] = np.array(results[op])
+                predictions[op] = eval('results[op].arg{}(axis=0)'.format(aux))
+                scores[op] = score(y_true, predictions[op], scoring)
+
+        return predictions, scores

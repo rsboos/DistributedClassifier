@@ -1,5 +1,6 @@
 import json
 import argparse
+import numpy as np
 
 from src.data import Data
 from src.metrics import summary
@@ -7,7 +8,7 @@ from pandas import DataFrame, concat
 from sklearn.externals import joblib
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
-from src.agents import Voter, Combiner, Arbiter
+from src.agents import Voter, Combiner, Arbiter, Mathematician
 
 
 def load_imports(imports):
@@ -101,6 +102,7 @@ if __name__ == "__main__":
 
     voter = Voter(list(p['voter'].values()))
     combiner = Combiner(load_imports(p['combiner']))
+    mathematician = Mathematician(p['mathematician'])
 
     print('OK')
     ###########################################################################
@@ -115,7 +117,12 @@ if __name__ == "__main__":
     # Create simulator (agents' manager)
     print('Simulating distribution...', end=' ')
 
-    simulator = FeatureDistributed.load(data, classifiers, p['overlap'], voter=voter, combiner=combiner)
+    simulator = FeatureDistributed.load(data,
+                                        classifiers,
+                                        p['overlap'],
+                                        voter=voter,
+                                        combiner=combiner,
+                                        mathematician=mathematician)
 
     print('OK')
 
@@ -134,11 +141,15 @@ if __name__ == "__main__":
     # Save CV scores
     print('Saving CV scores...', end=' ')
 
+    mathematician_names = list()
+    for names in p['mathematician'].values():
+        mathematician_names += [name for name in names]
+
     classif_names = list(p['classifiers'].keys())
     combiner_names = list(p['combiner'].keys())
     voter_names = list(p['voter'].keys())
 
-    names = classif_names + voter_names + combiner_names
+    names = classif_names + voter_names + combiner_names + mathematician_names
     n = len(names)
 
     [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]

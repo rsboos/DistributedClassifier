@@ -5,7 +5,7 @@ import copy
 from .data import Data
 from .split import P3StratifiedKFold
 from .metrics import cv_score, score, join_ranks
-from .agents import Learner, Voter, Combiner, Arbiter
+from .agents import Learner, Voter, Combiner, Arbiter, Mathematician
 
 
 class Simulator():
@@ -28,6 +28,7 @@ class Simulator():
 		self.learners = learners
 		self.voter = kwargs.get('voter', Voter())
 		self.combiner = kwargs.get('combiner', Combiner())
+		self.mathematician = kwargs.get('mathematician', Mathematician())
 
 	def fit(self):
 		"""Train model with trainingset for each learner."""
@@ -249,8 +250,15 @@ class FeatureDistributed(Simulator):
 													  y_true=sample_y[test_i],
 				                                 	  scoring=scoring)
 
+				maggr_r, maggr_s = self.mathematician.aggr(y_true=sample_y[test_i],
+				                                 		   y_proba=probabilities,
+				                                 		   scoring=scoring)
+
 				aggr_r.update(caggr_r)
+				aggr_r.update(maggr_r)
+
 				aggr_s.update(caggr_s)
+				aggr_s.update(maggr_s)
 
 				# Save ranks
 				for k in aggr_r:
