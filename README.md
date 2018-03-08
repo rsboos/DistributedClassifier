@@ -37,6 +37,14 @@ A JSON file as follow:
     // represents the features' columns indexes. By default, the value is set to 0.
     "overlap": 0,
 
+    // Selection Rule
+    // This option is for Arbiter methods.
+    // It's the rule used to select instances to train arbiters
+    // "MetaDiff": select instances whose predictions disagrees
+    // "MetaDiffInc": "MetaDiff" + instances whose predictions agree incorrectly
+    // "MetaDiffIncCorr": "MetaDiffInc" + instances whose predictions agree correctly
+    "selection_rule": "MetaDiffIncCorr",
+
     // Classifiers
     // {<classifier id>: <full method call, i.e., with parameters>}
     "classifiers": {
@@ -77,6 +85,13 @@ A JSON file as follow:
     "combiner": {
         "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
         "cmb_svc": "sklearn.svm.SVC(probability=True)"
+    },
+
+    // For rank aggregation by arbiter choice...
+    // {<arbiter's label>: <full method call, i.e., with parameters>}
+    "arbiter": {
+        "arb_nb": "sklearn.naive_bayes.GaussianNB()",
+        "arb_svc": "sklearn.svm.SVC(probability=True)"
     },
 
     // For rank aggregation by math operations...
