@@ -4,6 +4,7 @@
     "iterations": 10,
     "random_state": 2,
     "overlap": 0,
+    "selection_rule": "MetaDiffIncCorr",
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
         "dtree": "sklearn.tree.DecisionTreeClassifier()"
@@ -27,7 +28,12 @@
         "plurality":  "plurality"
     },
     "combiner": {
+        "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
         "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()"
+    },
+    "arbiter": {
+        "arb_nb": "sklearn.naive_bayes.GaussianNB()",
+        "arb_dtree": "sklearn.tree.DecisionTreeClassifier()"
     },
     "mathematician": {
         "max": ["mean", "median"]

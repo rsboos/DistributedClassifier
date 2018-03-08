@@ -4,6 +4,7 @@
     "iterations": 10,
     "random_state": 1,
     "overlap": 0,
+    "selection_rule": "MetaDiff",
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
         "svc": "sklearn.svm.SVC(probability=True)",
@@ -26,7 +27,13 @@
     },
     "combiner": {
         "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
-        "cmb_svc": "sklearn.svm.SVC(probability=True)"
+        "cmb_svc": "sklearn.svm.SVC(probability=True)",
+        "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()"
+    },
+    "arbiter": {
+        "arb_nb": "sklearn.naive_bayes.GaussianNB()",
+        "arb_svc": "sklearn.svm.SVC(probability=True)",
+        "arb_dtree": "sklearn.tree.DecisionTreeClassifier()"
     },
     "mathematician": {
         "max": ["mean", "median"]

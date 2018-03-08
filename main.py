@@ -8,6 +8,7 @@ from pandas import DataFrame, concat
 from sklearn.externals import joblib
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
+from src.selectors import MetaDiff, MetaDiffInc, MetaDiffIncCorr
 from src.agents import Voter, Combiner, Arbiter, Mathematician
 
 
@@ -103,6 +104,7 @@ if __name__ == "__main__":
     voter = Voter(list(p['voter'].values()))
     combiner = Combiner(load_imports(p['combiner']))
     mathematician = Mathematician(p['mathematician'])
+    arbiter = Arbiter(eval(p['selection_rule']), load_imports(p['arbiter']))
 
     print('OK')
     ###########################################################################
@@ -121,6 +123,7 @@ if __name__ == "__main__":
                                         classifiers,
                                         p['overlap'],
                                         voter=voter,
+                                        arbiter=arbiter,
                                         combiner=combiner,
                                         mathematician=mathematician)
 
@@ -147,9 +150,10 @@ if __name__ == "__main__":
 
     classif_names = list(p['classifiers'].keys())
     combiner_names = list(p['combiner'].keys())
+    arbiter_names = list(p['arbiter'].keys())
     voter_names = list(p['voter'].keys())
 
-    names = classif_names + voter_names + combiner_names + mathematician_names
+    names = classif_names + voter_names + combiner_names + arbiter_names + mathematician_names
     n = len(names)
 
     [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
