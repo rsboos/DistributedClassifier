@@ -118,6 +118,9 @@ class MetaDiff(SelectionRule):
 
         return (set(indices),)
 
+    def __str__(self):
+        return 'md'
+
 
 class MetaDiffInc(MetaDiff):
 
@@ -147,6 +150,9 @@ class MetaDiffInc(MetaDiff):
                 indices.append(j)
 
         return (td[0], set(indices))
+
+    def __str__(self):
+        return 'mdi'
 
 
 class MetaDiffIncCorr(MetaDiffInc):
@@ -202,3 +208,6 @@ class MetaDiffIncCorr(MetaDiffInc):
                 predictions.append(ai_pred[j])
 
         return predictions
+
+    def __str__(self):
+        return 'mdic'

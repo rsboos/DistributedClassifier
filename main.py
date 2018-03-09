@@ -101,10 +101,12 @@ if __name__ == "__main__":
     # Evaluate aggregator
     print('Loading aggregators...', end=' ')
 
+    selectors = [eval(s) for s in p['selection_rules'].values()]
+
     voter = Voter(list(p['voter'].values()))
     combiner = Combiner(load_imports(p['combiner']))
     mathematician = Mathematician(p['mathematician'])
-    arbiter = Arbiter(eval(p['selection_rule']), load_imports(p['arbiter']))
+    arbiter = Arbiter(selectors, load_imports(p['arbiter']))
 
     print('OK')
     ###########################################################################
@@ -148,9 +150,14 @@ if __name__ == "__main__":
     for names in p['mathematician'].values():
         mathematician_names += [name for name in names]
 
+    arbiter_names = []
+    arb_methods = list(p['arbiter'].keys())
+    for arb in arb_methods:
+        for name in p['selection_rules'].keys():
+            arbiter_names.append(arb + '_' + name)
+
     classif_names = list(p['classifiers'].keys())
     combiner_names = list(p['combiner'].keys())
-    arbiter_names = list(p['arbiter'].keys())
     voter_names = list(p['voter'].keys())
 
     names = classif_names + voter_names + combiner_names + arbiter_names + mathematician_names

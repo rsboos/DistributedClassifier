@@ -4,7 +4,6 @@
     "iterations": 10,
     "random_state": 4,
     "overlap": 0,
-    "selection_rule": "MetaDiffIncCorr",
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
         "svc": "sklearn.svm.SVC(probability=True)",
@@ -32,6 +31,11 @@
     "arbiter": {
         "arb_knn": "sklearn.neighbors.KNeighborsClassifier()",
         "arb_svc": "sklearn.svm.SVC(probability=True)"
+    },
+    "selection_rules": {
+        "md": "MetaDiff",
+        "mdi": "MetaDiffInc",
+        "mdic": "MetaDiffIncCorr"
     },
     "mathematician": {
         "max": ["mean", "median"]
