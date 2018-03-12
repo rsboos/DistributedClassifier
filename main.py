@@ -4,6 +4,7 @@ import numpy as np
 
 from src.data import Data
 from src.metrics import summary
+from theobserver import Observer
 from pandas import DataFrame, concat
 from sklearn.externals import joblib
 from sklearn.metrics import make_scorer
@@ -109,6 +110,27 @@ if __name__ == "__main__":
     # SIMULATE DISTRIBUTION ###################################################
     ###########################################################################
     print('Loading dataset {}...'.format(p['dataset']), end=' ')
+
+    obs = Observer(p['dataset'], p['class_column'])
+    characteristics = obs.extract()
+    characteristics += [len(classifiers), p['overlap'], p['dataset']]
+    characteristics = list(map(lambda x: str(x), characteristics))
+
+    file = open('tests/observer_data.csv', 'a+')
+    file.seek(0)
+
+    is_in = False
+    for line in file:
+        datafile = line.split(',')[-1][:-1]
+
+        if p['dataset'] == datafile:
+            is_in = True
+            break
+
+    if not is_in:
+        file.write(','.join(characteristics) + '\n')
+
+    file.close()
 
     data = Data.load(p['dataset'], p['class_column'])
 
