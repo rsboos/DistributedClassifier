@@ -2,52 +2,14 @@ import json
 import argparse
 import numpy as np
 
-from src.data import Data
-from src.metrics import summary
-from theobserver import Observer
 from pandas import DataFrame, concat
-from sklearn.externals import joblib
-from sklearn.metrics import make_scorer
-from src.simulator import FeatureDistributed
-from src.selectors import MetaDiff, MetaDiffInc, MetaDiffIncCorr
 from src.agents import Voter, Combiner, Arbiter, Mathematician
-
-
-def load_imports(imports):
-    objs = list()
-
-    for c in imports.values():                           # for each classfier
-        i, modules, obj = split_parts(c)                 # separate in parts
-
-        str_eval = "from {} import {}".format(modules, obj[:i])
-
-        print(str_eval)
-
-        # Execute import
-        exec(str_eval)
-
-        # Evaluate a classifier
-        objs.append(eval(obj))
-
-    return objs
-
-
-def split_parts(label):
-    parts = label.split('.')                         # separate in parts
-
-    i = ['(' in part for part in parts].index(1)     # filter parts
-
-    modules = '.'.join(parts[:i])                    # get modules
-    obj = '.'.join(parts[i:])                        # get obj
-    i = obj.find('(')                                # filter obj
-
-    return i, modules, obj
+from src.selectors import MetaDiff, MetaDiffInc, MetaDiffIncCorr
+from src.test import test, load_imports, split_parts, load_scorers
 
 
 if __name__ == "__main__":
-    ###########################################################################
-    # COMMAND LINE PARAMS #####################################################
-    ###########################################################################
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-p", "--params",
@@ -58,116 +20,24 @@ if __name__ == "__main__":
     # Validate params
     args = parser.parse_args()
 
-    ###########################################################################
-    # LOAD APP PARAMS #########################################################
-    ###########################################################################
-    print('Loading params...', end=' ')
-
+    # Load params
     params = open("{}/params.json".format(args.params_folder), 'r')
     p = json.load(params)
 
-    print('OK')
-
     # Evaluate classifiers
-    print('Loading classifiers...')
-
     classifiers = load_imports(p['classifiers'])
 
-    print('Done.')
-
     # Evaluate metrics
-    print('Loading metrics...')
-    scorers = dict()
-
-    for n, c in p['metrics'].items():                    # for each metric (name, method)
-        i, modules, metric = split_parts(c)              # separate in parts
-
-        params = metric[i + 1:-1]                        # get score func params (without '()')
-        metric = metric[:i]                              # get score func name
-
-        str_eval_import = "from {} import {}".format(modules, metric)
-        str_eval_scorer = "make_scorer({}, {})".format(metric, params)
-
-        print(str_eval_import)
-        print(str_eval_scorer)
-
-        # Execute import
-        exec(str_eval_import)
-
-        # Evaluate a metric
-        scorers[n] = eval(str_eval_scorer)
-
-    print('Done.')
+    scorers = load_scorers(p['metrics'])
 
     # Evaluate aggregator
-    print('Loading aggregators...', end=' ')
-
-    selectors = [eval(s) for s in p['selection_rules'].values()]
-
     voter = Voter(list(p['voter'].values()))
     combiner = Combiner(load_imports(p['combiner']))
     mathematician = Mathematician(p['mathematician'])
+    selectors = [eval(s) for s in p['selection_rules'].values()]
     arbiter = Arbiter(selectors, load_imports(p['arbiter']))
 
-    print('OK')
-    ###########################################################################
-    # SIMULATE DISTRIBUTION ###################################################
-    ###########################################################################
-    print('Loading dataset {}...'.format(p['dataset']), end=' ')
-
-    obs = Observer(p['dataset'], p['class_column'])
-    characteristics = obs.extract()
-    characteristics += [len(classifiers), p['overlap'], p['dataset']]
-    characteristics = list(map(lambda x: str(x), characteristics))
-
-    file = open('tests/observer_data.csv', 'a+')
-    file.seek(0)
-
-    is_in = False
-    for line in file:
-        datafile = line.split(',')[-1][:-1]
-
-        if p['dataset'] == datafile:
-            is_in = True
-            break
-
-    if not is_in:
-        file.write(','.join(characteristics) + '\n')
-
-    file.close()
-
-    data = Data.load(p['dataset'], p['class_column'])
-
-    print('OK')
-
-    # Create simulator (agents' manager)
-    print('Simulating distribution...', end=' ')
-
-    simulator = FeatureDistributed.load(data,
-                                        classifiers,
-                                        p['overlap'],
-                                        voter=voter,
-                                        arbiter=arbiter,
-                                        combiner=combiner,
-                                        mathematician=mathematician)
-
-    print('OK')
-
-    ###########################################################################
-    # CROSS VALIDATION ########################################################
-    ###########################################################################
-    print('Cross validating...', end=' ')
-
-    ranks, scores = simulator.repeated_cv(scorers, p['random_state'], p['iterations'])
-
-    print('OK')
-
-    ###########################################################################
-    # SAVE RESULTS ############################################################
-    ###########################################################################
-    # Save CV scores
-    print('Saving CV scores...', end=' ')
-
+    # Get names
     mathematician_names = list()
     for names in p['mathematician'].values():
         mathematician_names += [name for name in names]
@@ -183,17 +53,19 @@ if __name__ == "__main__":
     voter_names = list(p['voter'].keys())
 
     names = classif_names + voter_names + combiner_names + arbiter_names + mathematician_names
-    n = len(names)
 
-    [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]
-
-    print('OK')
-
-    # Create CV summary
-    print('Creating CV summary...', end=' ')
-
-    stats = summary(scores)
-    stats.index = names
-    stats.to_csv('{}/cv_summary.csv'.format(args.params_folder))
-
-    print('OK')
+    # Run test
+    test(overlap=p['overlap'],
+         filepath=p['dataset'],
+         iterations=p['iterations'],
+         class_column=p['class_column'],
+         random_state=p['random_state'],
+         scorers=scorers,
+         classifiers=classifiers,
+         voter=voter,
+         arbiter=arbiter,
+         combiner=combiner,
+         selectors=selectors,
+         mathematician=mathematician,
+         names=names,
+         results_path=args.params_folder)
