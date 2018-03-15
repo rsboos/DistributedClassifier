@@ -251,6 +251,15 @@ class Arbiter(Aggregator):
         n_rules = len(self.selection_rules)
         n_classes = len(set(y_true))
         n_learners = len(learners)
+        n_instances = y_proba[0].shape[0]
+
+        # Prep trainingset
+        x = np.zeros((n_instances, n_classes))
+
+        for i in range(n_learners):
+            x = np.append(x, y_proba[i], axis=1)
+
+        x = x[:, n_classes:]
 
         predictions = dict()
         scores = dict()
@@ -263,42 +272,36 @@ class Arbiter(Aggregator):
                 x_indices = t[0].union(t[1]) if n_t == 2 else t[0]
                 x_indices = list(x_indices)
 
-                n_instances = len(x_indices)
-
-                x = np.zeros((n_instances, n_classes))
-
-                for i in range(n_learners):
-                    x = np.append(x, y_proba[i][x_indices, :], axis=1)
-
-                x = x[:, n_classes:]
-                y = y_train[x_indices]
+                xt = x[x_indices, :]
+                yt = y_train[x_indices]
             else:
-                x = []
-                y = []
+                xt = []
+                yt = []
 
                 for i in range(n_t):
                     x_indices = list(t[i])
-                    n_instances = len(x_indices)
-
-                    xi = np.zeros((n_instances, n_classes))
-                    for j in range(n_learners):
-                        xi = np.append(xi, y_proba[j][x_indices, :], axis=1)
-
-                    x.append(xi[:, n_classes:])
-                    y.append(y_train[x_indices])
+                    xt.append(x[x_indices, :])
+                    yt.append(y_train[x_indices])
 
             # For each method...
             for i in range(n):
 
                 if n_t < 3:
-                    self.methods[i].fit(x, y)
+                    if len(set(yt)) == n_classes:
+                        self.methods[i].fit(xt, yt)
+                    else:
+                        self.methods[i].fit(x, y_train)
+
                     y_pred = self.methods[i].predict(test)
                 else:
                     y_pred = []
                     for j in range(n_t):
-                        self.methods[i].fit(x[j], y[j])
-                        y_pred.append(self.methods[i].predict(test))
+                        if len(set(yt[j])) == n_classes:
+                            self.methods[i].fit(xt[j], yt[j])
+                        else:
+                            self.methods[i].fit(x, y_train)
 
+                        y_pred.append(self.methods[i].predict(test))
 
                 k = 'arb_' + str(self.selection_rules[j]) + '_' + str(i)
 
