@@ -65,8 +65,8 @@ class Data():
 		j = n_columns + class_column	# final + 1 (because it's exclusive)
 
 		# Separates the data from the classes (target)
-		x = dataset.ix[:, i:j]			# all lines and all columns (except the class column)
-		y = dataset.ix[:, class_column] # all lines and the class column
+		x = dataset.iloc[:, i:j]			# all lines and all columns (except the class column)
+		y = dataset.iloc[:, class_column]   # all lines and the class column
 
 		# Creates a Data object and returns it
 		return cls(x, y)
