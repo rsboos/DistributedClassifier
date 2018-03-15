@@ -202,7 +202,7 @@ class MetaDiffIncCorr(MetaDiffInc):
 
             if not cls.agree(pred):
                 predictions.append(ad_pred[j])
-            elif cls.agree(np.append(pred, [ac_pred[j]])): # PODEMOS COLOCAR DUAS VEZES A PREDIÇÃO DO ARBITRO PARA FAVORECÊ-LO
+            elif cls.correct(pred, ac_pred[j]):
                 predictions.append(ac_pred[j])
             else:
                 predictions.append(ai_pred[j])
