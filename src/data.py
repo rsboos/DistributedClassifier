@@ -55,7 +55,7 @@ class Data():
 		"""
 
 		# Loads the CSV file
-		dataset = pandas.read_csv(filepath)
+		dataset = pandas.read_csv(filepath, header=None)
 
 		# Gets the number of columns: dataset.shape -> (#lines, #columns)
 		n_columns = dataset.shape[1]
