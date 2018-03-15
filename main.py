@@ -9,6 +9,7 @@ from pandas import DataFrame, concat
 from sklearn.externals import joblib
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
+from src.selectors import MetaDiff, MetaDiffInc, MetaDiffIncCorr
 from src.agents import Voter, Combiner, Arbiter, Mathematician
 
 
@@ -101,9 +102,12 @@ if __name__ == "__main__":
     # Evaluate aggregator
     print('Loading aggregators...', end=' ')
 
+    selectors = [eval(s) for s in p['selection_rules'].values()]
+
     voter = Voter(list(p['voter'].values()))
     combiner = Combiner(load_imports(p['combiner']))
     mathematician = Mathematician(p['mathematician'])
+    arbiter = Arbiter(selectors, load_imports(p['arbiter']))
 
     print('OK')
     ###########################################################################
@@ -143,6 +147,7 @@ if __name__ == "__main__":
                                         classifiers,
                                         p['overlap'],
                                         voter=voter,
+                                        arbiter=arbiter,
                                         combiner=combiner,
                                         mathematician=mathematician)
 
@@ -167,11 +172,17 @@ if __name__ == "__main__":
     for names in p['mathematician'].values():
         mathematician_names += [name for name in names]
 
+    arbiter_names = []
+    arb_methods = list(p['arbiter'].keys())
+    for arb in arb_methods:
+        for name in p['selection_rules'].keys():
+            arbiter_names.append(arb + '_' + name)
+
     classif_names = list(p['classifiers'].keys())
     combiner_names = list(p['combiner'].keys())
     voter_names = list(p['voter'].keys())
 
-    names = classif_names + voter_names + combiner_names + mathematician_names
+    names = classif_names + voter_names + combiner_names + arbiter_names + mathematician_names
     n = len(names)
 
     [scores[i].to_csv('{}/cv_scores_{}.csv'.format(args.params_folder, names[i])) for i in range(n)]

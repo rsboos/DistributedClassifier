@@ -79,6 +79,27 @@ A JSON file as follow:
         "cmb_svc": "sklearn.svm.SVC(probability=True)"
     },
 
+    // For rank aggregation by arbiter choice...
+    // {<arbiter's label>: <full method call, i.e., with parameters>}
+    "arbiter": {
+        "arb_nb": "sklearn.naive_bayes.GaussianNB()",
+        "arb_svc": "sklearn.svm.SVC(probability=True)"
+    },
+
+    // Selection Rule
+    // {<rule's label>: <rule's callable>}
+    // This option is for Arbiter methods.
+    // It's the rule used to select instances to train arbiters
+    // Support more than one rule, i.e., it will apply all rules to all arbiters
+    // "MetaDiff": select instances whose predictions disagrees
+    // "MetaDiffInc": "MetaDiff" + instances whose predictions agree incorrectly
+    // "MetaDiffIncCorr": "MetaDiffInc" + instances whose predictions agree correctly
+    "selection_rules": {
+        "md": "MetaDiff",
+        "mdi": "MetaDiffInc",
+        "mdic": "MetaDiffIncCorr"
+    },
+
     // For rank aggregation by math operations...
     // {<max/min>: <list of math operations from numpy>}
     // max: get the maximum value in mean and median

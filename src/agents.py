@@ -208,8 +208,107 @@ class Combiner(Aggregator):
 
 class Arbiter(Aggregator):
 
+    def __init__(self, selection_rules, methods=[]):
+        """Sets the selection rule to be used.
+
+        Keyword arguments:
+            selection_rules -- a list of SelectionRule objects
+            methods -- a list of classifiers (default [])
+        """
+        self.selection_rules = selection_rules
+        super().__init__(methods)
+
     def aggr(self, **kwargs):
-        pass
+        """Aggregate probabilities and return aggregated ranks and scores.
+
+        Keyword arguments:
+            learners -- a list of Learners
+            x -- learners' probabilities to be trained by the arbiter
+            y -- labels for x
+            y_true -- true classes
+            y_pred -- predicted classes
+            testset -- test instances
+            test_i -- test instance indexes
+            scoring -- a dict of scorers (default {})
+        """
+        # Get params
+        learners = kwargs['learners']
+        y_proba = kwargs['x']
+        y_train = kwargs['y']
+        y_true = kwargs['y_true']
+        base_pred = kwargs['y_pred']
+        testset = kwargs['testset']
+        scoring = kwargs.get('scoring', {})
+
+        # Prep testset
+        n = len(testset)
+        test = testset[0]
+
+        for i in range(1, n):
+            test = np.append(test, testset[i], axis=1)
+
+        n = len(self.methods)
+        n_rules = len(self.selection_rules)
+        n_classes = len(set(y_true))
+        n_learners = len(learners)
+        n_instances = y_proba[0].shape[0]
+
+        # Prep trainingset
+        x = np.zeros((n_instances, n_classes))
+
+        for i in range(n_learners):
+            x = np.append(x, y_proba[i], axis=1)
+
+        x = x[:, n_classes:]
+
+        predictions = dict()
+        scores = dict()
+
+        for j in range(n_rules):
+            t = self.selection_rules[j].select(base_pred, y_true)
+            n_t = len(t)
+
+            if n_t < 3:
+                x_indices = t[0].union(t[1]) if n_t == 2 else t[0]
+                x_indices = list(x_indices)
+
+                xt = x[x_indices, :]
+                yt = y_train[x_indices]
+            else:
+                xt = []
+                yt = []
+
+                for i in range(n_t):
+                    x_indices = list(t[i])
+                    xt.append(x[x_indices, :])
+                    yt.append(y_train[x_indices])
+
+            # For each method...
+            for i in range(n):
+
+                if n_t < 3:
+                    if len(set(yt)) == n_classes:
+                        self.methods[i].fit(xt, yt)
+                    else:
+                        self.methods[i].fit(x, y_train)
+
+                    y_pred = self.methods[i].predict(test)
+                else:
+                    y_pred = []
+                    for j in range(n_t):
+                        if len(set(yt[j])) == n_classes:
+                            self.methods[i].fit(xt[j], yt[j])
+                        else:
+                            self.methods[i].fit(x, y_train)
+
+                        y_pred.append(self.methods[i].predict(test))
+
+                k = 'arb_' + str(self.selection_rules[j]) + '_' + str(i)
+
+                predictions[k] = self.selection_rules[j].apply(base_pred, y_pred)
+                scores[k] = score(y_true, predictions[k], scoring)
+
+        return predictions, scores
 
 
 class Mathematician(Aggregator):

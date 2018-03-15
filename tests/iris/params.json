@@ -1,19 +1,17 @@
 {
-    "dataset": "datasets/letterFirst.txt",
-    "class_column": 0,
+    "dataset": "datasets/irisLast.txt",
+    "class_column": -1,
     "iterations": 10,
-    "random_state": 3,
+    "random_state": 2,
     "overlap": 0,
     "classifiers": {
         "nb": "sklearn.naive_bayes.GaussianNB()",
-        "svc": "sklearn.svm.SVC(probability=True)",
-        "dtree": "sklearn.tree.DecisionTreeClassifier()",
-        "knn": "sklearn.neighbors.KNeighborsClassifier()"
+        "dtree": "sklearn.tree.DecisionTreeClassifier()"
     },
     "metrics": {
         "f1_macro": "sklearn.metrics.f1_score(average='macro')",
-        "recall_macro": "sklearn.metrics.recall_score(average='macro')",
         "f1_micro": "sklearn.metrics.f1_score(average='micro')",
+        "recall_macro": "sklearn.metrics.recall_score(average='macro')",
         "recall_micro": "sklearn.metrics.recall_score(average='micro')",
         "specificity_macro": "src.metrics.specificity_score(average='macro')",
         "sensitivity_macro": "src.metrics.sensitivity_score(average='macro')",
@@ -24,16 +22,16 @@
         "precision_micro": "sklearn.metrics.precision_score(average='micro')"
     },
     "voter": {
-        "dowdall": "dowdall",
-        "schulze": "schulze",
-        "simpson":  "simpson"
+        "borda": "borda",
+        "simpson": "simpson",
+        "plurality":  "plurality"
     },
     "combiner": {
-        "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()",
+        "cmb_nb": "sklearn.naive_bayes.GaussianNB()",
         "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()"
     },
     "arbiter": {
-        "arb_knn": "sklearn.neighbors.KNeighborsClassifier()",
+        "arb_nb": "sklearn.naive_bayes.GaussianNB()",
         "arb_dtree": "sklearn.tree.DecisionTreeClassifier()"
     },
     "selection_rules": {
