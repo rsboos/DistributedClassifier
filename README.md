@@ -5,10 +5,12 @@ Research project of Federal University of Rio Grande do Sul (UFRGS).
 
 ## Command Line Usage
 ```bash
-usage: main.py [-h] -p PARAMS_FOLDER
+usage: main.py [-h] -d DATASET_PATH [-p PARAMS_FOLDER]
 
 optional arguments:
   -h, --help            show this help message and exit
+  -d DATASET_PATH, --dataset DATASET_PATH
+                        Dataset's absolute/relative path.
   -p PARAMS_FOLDER, --params PARAMS_FOLDER
                         Folder where a file params.json is.
 ```
@@ -17,9 +19,6 @@ optional arguments:
 A JSON file as follow:
 ```javascript
 {
-    // Dataset filepath
-    "dataset": "datasets/cancer.data.process",
-
     // Class' column in dataset (default -1)
     // -1 for last column, 0 for first column
     "class_column": -1,
@@ -112,10 +111,16 @@ A JSON file as follow:
 ```
 
 ## Example
+To use a default parameters set, i.e., `binary.json` or `multiclass.json`, just:
 ```bash
-python3 main.py -p tests/cancer
+python3 main.py -d datasets/cancer_last.csv
 ```
-The program will save the **results** in the same folder.
+The program will save the **results** in `tests/cancer_last_<i>` folder.
+
+If you want to change the test's parameters, just set a params.json path.
+```bash
+python3 main.py -d datasets/cancer_last.csv -p tests/cancer_last_0
+```
 
 ## Results
 Result files saved in *test folder*. You can find examples in `tests` folder.
