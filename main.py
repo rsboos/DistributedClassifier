@@ -89,17 +89,15 @@ if __name__ == "__main__":
 
     parser.add_argument("-p", "--params",
                         default=None,
-                        dest="params_folder",
-                        help="Folder where a file params.json is.")
+                        dest="params_path",
+                        help=".json params file's absolute/relative path.")
 
     # Validate params
     args = parser.parse_args()
 
-    if args.params_folder:
-        params_path = '{}/params.json'.format(args.params_folder)
-        result_path = args.params_folder
-    else:
-        dataset_name = get_dataset_name(args.dataset_path)
+    dataset_name = get_dataset_name(args.dataset_path)
+
+    if args.params_path is None:
         class_column = get_class_column_by_name(dataset_name)
         obs = Observer(args.dataset_path, class_column)
 
@@ -107,18 +105,20 @@ if __name__ == "__main__":
             params_path = 'tests/binary.json'
         else:  # multiclass
             params_path = 'tests/multiclass.json'
+    else:
+        params_path = args.params_path
 
-        # Create test folder if not exists
-        i = 0
-        result_path = 'tests/{}_{}'.format(dataset_name[:-4], i)
-        while os.path.exists(result_path):
-            i += 1
+    # Create test folder if not exists
+    i = 0
+    result_path = 'tests/{}_{}'.format(dataset_name[:-4], i)
+    while os.path.exists(result_path):
+        i += 1
 
-        result_path = result_path[:-1] + '_' + str(i)
-        os.makedirs(result_path)
+    result_path = result_path[:-1] + '_' + str(i)
+    os.makedirs(result_path)
 
-        # Copy params file to test folder
-        os.system('cp {} {}/params.json'.format(params_path, result_path))
+    # Copy params file to test folder
+    os.system('cp {} {}/params.json'.format(params_path, result_path))
 
     # Load params and run test
     params = open(params_path, 'r')

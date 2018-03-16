@@ -119,7 +119,7 @@ The program will save the **results** in `tests/cancer_last_<i>` folder.
 
 If you want to change the test's parameters, just set a params.json path.
 ```bash
-python3 main.py -d datasets/cancer_last.csv -p tests/cancer_last_0
+python3 main.py -d datasets/cancer_last.csv -p tests/cancer/params.json
 ```
 
 ## Results
