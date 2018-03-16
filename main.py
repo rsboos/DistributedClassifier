@@ -96,9 +96,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dataset_name = get_dataset_name(args.dataset_path)
+    class_column = get_class_column_by_name(dataset_name)
 
     if args.params_path is None:
-        class_column = get_class_column_by_name(dataset_name)
         obs = Observer(args.dataset_path, class_column)
 
         if obs.n_targets() == 2:  # binary
@@ -126,6 +126,7 @@ if __name__ == "__main__":
     params.close()
 
     p['dataset'] = args.dataset_path
+    p['class_column'] = class_column
     p['result_path'] = result_path
 
     run_test(p)
