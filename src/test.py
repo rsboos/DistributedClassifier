@@ -151,13 +151,13 @@ def test(**kwargs):
     obs = Observer(filepath, class_column)
 
     characteristics = obs.extract()
-    characteristics += [len(classifiers), overlap, filepath]
+    characteristics += [len(classifiers), overlap, results_path]
     characteristics = list(map(lambda x: str(x), characteristics))
 
     file = open('tests/observer_data.csv', 'a+')
     file.seek(0)
 
-    if all([filepath != line.split(',')[-1][:-1] for line in file]):
+    if all([results_path != line.split(',')[-1][:-1] for line in file]):
         file.write(','.join(characteristics) + '\n')
 
     file.close()
