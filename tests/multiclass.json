@@ -27,7 +27,7 @@
         "dowdall": "dowdall",
         "schulze": "schulze",
         "copeland": "copeland",
-        "plurality":  "plurality",
+        "plurality":  "plurality"
     },
     "combiner": {
         "cmb_nb": "sklearn.naive_bayes.GaussianNB()",

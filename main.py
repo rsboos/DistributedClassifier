@@ -114,7 +114,7 @@ if __name__ == "__main__":
     while os.path.exists(result_path):
         i += 1
 
-    result_path = result_path[:-1] + '_' + str(i)
+    result_path = result_path[:-1] + str(i)
     os.makedirs(result_path)
 
     # Copy params file to test folder
