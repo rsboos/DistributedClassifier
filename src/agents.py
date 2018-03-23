@@ -1,7 +1,8 @@
+import warnings
 import numpy as np
 
-from .metrics import score
 from .data import Data
+from .metrics import score
 from sklearn import model_selection
 from .metrics import score, join_ranks
 from social_choice.profile import Profile
@@ -290,6 +291,7 @@ class Arbiter(Aggregator):
                     if len(set(yt)) == n_classes:
                         self.methods[i].fit(xt, yt)
                     else:
+                        warnings.warn('Special arbiter is being used.', FutureWarning)
                         self.methods[i].fit(x, y_train)
 
                     y_pred = self.methods[i].predict(test)
@@ -299,6 +301,7 @@ class Arbiter(Aggregator):
                         if len(set(yt[j])) == n_classes:
                             self.methods[i].fit(xt[j], yt[j])
                         else:
+                            warnings.warn('Special arbiter is being used.', FutureWarning)
                             self.methods[i].fit(x, y_train)
 
                         y_pred.append(self.methods[i].predict(test))
