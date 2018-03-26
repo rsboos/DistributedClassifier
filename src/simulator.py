@@ -130,12 +130,12 @@ class FeatureDistributed(Simulator):
 		n_distinct = len(distinct_features)
 
 		# Calculates the number of distinc features per part
-		n_part_features = math.ceil(n_distinct / n)
+		n_part_features = math.floor(n_distinct / n)
 
 		# A part should not have less than 2 features
 		if n_part_features + n_common < 2:
 			n = n_distinct / (2 - n_common)
-			n_part_features = math.ceil(n_distinct / n)
+			n_part_features = math.floor(n_distinct / n)
 			warnings.warn('Each division has less then 2 features. Narrowing down to {} divisions.' % n, FutureWarning)
 
 		# Empty list for the loop
@@ -144,10 +144,17 @@ class FeatureDistributed(Simulator):
 		# The main object in the loop is the distinct_features list
 		# We want to add a slice of this list with the common_features list
 		# for each part
-		for i in range(0, n_distinct + 1, n_part_features):
+		for k in range(0, n):
+			i = k * n_part_features
 			j = i + n_part_features									# stop index for slice, garantees n features to the part
 			part_indexes = common_features + distinct_features[i:j] # list of common and distinct indexes for the part
 			distribution.append(part_indexes)						# adds the list to distribution
+
+		n_features = n_part_features * len(distribution)
+		n_left = n_distinct - n_features
+
+		if n_left > 0:
+			distribution[-1] += distinct_features[n_features:n_features + n_left]
 
 		# Returns the distribution list
 		return distribution
