@@ -1,6 +1,7 @@
-import numpy
 import math
 import copy
+import numpy
+import warnings
 
 from .data import Data
 from .split import P3StratifiedKFold
@@ -18,44 +19,26 @@ class Simulator():
 		combiner -- a Combiner object
 	"""
 
-	def __init__(self, learners, **kwargs):
+	def __init__(self, **kwargs):
 		"""Sets the properties, create the agents, divides the data between the agents.
 
 		Keyword arguments:
-			n_learners -- number of agents to be used (must be greater than 1)
 			voter -- a Voter object with social choice functions (default None)
 			combiner -- a Combiner object with a list of classifiers (default None)
+			arbiter -- a Arbiter object
+			mathematician -- a Mathematician object
 		"""
-		self.learners = learners
 		self.voter = kwargs.get('voter', Voter())
 		self.arbiter = kwargs.get('arbiter', Arbiter(MetaDiffIncCorr))
 		self.combiner = kwargs.get('combiner', Combiner())
 		self.mathematician = kwargs.get('mathematician', Mathematician())
-
-	def fit(self):
-		"""Train model with trainingset for each learner."""
-		[learner.fit() for learner in self.learners]
-
-	def predict_proba(self, data):
-		"""Predicts the probabilities using the learner classifier
-		and returns a list of predictions for every learner
-
-		Keyword arguments:
-			data -- data to be predicted
-		"""
-		return [learner.predict_proba(data) for learner in self.learners]
 
 	@staticmethod
 	def get_distribution(**kwargs):
 		"""Not implemented. Should be implemented in a child class."""
 		pass
 
-	@classmethod
-	def load(cls, **kwargs):
-		"""Not implemented. Should be implemented in a child class."""
-		pass
-
-	def cross_validate(self, **kwargs):
+	def repeated_cv(self, **kwargs):
 		"""Not implemented. Should be implemented in a child class."""
 		pass
 
@@ -69,9 +52,35 @@ class FeatureDistributed(Simulator):
 
 	Also see: Simulator class documentation.
 	"""
+	@classmethod
+	def init_learners(cls, data, classifiers, overlap, random_state):
+		# The number of classifiers define the number of learners
+		n_learners = len(classifiers)
+
+		# Gets the indexes to slice the data
+		# Because the distribution is vertical, we can use a part
+		# of the data with all features to get the slice indexes
+		indexes = cls.get_distribution(data, n_learners, overlap, random_state)
+		n_indexes = len(indexes)
+
+		# Convert to ndarray for slicing
+		data.x, data.y = numpy.array(data.x), numpy.array(data.y)
+
+		learners = list()
+
+		for i in range(n_indexes):
+			features = indexes[i]								 # gets the features indexes
+
+			dataset = Data(data.x[:, features], data.y)		 	 # gets the trainingset
+			classifier = classifiers[i]			   			     # gets the classifier
+
+			learner = Learner(dataset, classifier) 			     # creates the learner
+			learners.append(learner)			   			     # saves the learner
+
+		return learners
 
 	@staticmethod
-	def get_distribution(data, n, overlap=0):
+	def get_distribution(data, n, overlap=0, random_state=None):
 		"""Vertically distributes the training data into n parts and returns a list of
 		column indexes for each part
 
@@ -82,17 +91,24 @@ class FeatureDistributed(Simulator):
 					   of parts' common features. If int, should be less than or equal to the
 					   number of features and represents the number of common features. If list,
 					   represents the features' columns indexes. By default, the value is set to 0.
+			random_state -- int, RandomState instance or None, optional, default=None
+		        If int, random_state is the seed used by the random number generator;
+		        If RandomState instance, random_state is the random number generator;
+		        If None, the random number generator is the RandomState instance used
+		        by `np.random`. Used when ``shuffle`` == True.
 		"""
 
 		# Check the type of overlap variable and sets the n_common and common_features, where
 		# n_common is the number of common features for each part and
 		# common_features is a common features' index's list
+		rs = numpy.random.RandomState(random_state)
+
 		if type(overlap) is int:
-			common_features = set(numpy.random.choice(data.n_features, overlap))  # gets a n length list with random numbers between 0-n_features
+			common_features = set(rs.choice(data.n_features, overlap))   # gets a n length list with random numbers between 0-n_features
 
 		elif type(overlap) is float:
-			n_common = math.ceil(data.n_features * overlap)						  # calculates the amount of features each part has in common
-			common_features = set(numpy.random.choice(data.n_features, n_common)) # gets a n length list with random numbers between 0-n_features
+			n_common = math.ceil(data.n_features * overlap)			     # calculates the amount of features each part has in common
+			common_features = set(rs.choice(data.n_features, n_common))  # gets a n length list with random numbers between 0-n_features
 
 		elif type(overlap) is list:
 			common_features = set(overlap)
@@ -105,15 +121,22 @@ class FeatureDistributed(Simulator):
 
 		# Just converts from set to list
 		common_features = list(common_features)
+		n_common = len(common_features)
 
 		# Permutates the distinct features (randomize)
-		distinct_features = list(numpy.random.permutation(distinct_features))
+		distinct_features = list(rs.permutation(distinct_features))
 
 		# Calculate the number of distinct features per part
 		n_distinct = len(distinct_features)
 
 		# Calculates the number of distinc features per part
 		n_part_features = math.ceil(n_distinct / n)
+
+		# A part should not have less than 2 features
+		if n_part_features + n_common < 2:
+			n = n_distinct / (2 - n_common)
+			n_part_features = math.ceil(n_distinct / n)
+			warnings.warn('Each division has less then 2 features. Narrowing down to {} divisions.' % n, FutureWarning)
 
 		# Empty list for the loop
 		distribution = []
@@ -129,9 +152,8 @@ class FeatureDistributed(Simulator):
 		# Returns the distribution list
 		return distribution
 
-	@classmethod
-	def load(cls, data, classifiers, overlap=0, **kwargs):
-		"""Creates n_learners Learner objects and returns a DistributedClassification object
+	def repeated_cv(self, data, classifiers, overlap, scoring={}, random_state=None, n_it=10):
+		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 
 		Keyword arguments:
 			data -- a Data object
@@ -141,40 +163,6 @@ class FeatureDistributed(Simulator):
 					   number of features/instances and represents the number of common
 					   features/instances. If list, represents the features'/instances'
 					   indexes. By default, the value is set to 0.
-			voter -- a Voter object with social choice functions (default None)
-			combiner -- a Combiner object with a list of classifiers (default None)
-		"""
-		# The number of classifiers define the number of learners
-		n_learners = len(classifiers)
-
-		# Gets the indexes to slice the data
-		# Because the distribution is vertical, we can use a part
-		# of the data with all features to get the slice indexes
-		indexes = cls.get_distribution(data, n_learners, overlap)
-
-		# Convert to ndarray for slicing
-		data.x, data.y = numpy.array(data.x), numpy.array(data.y)
-
-		# Initialize an empty list for learners
-		learners = list()
-
-		# For each learner
-		for i in range(n_learners):
-			features = indexes[i]								 # gets the features indexes
-
-			dataset = Data(data.x[:, features], data.y)		 	 # gets the trainingset
-			classifier = classifiers[i]			   			     # gets the classifier
-
-			learner = Learner(dataset, classifier) 			     # creates the learner
-			learners.append(learner)			   			     # saves the learner
-
-		# Creates a DistributedClassifition simulator
-		return cls(learners, **kwargs)
-
-	def repeated_cv(self, scoring={}, random_state=None, n_it=10):
-		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
-
-		Keyword arguments:
 			scoring -- metrics to be returned (default {})*
 			random_state -- int, RandomState instance or None, optional, default=None
 		        If int, random_state is the seed used by the random number generator;
@@ -189,23 +177,21 @@ class FeatureDistributed(Simulator):
 		# Number of folds
 		k_fold = 10
 
-		# Number of learners
-		n = len(self.learners)
-
 		# Initializes an empty dict for scores and rankings
 		scores = dict()
 		ranks = dict()
-
-		# Gets a sample of the data for the splitter
-		sample_x = self.learners[0].dataset.x  # instances
-		sample_y = self.learners[0].dataset.y  # classes
-
-		n_samples = sample_y.shape[0]
 
 		# Splits into k training and test folds for cross-validation
 		skf = P3StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for i in range(n_it):
+			learners = cls.init_learners(data, classifiers, overlap, i)
+			n = len(learners)
+
+			# Gets a sample of the data for the splitter
+			sample_x = learners[0].dataset.x  # instances
+			sample_y = learners[0].dataset.y  # classes
+
 			# Create folds and iterate
 			for train_i, val_i, test_i in skf.split(sample_x, sample_y):
 				# Initialize empty list for probabilities
@@ -216,18 +202,18 @@ class FeatureDistributed(Simulator):
 				# For each learner...
 				for j in range(n):
 					# Compute a fold
-					_, proba = self.learners[j].run_fold(train_i, val_i, scoring)
+					_, proba = learners[j].run_fold(train_i, val_i, scoring)
 
 					# Save for combiner
 					combiner_input.append(proba)
 
 					# Get test data
-					test_x = self.learners[j].dataset.x[test_i, :]
-					test_y = self.learners[j].dataset.y[test_i]
+					test_x = learners[j].dataset.x[test_i, :]
+					test_y = learners[j].dataset.y[test_i]
 
 					# Get model's predictions
-					predi = self.learners[j].predict(test_x)
-					proba = self.learners[j].predict_proba(test_x)
+					predi = learners[j].predict(test_x)
+					proba = learners[j].predict_proba(test_x)
 
 					# Get scores
 					metrics = score(test_y, predi, scoring)
@@ -252,7 +238,7 @@ class FeatureDistributed(Simulator):
 													  y_true=sample_y[test_i],
 				                                 	  scoring=scoring)
 
-				aaggr_r, aaggr_s = self.arbiter.aggr(learners=self.learners,
+				aaggr_r, aaggr_s = self.arbiter.aggr(learners=learners,
 				                                     x=combiner_input,
 				                                     y=sample_y[val_i],
 				                                     y_pred=predictions,
