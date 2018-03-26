@@ -137,6 +137,14 @@ def test(**kwargs):
 
     # Save CV scores
     n = len(names)
+
+    diff = n - len(scores)
+
+    if diff > 0:
+        nc = len(classifiers)
+        names = names[0:nc - diff] + names[nc:]
+        n = len(names)
+
     [scores[i].to_csv('{}/cv_scores_{}.csv'.format(results_path, names[i])) for i in range(n)]
 
     # Create CV summary
