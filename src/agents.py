@@ -288,23 +288,26 @@ class Arbiter(Aggregator):
             for i in range(n):
 
                 if n_t < 3:
-                    if len(set(yt)) == n_classes:
+                    if len(set(yt)) == n_classes and len(yt) > 4:
                         self.methods[i].fit(xt, yt)
                     else:
                         warnings.warn('Special arbiter is being used.', FutureWarning)
                         self.methods[i].fit(x, y_train)
 
                     y_pred = self.methods[i].predict(test)
+
                 else:
                     y_pred = []
+
                     for j in range(n_t):
-                        if len(set(yt[j])) == n_classes:
+                        if len(set(yt[j])) == n_classes and len(yt) > 4:
                             self.methods[i].fit(xt[j], yt[j])
                         else:
                             warnings.warn('Special arbiter is being used.', FutureWarning)
                             self.methods[i].fit(x, y_train)
 
                         y_pred.append(self.methods[i].predict(test))
+
 
                 k = 'arb_' + str(self.selection_rules[j]) + '_' + str(i)
 
