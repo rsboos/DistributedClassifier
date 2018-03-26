@@ -185,7 +185,7 @@ class FeatureDistributed(Simulator):
 		skf = P3StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for i in range(n_it):
-			learners = cls.init_learners(data, classifiers, overlap, i)
+			learners = self.init_learners(data, classifiers, overlap, i)
 			n = len(learners)
 
 			# Gets a sample of the data for the splitter
