@@ -4,12 +4,10 @@
     "overlap": 0,
     "classifiers": {
         "gnb": "sklearn.naive_bayes.GaussianNB()",
-        "bnb": "sklearn.naive_bayes.BernoulliNB()",
         "svc": "sklearn.svm.SVC(probability=True)",
         "mlp": "sklearn.neural_network.MLPClassifier()",
         "dtree": "sklearn.tree.DecisionTreeClassifier()",
-        "knn": "sklearn.neighbors.KNeighborsClassifier()",
-        "gpc": "sklearn.gaussian_process.GaussianProcessClassifier()"
+        "knn": "sklearn.neighbors.KNeighborsClassifier()"
     },
     "metrics": {
         "auc": "sklearn.metrics.roc_auc_score()",
@@ -30,21 +28,17 @@
     },
     "combiner": {
         "cmb_gnb": "sklearn.naive_bayes.GaussianNB()",
-        "cmb_bnb": "sklearn.naive_bayes.BernoulliNB()",
         "cmb_svc": "sklearn.svm.SVC(probability=True)",
         "cmb_mlp": "sklearn.neural_network.MLPClassifier()",
         "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()",
-        "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()",
-        "cmb_gpc": "sklearn.gaussian_process.GaussianProcessClassifier()"
+        "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()"
     },
     "arbiter": {
         "arb_gnb": "sklearn.naive_bayes.GaussianNB()",
-        "arb_bnb": "sklearn.naive_bayes.BernoulliNB()",
         "arb_svc": "sklearn.svm.SVC(probability=True)",
         "arb_mlp": "sklearn.neural_network.MLPClassifier()",
         "arb_dtree": "sklearn.tree.DecisionTreeClassifier()",
-        "arb_knn": "sklearn.neighbors.KNeighborsClassifier()",
-        "arb_gpc": "sklearn.gaussian_process.GaussianProcessClassifier()"
+        "arb_knn": "sklearn.neighbors.KNeighborsClassifier()"
     },
     "selection_rules": {
         "md": "MetaDiff",
