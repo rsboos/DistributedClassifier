@@ -78,6 +78,49 @@ def run_test(p):
          results_path=p['result_path'])
 
 
+def main(args):
+    dataset_name = get_dataset_name(args['dataset_path'])
+    class_column = get_class_column_by_name(dataset_name)
+
+    if args['params_path'] is None:
+        obs = Observer(args['dataset_path'], class_column)
+
+        if obs.n_targets() == 2:  # binary
+            params_path = 'tests/binary.json'
+        else:  # multiclass
+            params_path = 'tests/multiclass.json'
+    else:
+        params_path = args['params_path']
+
+    # Create test folder if not exists
+    i = 0
+    result_path = 'tests/{}_{}'.format(dataset_name[:-4], i)
+    while os.path.exists(result_path):
+        i += 1
+        result_path = result_path[:-1] + str(i)
+
+    os.makedirs(result_path)
+
+    # Load params and run test
+    params = open(params_path, 'r')
+    p = json.load(params)
+    params.close()
+
+    p['dataset'] = args['dataset_path']
+    p['class_column'] = class_column
+    p['result_path'] = result_path
+
+    if args['overlap'] is not None:
+        p['overlap'] = float(args['overlap'])
+
+    # Save params
+    file = open('{}/params.json'.format(result_path), 'w')
+    json.dump(p, file)
+    file.close()
+
+    run_test(p)
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -98,45 +141,6 @@ if __name__ == "__main__":
                         help="\% of overlaped features, value between 0.0 and 1.0.")
 
     # Validate params
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    dataset_name = get_dataset_name(args.dataset_path)
-    class_column = get_class_column_by_name(dataset_name)
-
-    if args.params_path is None:
-        obs = Observer(args.dataset_path, class_column)
-
-        if obs.n_targets() == 2:  # binary
-            params_path = 'tests/binary.json'
-        else:  # multiclass
-            params_path = 'tests/multiclass.json'
-    else:
-        params_path = args.params_path
-
-    # Create test folder if not exists
-    i = 0
-    result_path = 'tests/{}_{}'.format(dataset_name[:-4], i)
-    while os.path.exists(result_path):
-        i += 1
-        result_path = result_path[:-1] + str(i)
-
-    os.makedirs(result_path)
-
-    # Load params and run test
-    params = open(params_path, 'r')
-    p = json.load(params)
-    params.close()
-
-    p['dataset'] = args.dataset_path
-    p['class_column'] = class_column
-    p['result_path'] = result_path
-
-    if args.overlap is not None:
-        p['overlap'] = float(args.overlap)
-
-    # Save params
-    file = open('{}/params.json'.format(result_path), 'w')
-    json.dump(p, file)
-    file.close()
-
-    run_test(p)
+    main(args)
