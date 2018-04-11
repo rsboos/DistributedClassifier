@@ -92,6 +92,11 @@ if __name__ == "__main__":
                         dest="params_path",
                         help=".json params file's absolute/relative path.")
 
+    parser.add_argument("-o", "--overlap",
+                        default=None,
+                        dest="overlap",
+                        help="\% of overlaped features, value between 0.0 and 1.0.")
+
     # Validate params
     args = parser.parse_args()
 
@@ -117,9 +122,6 @@ if __name__ == "__main__":
 
     os.makedirs(result_path)
 
-    # Copy params file to test folder
-    os.system('cp {} {}/params.json'.format(params_path, result_path))
-
     # Load params and run test
     params = open(params_path, 'r')
     p = json.load(params)
@@ -128,5 +130,13 @@ if __name__ == "__main__":
     p['dataset'] = args.dataset_path
     p['class_column'] = class_column
     p['result_path'] = result_path
+
+    if args.overlap is not None:
+        p['overlap'] = float(args.overlap)
+
+    # Save params
+    file = open('{}/params.json'.format(result_path), 'w')
+    json.dump(p, file)
+    file.close()
 
     run_test(p)

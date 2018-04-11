@@ -13,6 +13,8 @@ optional arguments:
                         Dataset's absolute/relative path.
   -p PARAMS_FOLDER, --params PARAMS_FOLDER
                         Folder where a file params.json is.
+  -o OVERLAP, --overlap OVERLAP
+                        % of overlaped features, value between 0.0 and 1.0.
 ```
 
 ## Params file
