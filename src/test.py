@@ -1,6 +1,5 @@
 from src.data import Data
 from src.metrics import summary
-from theobserver import Observer
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributed
 
@@ -151,18 +150,3 @@ def test(**kwargs):
     stats = summary(scores)
     stats.index = names
     stats.to_csv('{}/cv_summary.csv'.format(results_path))
-
-    # Save dataset information
-    obs = Observer(filepath, class_column)
-
-    characteristics = obs.extract()
-    characteristics += [len(classifiers), overlap, results_path]
-    characteristics = list(map(lambda x: str(x), characteristics))
-
-    file = open('tests/observer_data.csv', 'a+')
-    file.seek(0)
-
-    if all([results_path != line.split(',')[-1][:-1] for line in file]):
-        file.write(','.join(characteristics) + '\n')
-
-    file.close()
