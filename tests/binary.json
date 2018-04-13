@@ -22,7 +22,6 @@
         "borda": "borda",
         "simpson": "simpson",
         "dowdall": "dowdall",
-        "schulze": "schulze",
         "copeland": "copeland",
         "plurality":  "plurality"
     },
