@@ -136,7 +136,7 @@ class FeatureDistributed(Simulator):
 		if n_part_features + n_common < 2:
 			n = n_distinct // (2 - n_common)
 			n_part_features = math.floor(n_distinct / n)
-			warnings.warn('Each division has less then 2 features. Narrowing down to {} divisions.'.format(str(n)), FutureWarning)
+			warnings.warn('Each division has less than 2 features. Narrowing down to {} divisions.'.format(str(n)), FutureWarning)
 
 		# Empty list for the loop
 		distribution = []
