@@ -1,86 +1,88 @@
 import warnings
 import numpy as np
 
-from .data import Data
-from .metrics import score
-from sklearn import model_selection
 from .metrics import score, join_ranks
 from social_choice.profile import Profile
 
 
 class Learner():
-	"""Trains a model given a classifier
+	"""Train a model given a classifier.
 
 	Properties:
 		dataset -- A Data for training and testing the model
-		classifier -- Algorithm used for training the model (an instance from sklearn library*)
-		__fit -- A flag to check if the data was fit
-
-	*The classifier should implement fit(), predict() and predict_proba().
-	See the sklearn documentation for more information...
 	"""
 
 	def __init__(self, dataset, classifier):
-		"""Sets the properties and fits the data
+		"""Set properties.
 
 		Keyword arguments:
 			dataset -- The Data used to fit a model
-			classifier -- An instance of a classifier from sklearn library
-		"""
+			classifier -- An instance of a classifier from sklearn library*
 
-		# Sets the properties
+		*The classifier should implement fit(), predict() and predict_proba().
+		See the sklearn documentation for more information...
+		"""
 		self.dataset = dataset
-		self.classifier = classifier
+		self.__classifier = classifier
 
-	def fit(self):
-		"""Fits the model using the class dataset and classifier"""
-		self.classifier = self.classifier.fit(self.dataset.x, self.dataset.y)
+	def fit(self, X=None, y=None):
+		"""Fit the model using the class dataset and classifier.
 
-	def predict(self, data):
+        Keyword arguments:
+            X -- training set (default self.dataset.x)
+            y -- target set (default self.dataset.y)
+        """
+		if X is None:
+			X = self.dataset.x
+
+		if y is None:
+			y = self.dataset.y
+
+		self.__classifier.fit(X, y)
+
+	def predict(self, X):
 		"""Predict classes for the testset on dataset and returns a ndarray as result.
-		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- data to be predicted
+			X -- data to be predicted
 		"""
-		return self.classifier.predict(data)  # returns the predictions
+		return self.__classifier.predict(X)
 
-	def predict_proba(self, data):
+	def predict_proba(self, X):
 		"""Predict the probabilities for the testset on dataset and returns a ndarray as result.
-		fit() is called before predict, if it was never executed.
 
 		Keyword arguments:
-			data -- data to be predicted
+			X -- data to be predicted
 		"""
-		return self.classifier.predict_proba(data)  # returns the predictions
+		return self.__classifier.predict_proba(X)
 
-	def run_fold(self, train_i, test_i, scoring={}):
+	def evaluate(self, fold, scoring={}):
 		"""Generate cross-validated for an input data point.
 
 		Keyword arguments:
-			train_i -- train instances' index
-			test_i -- test instances' index
-			scoring -- a dict of scorers {<'scorer_name'>: <scorer_callable>}
-
-		*For more information about the returned data and the parameters:
-		http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
+			folds -- CV folds for one run
+            scoring -- metrics to be returned (default {})*
 		"""
-		# Get training data
-		train_x = self.dataset.x[train_i, :]
-		train_y = self.dataset.y[train_i]
+		train_i, val_i, test_i = fold
 
-		# Get test data
-		test_x = self.dataset.x[test_i, :]
-		test_y = self.dataset.y[test_i]
+		x_train = self.dataset.x[train_i, :]
+		y_train = self.dataset.y[train_i]
 
-		# Train model
-		self.classifier.fit(train_x, train_y)
+		x_val = self.dataset.x[val_i, :]
+		y_val = self.dataset.y[val_i]
 
-		# Get model's predictions
-		predi = self.classifier.predict(test_x)
-		proba = self.classifier.predict_proba(test_x)
+		x_test = self.dataset.x[test_i, :]
+		y_test = self.dataset.y[test_i]
 
-		return predi, proba
+		self.fit(x_train, y_train)
+
+		y_pred = self.predict(x_test)
+		y_proba_val = self.predict_proba(x_val)
+		y_proba_test = self.predict_proba(x_test)
+
+		metrics = score(y_test, y_pred, scoring)
+
+		return y_pred, y_proba_val, y_proba_test, metrics
 
 
 class Aggregator():

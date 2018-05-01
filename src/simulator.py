@@ -56,7 +56,8 @@ class FeatureDistributedSimulator():
 			sample_x = learners[0].dataset.x
 			sample_y = learners[0].dataset.y
 
-			for train_i, val_i, test_i in skf.split(sample_x, sample_y):
+			for fold in skf.split(sample_x, sample_y):
+				train_i, val_i, test_i = fold
 
 				combiner_input = list()
 				probabilities = list()
@@ -65,25 +66,14 @@ class FeatureDistributedSimulator():
 				# For each learner...
 				for j in range(n):
 					# Compute a fold
-					_, proba = learners[j].run_fold(train_i, val_i, scoring)
+					y_pred, y_proba_val, y_proba_test, metrics = learners[j].evaluate(fold, scoring)
 
 					# Save for combiner
-					combiner_input.append(proba)
-
-					# Get test data
-					test_x = learners[j].dataset.x[test_i, :]
-					test_y = learners[j].dataset.y[test_i]
-
-					# Get model's predictions
-					predi = learners[j].predict(test_x)
-					proba = learners[j].predict_proba(test_x)
-
-					# Get scores
-					metrics = score(test_y, predi, scoring)
+					combiner_input.append(y_proba_val)
 
 					# Save predictions and probabilities
-					predictions.append(predi)
-					probabilities.append(proba)
+					predictions.append(y_pred)
+					probabilities.append(y_proba_test)
 
 					# Save score
 					scores.setdefault(j, [])
