@@ -127,10 +127,10 @@ def test(**kwargs):
     data = Data.load(filepath, class_column)
 
     # Create simulator (agents' manager)
-    simulator = FeatureDistributedSimulator(classifiers, aggregators)
+    simulator = FeatureDistributedSimulator(data, classifiers, aggregators)
 
     # Cross validate
-    ranks, scores = simulator.repeated_cv(data, overlap, scorers, random_state, iterations)
+    ranks, scores = simulator.evaluate(overlap, random_state, scorers, iterations)
 
     # Save CV scores
     n = len(names)

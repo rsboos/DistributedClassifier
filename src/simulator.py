@@ -11,22 +11,21 @@ class FeatureDistributedSimulator():
 		This class simulates a distributed learning using classifier agents. It divides
 		the data vertically, i. e., it divides the features randomly between the learners.
 	"""
-	def __init__(self, classifiers, agreggators):
+	def __init__(self, data, classifiers, agreggators):
 		"""Set private properties.
 
 		Keyword arguments:
 			classifiers -- a list of classifiers' instances
 			aggregators -- a list of agreggators' inatances
 		"""
+		self.__data = data
 		self.__classifiers = classifiers
 		self.__aggregators = agreggators
 
-	def repeated_cv(self, data, overlap, scoring={}, random_state=None, n_it=10):
-		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
+	def evaluate(self, overlap, random_state=None, scoring={}, n_it=10):
+		"""Run the cross_validate function for each agent and returns a list with each learner's scores.
 
 		Keyword arguments:
-			data -- a Data object
-			classifiers -- a list of classifiers, len(classifiers) define the number of learners
 			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
 					   of parts' in common. If int, should be less than or equal to the
 					   number of features/instances and represents the number of common
@@ -38,32 +37,27 @@ class FeatureDistributedSimulator():
 		        If RandomState instance, random_state is the random number generator;
 		        If None, the random number generator is the RandomState instance used
 		        by `np.random`. Used when ``shuffle`` == True.
-			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
+			n_it -- number of cross-validation iterations (default 10, i. e., 10 10-fold cross-validation)
 
 		For how to use scoring:
 		http://scikit-learn.org/stable/modules/cross_validation.html
 		"""
-		# Number of folds
 		k_fold = 10
 
-		# Initializes an empty dict for scores and rankings
 		scores = dict()
 		ranks = dict()
 
-		# Splits into k training and test folds for cross-validation
 		skf = P3StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for seed in range(n_it):
-			learners = self.__distribute(data, overlap, seed)
+			learners = self.__distribute(overlap, seed)
 			n = len(learners)
 
-			# Gets a sample of the data for the splitter
-			sample_x = learners[0].dataset.x  # instances
-			sample_y = learners[0].dataset.y  # classes
+			sample_x = learners[0].dataset.x
+			sample_y = learners[0].dataset.y
 
-			# Create folds and iterate
 			for train_i, val_i, test_i in skf.split(sample_x, sample_y):
-				# Initialize empty list for probabilities
+
 				combiner_input = list()
 				probabilities = list()
 				predictions = list()
@@ -125,19 +119,22 @@ class FeatureDistributedSimulator():
 		# Return the ranks and aggregated scores as DataFrames for each learner
 		return ranks, [cv_score(scores[k]) for k in scores]
 
-	def __distribute(self, data, overlap, random_state):
+	def __distribute(self, overlap, random_state):
 		learners = []
 		n_learners = len(self.__classifiers)
 
 		distributor = Distributor(n_learners, overlap, random_state)
 
-		indexes = distributor.split(data)
+		indexes = distributor.split(self.__data)
 		n_indexes = len(indexes)
 
 		for i in range(n_indexes):
 			features = indexes[i]
 
-			dataset = Data(data.x[:, features], data.y)
+			X = self.__data.x[:, features]
+			y = self.__data.y
+
+			dataset = Data(X, y)
 			classifier = self.__classifiers[i]
 
 			learner = Learner(dataset, classifier)
