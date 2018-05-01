@@ -1,34 +1,17 @@
-import math
-import copy
-import numpy
-import pandas
-
-from sklearn import preprocessing, model_selection
+from pandas import read_csv
+from sklearn.preprocessing import LabelEncoder
 
 
 class Data():
-	"""Represents the data
+	"""Represent the data.
 
 	Properties*:
-		x -- instances' attributes (pandas.dataframe)
+		x -- instances' attributes (ndarray)
 		y -- instances' classes (ndarray)
 	"""
-
 	def __init__(self, x, y):
-		"""Nomalize the data and sets the properties
-
-		Keywords arguments:
-			x -- instances' attributes (pandas.dataframe)
-			y -- instances' classes (ndarray)
-		"""
-
-		# Normalizes the target
-		preprocess = preprocessing.LabelEncoder() # new LabelEncoder
-		preprocess.fit(y)				 	      # inserts the labels
-
-		self.x = x						   # sets the instances
-		self.y = preprocess.transform(y)   # transforms labels into integers (indexes for classes)
-		self.classes = preprocess.classes_ # list of classes that can be accessed with any target
+		self.x = x
+		self.__discretize(y)
 
 	@property
 	def n_features(self):
@@ -43,39 +26,30 @@ class Data():
 	@property
 	def n_classes(self):
 		"""Gets the number of classes from data and returns it"""
-		return len(self.classes)
+		return self.classes.size
 
 	@classmethod
 	def load(cls, filepath, class_column=-1):
-		"""Loads a CSV file and returns a tuple with instances' features and classes (x,y)
+		"""Load a headless CSV file and return a Data object.
 
 		Keyword arguments:
 			filepath -- file's absolute/relative path
 			class_column -- number of the class column [0 -> first column, (default -1) -> last column]
 		"""
+		dataset = read_csv(filepath, header=None)
+		dataset = dataset.values
 
-		# Loads the CSV file
-		dataset = pandas.read_csv(filepath, header=None)
-
-		# Gets the number of columns: dataset.shape -> (#lines, #columns)
 		n_columns = dataset.shape[1]
 
-		# Initial and final column index (exclusive on stop)
-		i = class_column + 1			# initial
-		j = n_columns + class_column	# final + 1 (because it's exclusive)
+		i = class_column + 1
+		j = n_columns + class_column
 
-		# Separates the data from the classes (target)
-		x = dataset.iloc[:, i:j]			# all lines and all columns (except the class column)
-		y = dataset.iloc[:, class_column]   # all lines and the class column
+		x = dataset[:, i:j]
+		y = dataset[:, class_column]
 
-		# Creates a Data object and returns it
 		return cls(x, y)
 
-	def map_classes(self, predictions):
-		"""Map predictions indexes to classes.
-
-		Keyword argument:
-			predictions -- a list of predictions
-		"""
-		pred = map(lambda x: self.classes[x], predictions)
-		return list(pred)
+	def __discretize(self, y):
+		encoder = LabelEncoder()
+		self.y = encoder.fit_transform(y)
+		self.classes = encoder.classes_
