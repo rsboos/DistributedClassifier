@@ -1,7 +1,7 @@
 from src.data import Data
 from src.metrics import summary
 from sklearn.metrics import make_scorer
-from src.simulator import FeatureDistributed
+from src.simulator import FeatureDistributedSimulator
 
 
 def load_imports(imports):
@@ -117,6 +117,7 @@ def test(**kwargs):
     combiner = kwargs['combiner']
     selectors = kwargs['selectors']
     mathematician = kwargs['mathematician']
+    aggregators = [voter, arbiter, combiner, mathematician]
 
     # For results
     names = kwargs['names']
@@ -126,13 +127,10 @@ def test(**kwargs):
     data = Data.load(filepath, class_column)
 
     # Create simulator (agents' manager)
-    simulator = FeatureDistributed(voter=voter,
-                                   arbiter=arbiter,
-                                   combiner=combiner,
-                                   mathematician=mathematician)
+    simulator = FeatureDistributedSimulator(classifiers, aggregators)
 
     # Cross validate
-    ranks, scores = simulator.repeated_cv(data, classifiers, overlap, scorers, random_state, iterations)
+    ranks, scores = simulator.repeated_cv(data, overlap, scorers, random_state, iterations)
 
     # Save CV scores
     n = len(names)

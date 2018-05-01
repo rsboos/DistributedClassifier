@@ -10,24 +10,31 @@ from .metrics import cv_score, score, join_ranks
 from .agents import Learner, Voter, Combiner, Arbiter, Mathematician
 
 
-class FeatureDistributed():
+class FeatureDistributedSimulator():
 	"""Feature distributed classification learning simulator.
 
 	Description:
 		This class simulates a distributed learning using classifier agents. It divides
 		the data vertically, i. e., it divides the features randomly between the learners.
-
-	Also see: Simulator class documentation.
 	"""
-	@classmethod
-	def init_learners(cls, data, classifiers, overlap, random_state):
+	def __init__(self, classifiers, agreggators):
+		"""Set private properties.
+
+		Keyword arguments:
+			classifiers -- a list of classifiers' instances
+			aggregators -- a list of agreggators' inatances
+		"""
+		self.__classifiers = classifiers
+		self.__aggregators = agreggators
+
+	def init_learners(self, data, overlap, random_state):
 		# The number of classifiers define the number of learners
-		n_learners = len(classifiers)
+		n_learners = len(self.__classifiers)
 
 		# Gets the indexes to slice the data
 		# Because the distribution is vertical, we can use a part
 		# of the data with all features to get the slice indexes
-		indexes = cls.get_distribution(data, n_learners, overlap, random_state)
+		indexes = self.get_distribution(data, n_learners, overlap, random_state)
 		n_indexes = len(indexes)
 
 		# Convert to ndarray for slicing
@@ -39,15 +46,14 @@ class FeatureDistributed():
 			features = indexes[i]								 # gets the features indexes
 
 			dataset = Data(data.x[:, features], data.y)		 	 # gets the trainingset
-			classifier = classifiers[i]			   			     # gets the classifier
+			classifier = self.__classifiers[i]			   	     # gets the classifier
 
 			learner = Learner(dataset, classifier) 			     # creates the learner
 			learners.append(learner)			   			     # saves the learner
 
 		return learners
 
-	@staticmethod
-	def get_distribution(data, n, overlap=0, random_state=None):
+	def get_distribution(self, data, n, overlap=0, random_state=None):
 		"""Vertically distributes the training data into n parts and returns a list of
 		column indexes for each part
 
@@ -126,7 +132,7 @@ class FeatureDistributed():
 		# Returns the distribution list
 		return distribution
 
-	def repeated_cv(self, data, classifiers, overlap, scoring={}, random_state=None, n_it=10):
+	def repeated_cv(self, data, overlap, scoring={}, random_state=None, n_it=10):
 		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
 
 		Keyword arguments:
@@ -159,7 +165,7 @@ class FeatureDistributed():
 		skf = P3StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for i in range(n_it):
-			learners = self.init_learners(data, classifiers, overlap, i)
+			learners = self.init_learners(data, overlap, i)
 			n = len(learners)
 
 			# Gets a sample of the data for the splitter
@@ -201,37 +207,21 @@ class FeatureDistributed():
 					scores[j].append(metrics)
 
 				# Aggregate probabilities with different methods
-				aggr_r, aggr_s = self.voter.aggr(y_true=sample_y[test_i],
-				                                 y_pred=predictions,
-				                                 y_proba=probabilities,
-				                                 scoring=scoring)
+				aggr_r, aggr_s = {}, {}
 
-				caggr_r, caggr_s = self.combiner.aggr(x=combiner_input,
-													  y=sample_y[val_i],
-													  testset=probabilities,
-													  y_true=sample_y[test_i],
-				                                 	  scoring=scoring)
+				for k in range(len(self.__aggregators)):
+					rank, metrics = self.__aggregators[k].aggr(y_true=sample_y[test_i],
+				                                 			   y_pred=predictions,
+				                                 			   y_proba=probabilities,
+				                                 			   x=combiner_input,
+												 			   y=sample_y[val_i],
+												 			   testset=probabilities,
+				                                 			   learners=learners,
+												 			   test_i=test_i,
+				                                 			   scoring=scoring)
 
-				aaggr_r, aaggr_s = self.arbiter.aggr(learners=learners,
-				                                     x=combiner_input,
-				                                     y=sample_y[val_i],
-				                                     y_pred=predictions,
-													 testset=probabilities,
-													 test_i=test_i,
-													 y_true=sample_y[test_i],
-			                                 		 scoring=scoring)
-
-				maggr_r, maggr_s = self.mathematician.aggr(y_true=sample_y[test_i],
-				                                 		   y_proba=probabilities,
-				                                 		   scoring=scoring)
-
-				aggr_r.update(caggr_r)
-				aggr_r.update(aaggr_r)
-				aggr_r.update(maggr_r)
-
-				aggr_s.update(caggr_s)
-				aggr_s.update(aaggr_s)
-				aggr_s.update(maggr_s)
+					aggr_r.update(rank)
+					aggr_s.update(metrics)
 
 				# Save ranks
 				for k in aggr_r:
