@@ -10,40 +10,7 @@ from .metrics import cv_score, score, join_ranks
 from .agents import Learner, Voter, Combiner, Arbiter, Mathematician
 
 
-class Simulator():
-	"""Distributed classification learning simulator.
-
-	Properties:
-		learners -- a list of learners
-		voter -- a Voter object
-		combiner -- a Combiner object
-	"""
-
-	def __init__(self, **kwargs):
-		"""Sets the properties, create the agents, divides the data between the agents.
-
-		Keyword arguments:
-			voter -- a Voter object with social choice functions (default None)
-			combiner -- a Combiner object with a list of classifiers (default None)
-			arbiter -- a Arbiter object
-			mathematician -- a Mathematician object
-		"""
-		self.voter = kwargs.get('voter', Voter())
-		self.arbiter = kwargs.get('arbiter', Arbiter(MetaDiffIncCorr))
-		self.combiner = kwargs.get('combiner', Combiner())
-		self.mathematician = kwargs.get('mathematician', Mathematician())
-
-	@staticmethod
-	def get_distribution(**kwargs):
-		"""Not implemented. Should be implemented in a child class."""
-		pass
-
-	def repeated_cv(self, **kwargs):
-		"""Not implemented. Should be implemented in a child class."""
-		pass
-
-
-class FeatureDistributed(Simulator):
+class FeatureDistributed():
 	"""Feature distributed classification learning simulator.
 
 	Description:
@@ -278,40 +245,3 @@ class FeatureDistributed(Simulator):
 
 		# Return the ranks and aggregated scores as DataFrames for each learner
 		return ranks, [cv_score(scores[k]) for k in scores]
-
-
-class InstanceDistributed(Simulator):
-	"""Instance distributed classification learning simulator.
-
-	Description:
-		This class simulates a distributed learning using classifier agents. It divides
-		the data horizontally, i. e., it divides the instances randomly between the learners.
-
-	Also see: Simulator class documentation.
-	"""
-
-	@staticmethod
-	def get_distribution(data, n, overlap=0):
-		"""Vertically distributes the training data into n parts and returns a list of
-		column indexes for each part
-
-		Keyword arguments:
-			data -- the training set to be splitted (Data)
-			n -- number of divisions
-			overlap -- if float, should be between 0.0 and 1.0 and represents the percentage
-					   of parts' common instances. If int, should be less than or equal to the
-					   number of instances and represents the number of common instances. If list,
-					   represents the instances' columns indexes. By default, the value is set to 0.
-		"""
-
-		pass
-
-	def cross_validate(self, k_fold=10, n_it=10):
-		"""Runs the cross_validate function for each agent and returns a list with each learner's scores
-
-		Keyword arguments:
-			k_fold -- number of folds
-			n_it -- number of cross-validation iterations (default 10, i. e., 10 k-fold cross-validation)
-		"""
-
-		pass
