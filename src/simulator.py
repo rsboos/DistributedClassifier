@@ -44,17 +44,18 @@ class FeatureDistributedSimulator():
 		"""
 		k_fold = 10
 
-		scores = dict()
-		ranks = dict()
+		scores = {}
+		ranks = {}
+		learners = []
 
 		skf = P3StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=random_state)
 
 		for seed in range(n_it):
-			learners = self.__distribute(overlap, seed)
+			learners = self.__distribute(overlap, seed, learners)
 			n = len(learners)
 
-			sample_x = learners[0].dataset.x
-			sample_y = learners[0].dataset.y
+			sample_x = learners[0].X
+			sample_y = learners[0].y
 
 			for fold in skf.split(sample_x, sample_y):
 				train_i, val_i, test_i = fold
@@ -109,8 +110,7 @@ class FeatureDistributedSimulator():
 		# Return the ranks and aggregated scores as DataFrames for each learner
 		return ranks, [cv_score(scores[k]) for k in scores]
 
-	def __distribute(self, overlap, random_state):
-		learners = []
+	def __distribute(self, overlap, random_state, learners=[]):
 		n_learners = len(self.__classifiers)
 
 		distributor = Distributor(n_learners, overlap, random_state)
@@ -118,16 +118,14 @@ class FeatureDistributedSimulator():
 		indexes = distributor.split(self.__data)
 		n_indexes = len(indexes)
 
+		if len(learners) == 0:
+			learners = [Learner(None, None, None) for _ in range(n_indexes)]
+
 		for i in range(n_indexes):
 			features = indexes[i]
 
-			X = self.__data.x[:, features]
-			y = self.__data.y
-
-			dataset = Data(X, y)
-			classifier = self.__classifiers[i]
-
-			learner = Learner(dataset, classifier)
-			learners.append(learner)
+			learners[i].X = self.__data.x[:, features]
+			learners[i].y = self.__data.y
+			learners[i].classifier = self.__classifiers[i]
 
 		return learners
