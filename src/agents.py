@@ -9,36 +9,32 @@ class Learner():
 	"""Train a model given a classifier.
 
 	Properties:
-		dataset -- A Data for training and testing the model
+		X -- a training set
+        y -- a target set
+        classifier -- An instance of a classifier from sklearn library*
+
+    *The classifier should implement fit(), predict() and predict_proba().
+    See the sklearn documentation for more information...
 	"""
-
-	def __init__(self, dataset, classifier):
-		"""Set properties.
-
-		Keyword arguments:
-			dataset -- The Data used to fit a model
-			classifier -- An instance of a classifier from sklearn library*
-
-		*The classifier should implement fit(), predict() and predict_proba().
-		See the sklearn documentation for more information...
-		"""
-		self.dataset = dataset
-		self.__classifier = classifier
+	def __init__(self, X, y, classifier):
+		self.X = X
+		self.y = y
+		self.classifier = classifier
 
 	def fit(self, X=None, y=None):
 		"""Fit the model using the class dataset and classifier.
 
         Keyword arguments:
-            X -- training set (default self.dataset.x)
-            y -- target set (default self.dataset.y)
+            X -- training set (default self.x)
+            y -- target set (default self.y)
         """
 		if X is None:
-			X = self.dataset.x
+			X = self.X
 
 		if y is None:
-			y = self.dataset.y
+			y = self.y
 
-		self.__classifier.fit(X, y)
+		self.classifier.fit(X, y)
 
 	def predict(self, X):
 		"""Predict classes for the testset on dataset and returns a ndarray as result.
@@ -46,7 +42,7 @@ class Learner():
 		Keyword arguments:
 			X -- data to be predicted
 		"""
-		return self.__classifier.predict(X)
+		return self.classifier.predict(X)
 
 	def predict_proba(self, X):
 		"""Predict the probabilities for the testset on dataset and returns a ndarray as result.
@@ -54,7 +50,7 @@ class Learner():
 		Keyword arguments:
 			X -- data to be predicted
 		"""
-		return self.__classifier.predict_proba(X)
+		return self.classifier.predict_proba(X)
 
 	def evaluate(self, fold, scoring={}):
 		"""Generate cross-validated for an input data point.
@@ -65,14 +61,14 @@ class Learner():
 		"""
 		train_i, val_i, test_i = fold
 
-		x_train = self.dataset.x[train_i, :]
-		y_train = self.dataset.y[train_i]
+		x_train = self.X[train_i, :]
+		y_train = self.y[train_i]
 
-		x_val = self.dataset.x[val_i, :]
-		y_val = self.dataset.y[val_i]
+		x_val = self.X[val_i, :]
+		y_val = self.y[val_i]
 
-		x_test = self.dataset.x[test_i, :]
-		y_test = self.dataset.y[test_i]
+		x_test = self.X[test_i, :]
+		y_test = self.y[test_i]
 
 		self.fit(x_train, y_train)
 
