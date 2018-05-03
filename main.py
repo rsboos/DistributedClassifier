@@ -5,9 +5,8 @@ import numpy as np
 
 from theobserver import Observer
 from pandas import DataFrame, concat
-from src.agents import Voter, Combiner, Arbiter, Mathematician
-from src.selectors import MetaDiff, MetaDiffInc, MetaDiffIncCorr
-from src.test import test, load_imports, split_parts, load_scorers
+from src.agents import Voter, Combiner, Mathematician
+from src.test import test, load_imports, split_parts, load_scorers, load_arbiters
 
 
 def get_class_column_by_name(name):
@@ -41,8 +40,7 @@ def run_test(p):
     voter = Voter(list(p['voter'].values()))
     combiner = Combiner(load_imports(p['combiner']))
     mathematician = Mathematician(p['mathematician'])
-    selectors = [eval(s) for s in p['selection_rules'].values()]
-    arbiter = Arbiter(selectors, load_imports(p['arbiter']))
+    arbiters = load_arbiters(p['arbiter'])
 
     # Get names
     mathematician_names = list()
@@ -50,10 +48,10 @@ def run_test(p):
         mathematician_names += [name for name in names]
 
     arbiter_names = []
-    arb_methods = list(p['arbiter'].keys())
-    for arb in arb_methods:
-        for name in p['selection_rules'].keys():
-            arbiter_names.append(arb + '_' + name)
+    arb_methods = list(p['arbiter']['methods'].keys())
+    for arb in arbiters:
+        for name in arb_methods:
+            arbiter_names.append(str(arb) + '_' + name)
 
     classif_names = list(p['classifiers'].keys())
     combiner_names = list(p['combiner'].keys())
@@ -70,9 +68,8 @@ def run_test(p):
          scorers=scorers,
          classifiers=classifiers,
          voter=voter,
-         arbiter=arbiter,
+         arbiters=arbiters,
          combiner=combiner,
-         selectors=selectors,
          mathematician=mathematician,
          names=names,
          results_path=p['result_path'])
