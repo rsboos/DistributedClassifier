@@ -33,16 +33,14 @@
         "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()"
     },
     "arbiter": {
-        "arb_gnb": "sklearn.naive_bayes.GaussianNB()",
-        "arb_svc": "sklearn.svm.SVC(probability=True)",
-        "arb_mlp": "sklearn.neural_network.MLPClassifier()",
-        "arb_dtree": "sklearn.tree.DecisionTreeClassifier()",
-        "arb_knn": "sklearn.neighbors.KNeighborsClassifier()"
-    },
-    "selection_rules": {
-        "md": "MetaDiff",
-        "mdi": "MetaDiffInc",
-        "mdic": "MetaDiffIncCorr"
+        "classes": ["ArbiterMetaDiff", "ArbiterMetaDiffInc", "ArbiterMetaDiffIncCorr"],
+        "methods": {
+            "gnb": "sklearn.naive_bayes.GaussianNB()",
+            "svc": "sklearn.svm.SVC(probability=True)",
+            "mlp": "sklearn.neural_network.MLPClassifier()",
+            "dtree": "sklearn.tree.DecisionTreeClassifier()",
+            "knn": "sklearn.neighbors.KNeighborsClassifier()"
+        }
     },
     "mathematician": {
         "max": ["mean", "median"]

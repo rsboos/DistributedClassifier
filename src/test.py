@@ -2,6 +2,7 @@ from src.data import Data
 from src.metrics import summary
 from sklearn.metrics import make_scorer
 from src.simulator import FeatureDistributedSimulator
+from src.agents import ArbiterMetaDiff, ArbiterMetaDiffInc, ArbiterMetaDiffIncCorr
 
 
 def load_imports(imports):
@@ -53,6 +54,17 @@ def load_scorers(metrics):
 
     return scorers
 
+
+def load_arbiters(arbiters):
+    methods = load_imports(arbiters['methods'])
+    arbiter_objs = []
+
+    for arbiter_class in arbiters['classes']:
+        arb = eval(arbiter_class + '(methods)')
+        arbiter_objs.append(arb)
+
+    return arbiter_objs
+
 def test(**kwargs):
     """Test over params and save results.
 
@@ -81,17 +93,14 @@ def test(**kwargs):
         voter: Voter
             A Voter object.
 
-        arbiter: Arbiter
-            A Arbiter object.
+        arbiters: list
+            A list of Arbiter objects.
 
         combiner: Combiner
             A Combiner object
 
         mathematician: Mathematician
             A Mathematician object.
-
-        selectors: list
-            A list of selectors.
 
         names: list
             Classifiers and aggregators' names.
@@ -113,11 +122,10 @@ def test(**kwargs):
 
     # Aggregators
     voter = kwargs['voter']
-    arbiter = kwargs['arbiter']
+    arbiters = kwargs['arbiters']
     combiner = kwargs['combiner']
-    selectors = kwargs['selectors']
     mathematician = kwargs['mathematician']
-    aggregators = [voter, arbiter, combiner, mathematician]
+    aggregators = [voter, combiner] + arbiters + [mathematician]
 
     # For results
     names = kwargs['names']

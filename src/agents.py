@@ -3,6 +3,7 @@ import numpy as np
 
 from .metrics import score, join_ranks
 from social_choice.profile import Profile
+from src.selectors import MetaDiff, MetaDiffInc, MetaDiffIncCorr
 
 
 class Learner():
@@ -207,14 +208,14 @@ class Combiner(Aggregator):
 
 class Arbiter(Aggregator):
 
-    def __init__(self, selection_rules, methods=[]):
+    def __init__(self, selection_rule, methods=[]):
         """Sets the selection rule to be used.
 
         Keyword arguments:
-            selection_rules -- a list of SelectionRule objects
+            selection_rule -- SelectionRule object
             methods -- a list of classifiers (default [])
         """
-        self.selection_rules = selection_rules
+        self.selection_rule = selection_rule
         super().__init__(methods)
 
     def aggr(self, **kwargs):
@@ -247,7 +248,6 @@ class Arbiter(Aggregator):
             test = np.append(test, testset[i], axis=1)
 
         n = len(self.methods)
-        n_rules = len(self.selection_rules)
         n_classes = len(set(y_true))
         n_learners = len(learners)
         n_instances = y_proba[0].shape[0]
@@ -263,56 +263,113 @@ class Arbiter(Aggregator):
         predictions = dict()
         scores = dict()
 
-        for j in range(n_rules):
-            t = self.selection_rules[j].select(base_pred, y_true)
-            n_t = len(t)
+        selection = self.selection_rule.select(base_pred, y_true)
+        xt, yt = self.get_from_selection(x, y_train, selection)
 
-            if n_t < 3:
-                x_indices = t[0].union(t[1]) if n_t == 2 else t[0]
-                x_indices = list(x_indices)
+        # For each method...
+        for i in range(n):
+            method = self.fit(xt, yt, self.methods[i], x, y_train)
+            y_pred = self.predict(test, method)
 
-                xt = x[x_indices, :]
-                yt = y_train[x_indices]
-            else:
-                xt = []
-                yt = []
+            k = str(self) + '_' + str(i)
 
-                for i in range(n_t):
-                    x_indices = list(t[i])
-                    xt.append(x[x_indices, :])
-                    yt.append(y_train[x_indices])
-
-            # For each method...
-            for i in range(n):
-
-                if n_t < 3:
-                    if len(set(yt)) == n_classes and len(yt) > 4:
-                        self.methods[i].fit(xt, yt)
-                    else:
-                        warnings.warn('Special arbiter is being used.', FutureWarning)
-                        self.methods[i].fit(x, y_train)
-
-                    y_pred = self.methods[i].predict(test)
-
-                else:
-                    y_pred = []
-
-                    for j in range(n_t):
-                        if len(set(yt[j])) == n_classes and len(yt) > 4:
-                            self.methods[i].fit(xt[j], yt[j])
-                        else:
-                            warnings.warn('Special arbiter is being used.', FutureWarning)
-                            self.methods[i].fit(x, y_train)
-
-                        y_pred.append(self.methods[i].predict(test))
-
-
-                k = 'arb_' + str(self.selection_rules[j]) + '_' + str(i)
-
-                predictions[k] = self.selection_rules[j].apply(base_pred, y_pred)
-                scores[k] = score(y_true, predictions[k], scoring)
+            predictions[k] = self.selection_rule.apply(base_pred, y_pred)
+            scores[k] = score(y_true, predictions[k], scoring)
 
         return predictions, scores
+
+    def get_from_selection(self, x, y_train, selection):
+        raise NotImplemented
+
+    def fit(self, Xs, ys, method, X, y):
+        missing_classes = set(y) - set(ys)
+
+        if len(missing_classes) == 0 and len(ys) > 4:  # if there is enough data to learn form
+            return method.fit(Xs, ys)
+
+        return method.fit(X, y)
+
+    def predict(self, X, method):
+        return method.predict(X)
+
+    def __str__(self):
+        return 'arb'
+
+
+class ArbiterMetaDiff(Arbiter):
+
+    def __init__(self, methods=[]):
+        super().__init__(MetaDiff(), methods)
+
+    def get_from_selection(self, x, y_train, selection):
+        x_indices = selection[0]
+        x_indices = list(x_indices)
+
+        xt = x[x_indices, :]
+        yt = y_train[x_indices]
+
+        return xt, yt
+
+    def __str__(self):
+        return super().__str__() + '_md'
+
+
+class ArbiterMetaDiffInc(Arbiter):
+
+    def __init__(self, methods=[]):
+        super().__init__(MetaDiffInc(), methods)
+
+    def get_from_selection(self, x, y_train, selection):
+        x_indices = selection[0].union(selection[1])
+        x_indices = list(x_indices)
+
+        xt = x[x_indices, :]
+        yt = y_train[x_indices]
+
+        return xt, yt
+
+    def __str__(self):
+        return super().__str__() + '_mdi'
+
+
+class ArbiterMetaDiffIncCorr(Arbiter):
+
+    def __init__(self, methods=[]):
+        super().__init__(MetaDiffIncCorr(), methods)
+
+    def get_from_selection(self, x, y_train, selection):
+        n = len(selection)
+        xt = []
+        yt = []
+
+        for i in range(n):
+            x_indices = list(selection[i])
+            xt.append(x[x_indices, :])
+            yt.append(y_train[x_indices])
+
+        return xt, yt
+
+    def fit(self, Xs, ys, method, X, y):
+        n = len(Xs)
+        methods = []
+        for i in range(n):
+            m = super().fit(Xs[i], ys[i], method, X, y)
+            methods.append(m)
+
+        return methods
+
+    def predict(self, X, method):
+        n = len(method)
+        predictions = []
+
+        for i in range(n):
+            y_pred = super().predict(X, method[i])
+            predictions.append(y_pred)
+
+        return predictions
+
+    def __str__(self):
+        return super().__str__() + '_mdic'
 
 
 class Mathematician(Aggregator):
