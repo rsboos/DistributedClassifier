@@ -115,7 +115,7 @@ class Distributor():
         n_left = n_distinct - total_splits
 
         if n_left > 0:
-            splits[-1] += distinct_features[total_splits:total_splits + n_left]
+            splits[-1] = np.append(splits[-1], distinct_features[total_splits:total_splits + n_left])
 
         return splits
 
