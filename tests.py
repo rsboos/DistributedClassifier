@@ -6,7 +6,13 @@ from glob import glob
 
 warnings.filterwarnings("ignore")
 
+tested = [folder.replace('tests/', '') for folder in glob('tests/*')]
+tested = ','.join(tested)
+
 for dataset in glob('datasets/*'):
+
+    if dataset.replace('datasets/', '')[:-4] in tested:
+        continue
 
     overlap = float(0)
     while overlap < 1:
