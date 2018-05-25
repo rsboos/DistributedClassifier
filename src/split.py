@@ -107,7 +107,7 @@ class Distributor():
             i = k * n_features_per_split
             j = i + n_features_per_split
 
-            indexes = np.append(common_features, distinct_features[i:j])
+            indexes = np.append(common_features, distinct_features[i:j]).astype(int)
             splits.append(indexes)
 
         # Add left features
@@ -115,7 +115,7 @@ class Distributor():
         n_left = n_distinct - total_splits
 
         if n_left > 0:
-            splits[-1] = np.append(splits[-1], distinct_features[total_splits:total_splits + n_left])
+            splits[-1] = np.append(splits[-1], distinct_features[total_splits:total_splits + n_left]).astype(int)
 
         return splits
 
