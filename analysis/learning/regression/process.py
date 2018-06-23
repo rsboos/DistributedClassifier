@@ -59,7 +59,7 @@ for method in methods:
                 try:
                     method_f1 = f1_scores[folder].loc[method]
 
-                    if method_f1 == 0:
+                    if method_f1 > 0:
                         ins = np.append(ins, overlap)
                         ins = np.append(ins, method_f1)
 
