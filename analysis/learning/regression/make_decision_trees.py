@@ -1,6 +1,7 @@
 from sklearn.tree import DecisionTreeRegressor, export_graphviz
 from pandas import read_csv, DataFrame, concat
 from glob import glob
+import numpy as np
 import os
 
 
@@ -24,6 +25,8 @@ def map_tree(tree_path, labels):
 
     new_tree.close()
 
+scored_ranks = {}
+ranks = {}
 for dataset_path in glob('data/*'):
 
     data = read_csv(dataset_path)
@@ -41,3 +44,16 @@ for dataset_path in glob('data/*'):
     export_graphviz(model, tree_path)
     map_tree(tree_path, data.columns.values)
     os.system('dot -Tpng ' + tree_path + ' -o ' + tree_path[:-4] + '.png')
+
+    feature_names = data.columns.values[:-1]
+    scored_ranks[dataset] = model.feature_importances_
+    rank = [feature_names[i] for i in np.argsort(scored_ranks[dataset])]
+    ranks[dataset] = list(reversed(rank))
+
+df = DataFrame(scored_ranks).T
+df.columns = feature_names
+df.T.to_csv('results/tree_ranks/scored_ranks.csv')
+
+df = DataFrame(ranks)
+df = df.T.sort_index()
+df.to_csv('results/tree_ranks/ranks.csv')

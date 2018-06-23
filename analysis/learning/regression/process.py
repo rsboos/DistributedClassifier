@@ -42,7 +42,7 @@ for n in range(n_rows):
         except FileNotFoundError:
             print('{} dataset does not exist yet.'.format(folder))
 
-# Create a dataset for each method
+# Create a data set for each method
 for method in methods:
     data = None
 
@@ -59,17 +59,18 @@ for method in methods:
                 try:
                     method_f1 = f1_scores[folder].loc[method]
 
-                    ins = np.append(ins, overlap)
-                    ins = np.append(ins, method_f1)
+                    if method_f1 == 0:
+                        ins = np.append(ins, overlap)
+                        ins = np.append(ins, method_f1)
 
-                    if data is None:
-                        cols = ins.size
-                        data = np.resize(ins, (1, cols))
-                    else:
-                        data = np.append(data, [ins], axis=0)
+                        if data is None:
+                            cols = ins.size
+                            data = np.resize(ins, (1, cols))
+                        else:
+                            data = np.append(data, [ins], axis=0)
                 except KeyError:
                     pass
 
     df = DataFrame(data)
-    df.columns = list(header[:-1]) + ['overlap','f1_score']
+    df.columns = list(header[:-1]) + ['overlap', 'f1_score']
     df.to_csv('data/{}_f1_scores.csv'.format(method), index=False)
