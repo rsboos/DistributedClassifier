@@ -1,5 +1,5 @@
 from sklearn.tree import DecisionTreeRegressor, export_graphviz
-from pandas import read_csv, DataFrame, concat
+from pandas import read_csv, DataFrame
 from glob import glob
 import numpy as np
 import os
@@ -26,7 +26,6 @@ def map_tree(tree_path, labels):
     new_tree.close()
 
 scored_ranks = {}
-ranks = {}
 for dataset_path in glob('data/*'):
 
     data = read_csv(dataset_path)
@@ -46,13 +45,33 @@ for dataset_path in glob('data/*'):
     os.system('dot -Tpng ' + tree_path + ' -o ' + tree_path[:-4] + '.png')
 
     feature_names = data.columns.values[:-1]
-    scored_ranks[dataset] = model.feature_importances_
-    rank = [feature_names[i] for i in np.argsort(scored_ranks[dataset])]
-    ranks[dataset] = list(reversed(rank))
+    feature_scores = model.feature_importances_
 
+    scored_ranks[dataset] = [s for s in feature_scores]
+
+scored_ranks_path = 'results/tree_ranks/scored_ranks.csv'
 df = DataFrame(scored_ranks).T
 df.columns = feature_names
-df.T.to_csv('results/tree_ranks/scored_ranks.csv')
+df.T.to_csv(scored_ranks_path)
+
+
+data = read_csv(scored_ranks_path, index_col=0, header=0)
+methods = data.columns.values
+features = data.index.values
+
+m, n = data.shape
+
+ranks = {}
+for j in range(n):
+    rank = data.iloc[:, j]
+
+    k = methods[j]
+    ranks[k] = []
+    for i in reversed(np.argsort(rank)):
+        if rank[i] == 0:
+            ranks[k].append("")
+        else:
+            ranks[k].append(features[i])
 
 df = DataFrame(ranks)
 df = df.T.sort_index()
