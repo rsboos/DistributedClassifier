@@ -100,7 +100,7 @@ class RegressionAnalysis():
             cv_summary = summary(all_scores)
             cv_summary.index = list(scores.keys())
 
-            cv_summary.to_csv(summary_path, index=False)
+            cv_summary.to_csv(summary_path)
 
 
     def __create_dataset_by_method(self, datasets_path, f1_scores, score):
