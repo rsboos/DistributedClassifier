@@ -1,11 +1,14 @@
 """"Data analysis using regression."""
 
+import sys
+sys.path.append('../evaluation/src/')
+
 import os
 import numpy as np
 from os import path
 from glob import glob
 from pandas import read_csv, DataFrame, concat
-from evaluation.src.metrics import summary
+from metrics import summary
 from sklearn.model_selection import KFold, cross_validate
 
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
