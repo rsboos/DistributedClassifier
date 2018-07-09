@@ -1,5 +1,4 @@
 """"Data analysis using regression."""
-
 import sys
 sys.path.append('../evaluation/src/')
 
@@ -7,8 +6,10 @@ import os
 import numpy as np
 from os import path
 from glob import glob
-from pandas import read_csv, DataFrame, concat
+from .path import Path
 from metrics import summary
+from sklearn.externals import joblib
+from pandas import read_csv, DataFrame, concat
 from sklearn.model_selection import KFold, cross_validate
 
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
@@ -18,19 +19,14 @@ from sklearn.linear_model import RANSACRegressor, HuberRegressor, \
     TheilSenRegressor, BayesianRidge, OrthogonalMatchingPursuit, ElasticNet, \
     LinearRegression, ARDRegression, LassoLars, Lasso, Ridge
 
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.neural_network import MLPRegressor
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.svm import SVR, NuSVR, LinearSVR
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.svm import SVR, NuSVR, LinearSVR
+from sklearn.neural_network import MLPRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.tree import DecisionTreeRegressor, export_graphviz
 
 
-class RegressionAnalysis():
-    default_file = 'cv_summary.csv'
-    test_path = 'tests/regression'
-    data_path = path.join(test_path, 'data/')
-    results_path = path.join(test_path, 'results/')
-    evaluation_path = path.join(results_path, 'evaluation/')
+class RegressionAnalysis:
 
     def process(self, datasets_path, evaluation_path):
         """Create a dataset for each method (classifiers, agreggators).
@@ -45,10 +41,12 @@ class RegressionAnalysis():
         :return: None
         """
         score = 'f1'
-        f1_scores = self.__scores_by_method([score, 'f1_micro'], evaluation_path)
+        f1_scores = self.__scores_by_method([score, 'f1_micro'],
+                                            evaluation_path)
 
         self.__create_dataset_by_method(datasets_path, f1_scores, score)
         self.__remove_zeroed_instances()
+        self.__remove_nan()
 
     def evaluate(self, regressors='*', scoring='*', cv=10, iterations=10):
         """Evaluate data in tests/regression/data/* and save results in
@@ -75,7 +73,7 @@ class RegressionAnalysis():
         if scoring == '*':
             scoring = self.__default_scoring()
 
-        dataset_paths = glob(path.join(self.data_path, '*'))
+        dataset_paths = glob(path.join(Path.data_path, '*'))
 
         for dataset_path in dataset_paths:
 
@@ -88,7 +86,7 @@ class RegressionAnalysis():
             dataset_file = dataset_path.split('/')[-1]
             dataset_name = dataset_file[:-4]
 
-            scores_path = path.join(self.evaluation_path, dataset_name)
+            scores_path = path.join(Path.evaluation_path, dataset_name)
             if not path.exists(scores_path):
                 os.makedirs(scores_path)
 
@@ -98,13 +96,12 @@ class RegressionAnalysis():
                 score.to_csv(filepath, index=False)
 
             all_scores = list(scores.values())
-            summary_path = path.join(scores_path, self.default_file)
+            summary_path = path.join(scores_path, Path.default_file)
 
             cv_summary = summary(all_scores)
             cv_summary.index = list(scores.keys())
 
             cv_summary.to_csv(summary_path)
-
 
     def __create_dataset_by_method(self, datasets_path, f1_scores, score):
         methods = f1_scores.columns.values
@@ -144,7 +141,7 @@ class RegressionAnalysis():
                                    axis=1)
                 data = data.append(instances)
 
-            data.to_csv(path.join(self.data_path,
+            data.to_csv(path.join(Path.data_path,
                                   '{}_f1.csv'.format(method)),
                         index=False)
 
@@ -166,7 +163,7 @@ class RegressionAnalysis():
             dataset_name = dataset_metadata[0]
             dataset_overlap = int(dataset_metadata[-1])
 
-            summary_path = path.join(folder, self.default_file)
+            summary_path = path.join(folder, Path.default_file)
             summary = read_csv(summary_path, header=[0, 1], index_col=0)
             summary = summary.sort_index()
 
@@ -189,7 +186,7 @@ class RegressionAnalysis():
         return f1_scores.sort_index()
 
     def __remove_zeroed_instances(self):
-        data_files = glob(path.join(self.data_path, '*'))
+        data_files = glob(path.join(Path.data_path, '*'))
         removed_instances = []
 
         for data_file in data_files:
@@ -204,6 +201,14 @@ class RegressionAnalysis():
         for data_file in data_files:
             data = read_csv(data_file, header=0)
             data = data.drop(removed_instances)
+            data.to_csv(data_file, index=False)
+
+    def __remove_nan(self):
+        data_files = glob(path.join(Path.data_path, '*'))
+
+        for data_file in data_files:
+            data = read_csv(data_file, header=0)
+            data = data.dropna()
             data.to_csv(data_file, index=False)
 
     @staticmethod
@@ -235,7 +240,8 @@ class RegressionAnalysis():
                 'median_absolute': make_scorer(median_absolute_error),
                 'r2': make_scorer(r2_score)}
 
-    def __cross_validate(self, dataset_path, regressors, scoring, cv, iterations):
+    @staticmethod
+    def __cross_validate(dataset_path, regressors, scoring, cv, iterations):
         data = read_csv(dataset_path, header=0)
         data = data.values
 
@@ -251,14 +257,73 @@ class RegressionAnalysis():
                 folds = skf.split(X, y)
                 scores.setdefault(name, DataFrame())
 
-                cv_scores = cross_validate(regressor, X, y, cv=folds,
-                                           scoring=scoring)
+                try:
+                    cv_scores = cross_validate(regressor, X, y,
+                                               cv=folds,
+                                               scoring=scoring)
 
-                cv_scores = {k.replace('test_', ''): v for k, v in
-                             cv_scores.items()
-                             if 'test_' in k}
+                    cv_scores = {k.replace('test_', ''): v for k, v in
+                                 cv_scores.items()
+                                 if 'test_' in k}
 
-                cv_scores = DataFrame(cv_scores)
-                scores[name] = scores[name].append(cv_scores)
+                    cv_scores = DataFrame(cv_scores)
+                    scores[name] = scores[name].append(cv_scores)
+                except np.linalg.linalg.LinAlgError:
+                    pass
+                except:
+                    import pdb
+                    pdb.set_trace()
 
         return scores
+
+
+class TreeAnalysis:
+
+    @staticmethod
+    def grow_trees(max_depth=10, min_samples_split=0.1):
+        """Create DecisionTrees for each data set.
+
+        :param max_depth: int (default 10)
+            Maximum depth of the tree.
+
+        :param min_samples_split: int, float (default 0.1)
+            Minimum samples required to split.
+            If int, the number of exact samples.
+            If float, the percentage of samples to be used for split.
+
+        :return: None
+        """
+        dataset_paths = glob(path.join(Path.data_path, '*'))
+
+        for dataset_path in dataset_paths:
+            data = read_csv(dataset_path)
+            features = data.columns.values
+            data = data.values
+
+            x = data[:, :-1]
+            y = data[:, -1]
+
+            model = DecisionTreeRegressor(max_depth=max_depth,
+                                          min_samples_split=min_samples_split)
+
+            model.fit(x, y)
+
+            dataset_name = dataset_path.split('/')[-1]
+            tree_name = dataset_name[:-4]
+
+            # Save as text file
+            tree_path = path.join(Path.trees_path, tree_name + '.dot')
+            export_graphviz(model,
+                            tree_path,
+                            feature_names=features,
+                            filled=True)
+
+            # Save as png
+            png_tree_path = path.join(Path.visible_trees_path,
+                                      tree_name + 'png')
+
+            os.system('dot -Tpng ' + tree_path + ' -o ' + png_tree_path)
+
+            # Save as object
+            obj_tree_path = path.join(Path.object_trees_path, tree_name + 'pkl')
+            joblib.dump(model.tree_, obj_tree_path)
