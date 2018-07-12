@@ -297,7 +297,7 @@ class TreeAnalysis:
 
         for dataset_path in dataset_paths:
             data = read_csv(dataset_path)
-            features = data.columns.values
+            features = data.columns.values[:-1]
             data = data.values
 
             x = data[:, :-1]
@@ -320,10 +320,10 @@ class TreeAnalysis:
 
             # Save as png
             png_tree_path = path.join(Path.visible_trees_path,
-                                      tree_name + 'png')
+                                      tree_name + '.png')
 
             os.system('dot -Tpng ' + tree_path + ' -o ' + png_tree_path)
 
             # Save as object
-            obj_tree_path = path.join(Path.object_trees_path, tree_name + 'pkl')
+            obj_tree_path = path.join(Path.object_trees_path, tree_name + '.pkl')
             joblib.dump(model.tree_, obj_tree_path)
