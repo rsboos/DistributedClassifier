@@ -9,7 +9,7 @@ from glob import glob
 from .path import Path
 from metrics import summary
 from sklearn.externals import joblib
-from pandas import read_csv, DataFrame, concat
+from pandas import read_csv, DataFrame, Series, concat
 from sklearn.model_selection import KFold, cross_validate
 
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
@@ -312,7 +312,7 @@ class TreeAnalysis:
             tree_name = dataset_name[:-4]
 
             # Save as text file
-            tree_path = path.join(Path.trees_path, tree_name + '.dot')
+            tree_path = path.join(Path.text_trees_path, tree_name + '.dot')
             export_graphviz(model,
                             tree_path,
                             feature_names=features,
@@ -327,3 +327,65 @@ class TreeAnalysis:
             # Save as object
             obj_tree_path = path.join(Path.object_trees_path, tree_name + '.pkl')
             joblib.dump(model.tree_, obj_tree_path)
+
+    @staticmethod
+    def get_important_nodes(analysis_datapath):
+        data = read_csv(analysis_datapath, header=0)
+        features_names = data.columns.values
+
+        trees_filepath = glob(path.join(Path.object_trees_path, '*'))
+
+        important_nodes = {}
+        columns = ['node_index',
+                   'feature',
+                   'importance',
+                   'impurity',
+                   'threshold',
+                   'value',
+                   'child_left_diff',
+                   'child_right_diff']
+
+        for tree_filepath in trees_filepath:
+            tree = joblib.load(tree_filepath)
+            data = DataFrame(columns=columns)
+
+            importances = tree.compute_feature_importances()
+            features = np.argsort(importances)[::-1]
+
+            for feature_i in features:
+
+                if importances[feature_i] == 0:
+                    break
+
+                possible_nodes = np.where(tree.feature == feature_i)[0]
+
+                node_index = possible_nodes[0]  # first node with this feature
+                left_i = tree.children_left[node_index]    # his left child
+                right_i = tree.children_right[node_index]  # his right child
+
+                feature = features_names[feature_i]
+                importance = importances[feature_i]
+
+                value = tree.value[node_index][0, 0]
+                impurity = tree.impurity[node_index]
+                threshold = tree.threshold[node_index]
+
+                child_left_diff = tree.value[left_i][0, 0] - value
+                child_right_diff = tree.value[right_i][0, 0] - value
+
+                ins = DataFrame([node_index,
+                                 feature,
+                                 importance,
+                                 impurity,
+                                 threshold,
+                                 value,
+                                 child_left_diff,
+                                 child_right_diff], index=columns).T
+
+                data = data.append(ins, ignore_index=True)
+
+            tree_name = tree_filepath.split('/')[-1][:-4]
+            important_nodes[tree_name] = data
+
+        concat(important_nodes).to_csv(path.join(Path.trees_path,
+                                                 'important_nodes.csv'))

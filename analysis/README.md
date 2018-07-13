@@ -3,7 +3,8 @@ This application is responsible for analysing evaluation results in `../evaluati
 
 ## Command Line
 ```
-usage: main.py [-h] [-p PROCESS] [-e EVALUATE] [-t TREES]
+usage: main.py [-h] [-p PROCESS] [-e EVALUATE] [-t TREES] [-i IMPORTANT_NODES]
+               [-a ALL]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -16,7 +17,11 @@ optional arguments:
   -t TREES, --make-trees TREES
                         Only for regression. Create trees from
                         DecisionTreeRegressor.
-
+  -i IMPORTANT_NODES, --get-important-nodes IMPORTANT_NODES
+                        Only for regression. Extract important nodes from
+                        trees.
+  -a ALL, --all ALL     Make a pipeline with all analysis for regression or
+                        classification.
 ```
 
 ## Note
