@@ -29,7 +29,7 @@ node [shape=box, style="filled", color="black"] ;
 12 -> 13 ;
 14 [label="mse = 0.001\nsamples = 18\nvalue = 0.789", fillcolor="#e58139a4"] ;
 12 -> 14 ;
-15 [label="unbalanced <= 1.0\nmse = 0.001\nsamples = 88\nvalue = 0.977", fillcolor="#e58139f5"] ;
+15 [label="silhouette <= 0.748\nmse = 0.001\nsamples = 88\nvalue = 0.977", fillcolor="#e58139f5"] ;
 3 -> 15 ;
 16 [label="mse = 0.001\nsamples = 33\nvalue = 0.939", fillcolor="#e58139e5"] ;
 15 -> 16 ;
