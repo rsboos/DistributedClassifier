@@ -6,10 +6,8 @@ import os
 import numpy as np
 from os import path
 from glob import glob
-from .path import Path
 from metrics import summary
-from sklearn.externals import joblib
-from pandas import read_csv, DataFrame, Series, concat
+from pandas import read_csv, DataFrame, concat
 from sklearn.model_selection import KFold, cross_validate
 
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
@@ -23,7 +21,9 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.svm import SVR, NuSVR, LinearSVR
 from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.tree import DecisionTreeRegressor, export_graphviz
+from sklearn.tree import DecisionTreeRegressor
+from .tree_analysis import TreeAnalysis
+from .path import RegressionPath
 
 
 class RegressionAnalysis:
@@ -73,7 +73,7 @@ class RegressionAnalysis:
         if scoring == '*':
             scoring = self.__default_scoring()
 
-        dataset_paths = glob(path.join(Path.data_path, '*'))
+        dataset_paths = glob(path.join(RegressionPath().data_path, '*'))
 
         for dataset_path in dataset_paths:
 
@@ -86,7 +86,7 @@ class RegressionAnalysis:
             dataset_file = dataset_path.split('/')[-1]
             dataset_name = dataset_file[:-4]
 
-            scores_path = path.join(Path.evaluation_path, dataset_name)
+            scores_path = path.join(RegressionPath().evaluation_path, dataset_name)
             if not path.exists(scores_path):
                 os.makedirs(scores_path)
 
@@ -96,12 +96,16 @@ class RegressionAnalysis:
                 score.to_csv(filepath, index=False)
 
             all_scores = list(scores.values())
-            summary_path = path.join(scores_path, Path.default_file)
+            summary_path = path.join(scores_path, RegressionPath().default_file)
 
             cv_summary = summary(all_scores)
             cv_summary.index = list(scores.keys())
 
             cv_summary.to_csv(summary_path)
+
+    @staticmethod
+    def grow_trees():
+        TreeAnalysis.grow_trees(DecisionTreeRegressor(), RegressionPath())
 
     def __create_dataset_by_method(self, datasets_path, f1_scores, score):
         methods = f1_scores.columns.values
@@ -141,7 +145,7 @@ class RegressionAnalysis:
                                    axis=1)
                 data = data.append(instances)
 
-            data.to_csv(path.join(Path.data_path,
+            data.to_csv(path.join(RegressionPath().data_path,
                                   '{}_f1.csv'.format(method)),
                         index=False)
 
@@ -163,7 +167,7 @@ class RegressionAnalysis:
             dataset_name = dataset_metadata[0]
             dataset_overlap = int(dataset_metadata[-1])
 
-            summary_path = path.join(folder, Path.default_file)
+            summary_path = path.join(folder, RegressionPath().default_file)
             summary = read_csv(summary_path, header=[0, 1], index_col=0)
             summary = summary.sort_index()
 
@@ -186,7 +190,7 @@ class RegressionAnalysis:
         return f1_scores.sort_index()
 
     def __remove_zeroed_instances(self):
-        data_files = glob(path.join(Path.data_path, '*'))
+        data_files = glob(path.join(RegressionPath().data_path, '*'))
         removed_instances = []
 
         for data_file in data_files:
@@ -204,7 +208,7 @@ class RegressionAnalysis:
             data.to_csv(data_file, index=False)
 
     def __remove_nan(self):
-        data_files = glob(path.join(Path.data_path, '*'))
+        data_files = glob(path.join(RegressionPath().data_path, '*'))
 
         for data_file in data_files:
             data = read_csv(data_file, header=0)
@@ -275,117 +279,3 @@ class RegressionAnalysis:
                     pdb.set_trace()
 
         return scores
-
-
-class TreeAnalysis:
-
-    @staticmethod
-    def grow_trees(max_depth=10, min_samples_split=0.1):
-        """Create DecisionTrees for each data set.
-
-        :param max_depth: int (default 10)
-            Maximum depth of the tree.
-
-        :param min_samples_split: int, float (default 0.1)
-            Minimum samples required to split.
-            If int, the number of exact samples.
-            If float, the percentage of samples to be used for split.
-
-        :return: None
-        """
-        dataset_paths = glob(path.join(Path.data_path, '*'))
-
-        for dataset_path in dataset_paths:
-            data = read_csv(dataset_path)
-            features = data.columns.values[:-1]
-            data = data.values
-
-            x = data[:, :-1]
-            y = data[:, -1]
-
-            model = DecisionTreeRegressor(max_depth=max_depth,
-                                          min_samples_split=min_samples_split)
-
-            model.fit(x, y)
-
-            dataset_name = dataset_path.split('/')[-1]
-            tree_name = dataset_name[:-4]
-
-            # Save as text file
-            tree_path = path.join(Path.text_trees_path, tree_name + '.dot')
-            export_graphviz(model,
-                            tree_path,
-                            feature_names=features,
-                            filled=True)
-
-            # Save as png
-            png_tree_path = path.join(Path.visible_trees_path,
-                                      tree_name + '.png')
-
-            os.system('dot -Tpng ' + tree_path + ' -o ' + png_tree_path)
-
-            # Save as object
-            obj_tree_path = path.join(Path.object_trees_path, tree_name + '.pkl')
-            joblib.dump(model.tree_, obj_tree_path)
-
-    @staticmethod
-    def get_important_nodes(analysis_datapath):
-        data = read_csv(analysis_datapath, header=0)
-        features_names = data.columns.values
-
-        trees_filepath = glob(path.join(Path.object_trees_path, '*'))
-
-        important_nodes = {}
-        columns = ['node_index',
-                   'feature',
-                   'importance',
-                   'impurity',
-                   'threshold',
-                   'value',
-                   'child_left_diff',
-                   'child_right_diff']
-
-        for tree_filepath in trees_filepath:
-            tree = joblib.load(tree_filepath)
-            data = DataFrame(columns=columns)
-
-            importances = tree.compute_feature_importances()
-            features = np.argsort(importances)[::-1]
-
-            for feature_i in features:
-
-                if importances[feature_i] == 0:
-                    break
-
-                possible_nodes = np.where(tree.feature == feature_i)[0]
-
-                node_index = possible_nodes[0]  # first node with this feature
-                left_i = tree.children_left[node_index]    # his left child
-                right_i = tree.children_right[node_index]  # his right child
-
-                feature = features_names[feature_i]
-                importance = importances[feature_i]
-
-                value = tree.value[node_index][0, 0]
-                impurity = tree.impurity[node_index]
-                threshold = tree.threshold[node_index]
-
-                child_left_diff = tree.value[left_i][0, 0] - value
-                child_right_diff = tree.value[right_i][0, 0] - value
-
-                ins = DataFrame([node_index,
-                                 feature,
-                                 importance,
-                                 impurity,
-                                 threshold,
-                                 value,
-                                 child_left_diff,
-                                 child_right_diff], index=columns).T
-
-                data = data.append(ins, ignore_index=True)
-
-            tree_name = tree_filepath.split('/')[-1][:-4]
-            important_nodes[tree_name] = data
-
-        concat(important_nodes).to_csv(path.join(Path.trees_path,
-                                                 'important_nodes.csv'))

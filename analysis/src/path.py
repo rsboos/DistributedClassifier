@@ -2,13 +2,31 @@ from os import path
 
 
 class Path:
-    default_file = 'cv_summary.csv'
-    test_path = 'tests/regression'
-    data_path = path.join(test_path, 'data/')
-    results_path = path.join(test_path, 'results/')
-    evaluation_path = path.join(results_path, 'evaluation/')
-    trees_path = path.join(results_path, 'trees/')
-    text_trees_path = path.join(trees_path, 'dots/')
-    visible_trees_path = path.join(trees_path, 'png/')
-    object_trees_path = path.join(trees_path, 'pkl/')
-    graphics_path = path.join(test_path, 'graphics/')
+
+    def __init__(self, main_folder):
+        self.default_file = 'cv_summary.csv'
+
+        self.test_path = path.join('tests/', main_folder)
+        self.data_path = path.join(self.test_path, 'data/')
+
+        self.results_path = path.join(self.test_path, 'results/')
+        self.evaluation_path = path.join(self.results_path, 'evaluation/')
+
+        self.trees_path = path.join(self.results_path, 'trees/')
+        self.text_trees_path = path.join(self.trees_path, 'dots/')
+        self.visible_trees_path = path.join(self.trees_path, 'png/')
+        self.object_trees_path = path.join(self.trees_path, 'pkl/')
+
+        self.graphics_path = path.join(self.test_path, 'graphics/')
+
+
+class RegressionPath(Path):
+
+    def __init__(self):
+        super().__init__('regression')
+
+
+class ClassificationPath(Path):
+
+    def __init__(self):
+        super().__init__('classification')

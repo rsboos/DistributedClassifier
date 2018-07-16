@@ -1,21 +1,25 @@
 import argparse
-from src.regression import RegressionAnalysis, TreeAnalysis
+from src.tree_analysis import TreeAnalysis
+from src.regression import RegressionAnalysis
+from src.classification import ClassificationAnalysis
+from src.path import RegressionPath, ClassificationPath
 
 
 def main(args):
     regression = 'regression'
-    classificaion = 'classification'
+    classification = 'classification'
 
     analysis_data = 'data/datasets.csv'
     evaluation_path = '../evaluation/tests'
 
+    # Regression
     if args.all == regression:
         regression = RegressionAnalysis()
         regression.process(analysis_data, evaluation_path)
-        # regression.evaluate()
+        regression.evaluate()
 
-        TreeAnalysis.grow_trees()
-        TreeAnalysis.get_important_nodes(analysis_data)
+        regression.grow_trees()
+        TreeAnalysis.get_important_nodes(analysis_data, RegressionPath())
 
     elif args.process == regression:
         regression = RegressionAnalysis()
@@ -26,10 +30,18 @@ def main(args):
         regression.evaluate()
 
     elif args.trees == regression:
-        TreeAnalysis.grow_trees()
+        RegressionAnalysis.grow_trees()
 
     elif args.important_nodes == regression:
-        TreeAnalysis.get_important_nodes(analysis_data)
+        TreeAnalysis.get_important_nodes(analysis_data, RegressionPath())
+
+    # Classification
+    elif args.process == classification:
+        classification = ClassificationAnalysis()
+        classification.process(analysis_data, evaluation_path)
+
+    elif args.trees == classification:
+        ClassificationAnalysis.grow_trees()
 
 
 if __name__ == "__main__":
@@ -39,14 +51,14 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--process",
                         dest="process",
                         default=None,
-                        help="Type of process (regression or classification). "
+                        help="Type of process (regression or __classification)."
                              "Create data sets for evaluation.")
 
     parser.add_argument("-e", "--evaluate",
                         dest="evaluate",
                         default=None,
                         help="Type of evaluation (regression or "
-                             "classification). Evaluate data sets.")
+                             "__classification). Evaluate data sets.")
 
     parser.add_argument("-t", "--make-trees",
                         dest="trees",
@@ -64,7 +76,7 @@ if __name__ == "__main__":
                         dest="all",
                         default=None,
                         help="Make a pipeline with all analysis for "
-                             "regression or classification.")
+                             "regression or __classification.")
 
     args = parser.parse_args()
     main(args)
