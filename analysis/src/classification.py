@@ -1,11 +1,25 @@
 """"Data analysis using classification."""
-from sklearn.tree import DecisionTreeClassifier
+import sys
+sys.path.append('../evaluation/src/')
+
 from pandas import read_csv, concat, DataFrame
 from .tree_analysis import TreeAnalysis
 from .path import ClassificationPath
+from metrics import summary
 from glob import glob
 from os import path
 import numpy as np
+import os
+
+from sklearn.model_selection import KFold, cross_validate
+from sklearn.metrics import make_scorer, f1_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score
+
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 
 class ClassificationAnalysis:
@@ -27,6 +41,64 @@ class ClassificationAnalysis:
                                                      evaluation_path)
 
         self.__create_dataset_by_method(datasets_path, best_methods)
+
+    def evaluate(self, classifiers='*', scoring='*', cv=10, iterations=10):
+        """Evaluate data in tests/classification/data/* and save results in
+        tests/classification/results/evaluation.
+
+        :param classifiers: dict or str (default '*')
+            Classifiers to be used. When default, use all classifiers.
+
+        :param scoring: dict or str (default '*')
+            Metrics to be measured. Its values should be scorers.
+            When default, use all metrics.
+
+        :param cv: int (default 10)
+            Number of CV folds.
+
+        :param iterations: int (default 10)
+            Number of CV repeats.
+
+        :return: None
+        """
+        if classifiers == '*':
+            classifiers = self.__default_classifiers()
+
+        if scoring == '*':
+            scoring = self.__default_scoring()
+
+        dataset_paths = glob(path.join(ClassificationPath().data_path, '*'))
+
+        for dataset_path in dataset_paths:
+
+            scores = self.__cross_validate(dataset_path,
+                                           classifiers,
+                                           scoring,
+                                           cv,
+                                           iterations)
+
+            dataset_file = dataset_path.split('/')[-1]
+            dataset_name = dataset_file[:-4]
+
+            scores_path = path.join(ClassificationPath().evaluation_path,
+                                    dataset_name)
+
+            if not path.exists(scores_path):
+                os.makedirs(scores_path)
+
+            for classifier, score in scores.items():
+                filename = classifier + '.csv'
+                filepath = path.join(scores_path, filename)
+                score.to_csv(filepath, index=False)
+
+            all_scores = list(scores.values())
+            summary_path = path.join(scores_path,
+                                     ClassificationPath().default_file)
+
+            cv_summary = summary(all_scores)
+            cv_summary.index = list(scores.keys())
+
+            cv_summary.to_csv(summary_path)
 
     @staticmethod
     def grow_trees():
@@ -98,3 +170,49 @@ class ClassificationAnalysis:
 
         data.to_csv(path.join(ClassificationPath().data_path,
                               'better_methods.csv'), index=False)
+
+    def __default_classifiers(self):
+        return {"gnb": GaussianNB(),
+                "svc": SVC(probability=True),
+                "mlp": MLPClassifier(),
+                "dtree": DecisionTreeClassifier(),
+                "knn": KNeighborsClassifier()}
+
+    def __default_scoring(self):
+        return {"f1_macro": make_scorer(f1_score, average='macro'),
+                "f1_micro": make_scorer(f1_score, average='micro'),
+                "recall_macro": make_scorer(recall_score, average='macro'),
+                "recall_micro": make_scorer(recall_score, average='micro'),
+                "accuracy": make_scorer(accuracy_score),
+                "precision_macro": make_scorer(precision_score, average='macro'),
+                "precision_micro": make_scorer(precision_score, average='micro')}
+
+    @staticmethod
+    def __cross_validate(dataset_path, classifiers, scoring, cv, iterations):
+        data = read_csv(dataset_path, header=0)
+        data = data.values
+
+        X = data[:, :-1]
+        y = data[:, -1]
+
+        scores = {}
+
+        for i in range(iterations):
+            skf = KFold(cv, True, i)
+
+            for name, classifier in classifiers.items():
+                folds = skf.split(X, y)
+                scores.setdefault(name, DataFrame())
+
+                cv_scores = cross_validate(classifier, X, y,
+                                           cv=folds,
+                                           scoring=scoring)
+
+                cv_scores = {k.replace('test_', ''): v for k, v in
+                             cv_scores.items()
+                             if 'test_' in k}
+
+                cv_scores = DataFrame(cv_scores)
+                scores[name] = scores[name].append(cv_scores)
+
+        return scores

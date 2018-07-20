@@ -40,6 +40,10 @@ def main(args):
         classification = ClassificationAnalysis()
         classification.process(analysis_data, evaluation_path)
 
+    elif args.evaluate == classification:
+        classification = ClassificationAnalysis()
+        classification.evaluate()
+
     elif args.trees == classification:
         ClassificationAnalysis.grow_trees()
 
