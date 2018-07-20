@@ -274,8 +274,5 @@ class RegressionAnalysis:
                     scores[name] = scores[name].append(cv_scores)
                 except np.linalg.linalg.LinAlgError:
                     pass
-                except:
-                    import pdb
-                    pdb.set_trace()
 
         return scores
