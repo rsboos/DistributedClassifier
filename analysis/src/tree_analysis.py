@@ -66,8 +66,8 @@ class TreeAnalysis:
 
             joblib.dump(model.tree_, obj_tree_path)
 
-    @staticmethod
-    def get_important_nodes(analysis_datapath, type_path):
+    @classmethod
+    def get_important_nodes(cls, analysis_datapath, type_path):
         """Get the most important nodes.
 
         :param analysis_datapath: string
@@ -83,6 +83,19 @@ class TreeAnalysis:
 
         trees_filepath = glob(path.join(type_path.object_trees_path, '*'))
 
+        method_types = {'borda': 'scf',
+                        'copeland': 'scf',
+                        'dowdall': 'scf',
+                        'simpson': 'scf',
+                        'dtree': 'classif',
+                        'gnb': 'classif',
+                        'knn': 'classif',
+                        'mlp': 'classif',
+                        'svc': 'classif',
+                        'mean': 'math',
+                        'median': 'math',
+                        'plurality': 'vote'}
+
         important_nodes = {}
         columns = ['node_index',
                    'feature',
@@ -91,7 +104,8 @@ class TreeAnalysis:
                    'threshold',
                    'value',
                    'child_left_diff',
-                   'child_right_diff']
+                   'child_right_diff',
+                   'children_diff']
 
         for tree_filepath in trees_filepath:
             tree = joblib.load(tree_filepath)
@@ -103,6 +117,9 @@ class TreeAnalysis:
             for feature_i in features:
 
                 if importances[feature_i] == 0:
+                    break
+
+                if 3 in data.shape:
                     break
 
                 possible_nodes = np.where(tree.feature == feature_i)[0]
@@ -118,8 +135,12 @@ class TreeAnalysis:
                 impurity = tree.impurity[node_index]
                 threshold = tree.threshold[node_index]
 
-                child_left_diff = tree.value[left_i][0, 0] - value
-                child_right_diff = tree.value[right_i][0, 0] - value
+                left_value = tree.value[left_i][0, 0]
+                right_value = tree.value[right_i][0, 0]
+
+                child_left_diff = left_value - value
+                child_right_diff = right_value - value
+                children_diff = left_value - right_value
 
                 ins = DataFrame([node_index,
                                  feature,
@@ -128,12 +149,75 @@ class TreeAnalysis:
                                  threshold,
                                  value,
                                  child_left_diff,
-                                 child_right_diff], index=columns).T
+                                 child_right_diff,
+                                 children_diff], index=columns).T
 
                 data = data.append(ins, ignore_index=True)
 
             tree_name = tree_filepath.split('/')[-1][:-4]
+            metadata = tree_name.split('_')[:-1]
+
+            if metadata[0] in method_types.keys():
+                tree_name = method_types[metadata[0]] + '_' + tree_name
+
             important_nodes[tree_name] = data
 
         concat(important_nodes).to_csv(path.join(type_path.trees_path,
                                                  'important_nodes.csv'))
+
+        cls.get_common_nodes(type_path)
+
+    @staticmethod
+    def get_common_nodes(type_path):
+        data = read_csv(path.join(type_path.trees_path, 'important_nodes.csv'),
+                        header=0,
+                        index_col=[0, 1])
+
+        methods, _ = zip(*data.index.values)
+        methods = set(methods)
+
+        importances_sum = {}
+
+        for method in methods:
+            metadata = method.split('_')[:-1]
+            method_type = metadata[0]
+
+            if method_type == 'arb':
+                method_type += metadata[1]
+
+            importances_sum.setdefault(method_type, DataFrame())
+            rankings = data.loc[method, :]
+            m, n = rankings.shape
+
+            for i in range(m):
+                ins = rankings.iloc[i, :]
+                feature = ins.loc['feature']
+                importance = ins.loc['importance']
+
+                try:
+                    importances_sum[method_type].loc[feature, :] += importance
+                except KeyError:
+                    importance_ins = DataFrame([importance],
+                                               index=[feature],
+                                               columns=['sum'])
+
+                    importances_sum[method_type] = \
+                        importances_sum[method_type].append(importance_ins)
+
+            importances_sum[method_type].sort_values('sum',
+                                                     ascending=False,
+                                                     inplace=True)
+
+        sums = concat(importances_sum)
+        most_important = {}
+
+        method_types, _ = zip(*sums.index.values)
+        method_types = set(method_types)
+
+        # Get only the first for each method type
+        for method_type in method_types:
+            data = sums.loc[method_type, :].iloc[0, :]
+            most_important[method_type] = DataFrame(data).T
+
+        concat(most_important).to_csv(path.join(type_path.trees_path,
+                                                'most_important_nodes.csv'))
