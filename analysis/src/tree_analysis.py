@@ -2,6 +2,7 @@ import os
 import numpy as np
 from os import path
 from glob import glob
+from itertools import product
 from sklearn.externals import joblib
 from sklearn.tree import export_graphviz
 from pandas import read_csv, DataFrame, concat
@@ -41,6 +42,7 @@ class TreeAnalysis:
 
             x = data[:, :-1]
             y = data[:, -1]
+            classes = sorted(set(y)) if type(y[0]) is str else None
 
             model.fit(x, y)
 
@@ -52,6 +54,7 @@ class TreeAnalysis:
             export_graphviz(model,
                             tree_path,
                             feature_names=features,
+                            class_names=classes,
                             filled=True)
 
             # Save as png
@@ -78,8 +81,12 @@ class TreeAnalysis:
 
         :return: None
         """
-        data = read_csv(analysis_datapath, header=0)
+        paths = glob(path.join(type_path.data_path, '*'))
+        data = read_csv(paths[0], header=0)
         features_names = data.columns.values
+
+        y = data.iloc[:, -1].values
+        classes = sorted(set(y)) if type(y[0]) is str else [features_names[-1]]
 
         trees_filepath = glob(path.join(type_path.object_trees_path, '*'))
 
@@ -109,7 +116,12 @@ class TreeAnalysis:
 
         for tree_filepath in trees_filepath:
             tree = joblib.load(tree_filepath)
-            data = DataFrame(columns=columns)
+
+            tree_name = tree_filepath.split('/')[-1][:-4]
+            metadata = tree_name.split('_')
+
+            if metadata[0] in method_types.keys():
+                tree_name = method_types[metadata[0]] + '_' + tree_name
 
             importances = tree.compute_feature_importances()
             features = np.argsort(importances)[::-1]
@@ -131,36 +143,46 @@ class TreeAnalysis:
                 feature = features_names[feature_i]
                 importance = importances[feature_i]
 
-                value = tree.value[node_index][0, 0]
-                impurity = tree.impurity[node_index]
-                threshold = tree.threshold[node_index]
+                values = tree.value[node_index]
+                m, n = values.shape
 
-                left_value = tree.value[left_i][0, 0]
-                right_value = tree.value[right_i][0, 0]
+                for i, j in product(range(m), range(n)):
+                    value = values[i, j]
+                    impurity = tree.impurity[node_index]
+                    threshold = tree.threshold[node_index]
 
-                child_left_diff = left_value - value
-                child_right_diff = right_value - value
-                children_diff = left_value - right_value
+                    left_value = tree.value[left_i][0, 0]
+                    right_value = tree.value[right_i][0, 0]
 
-                ins = DataFrame([node_index,
-                                 feature,
-                                 importance,
-                                 impurity,
-                                 threshold,
-                                 value,
-                                 child_left_diff,
-                                 child_right_diff,
-                                 children_diff], index=columns).T
+                    child_left_diff = left_value - value
+                    child_right_diff = right_value - value
+                    children_diff = left_value - right_value
 
-                data = data.append(ins, ignore_index=True)
+                    class_name = classes[j]
 
-            tree_name = tree_filepath.split('/')[-1][:-4]
-            metadata = tree_name.split('_')[:-1]
+                    if class_name in method_types.keys():
+                        class_name = method_types[class_name] + '_' + class_name
 
-            if metadata[0] in method_types.keys():
-                tree_name = method_types[metadata[0]] + '_' + tree_name
+                    important_nodes.setdefault(class_name, {})
+                    important_nodes[class_name].\
+                        setdefault(tree_name, DataFrame(columns=columns))
 
-            important_nodes[tree_name] = data
+                    ins = DataFrame([node_index,
+                                     feature,
+                                     importance,
+                                     impurity,
+                                     threshold,
+                                     value,
+                                     child_left_diff,
+                                     child_right_diff,
+                                     children_diff], index=columns).T
+
+                    important_nodes[class_name][tree_name] = \
+                        important_nodes[class_name][tree_name].\
+                        append(ins, ignore_index=True)
+
+        for class_name in important_nodes:
+            important_nodes[class_name] = concat(important_nodes[class_name])
 
         concat(important_nodes).to_csv(path.join(type_path.trees_path,
                                                  'important_nodes.csv'))
@@ -173,20 +195,26 @@ class TreeAnalysis:
                         header=0,
                         index_col=[0, 1])
 
-        methods, _ = zip(*data.index.values)
-        methods = set(methods)
+        methods1, methods2 = zip(*data.index.values)
+        methods1, methods2 = list(set(methods1)), list(set(methods2))
+        methods = methods1 if len(methods1) > len(methods2) else methods2
 
         importances_sum = {}
 
         for method in methods:
-            metadata = method.split('_')[:-1]
+            metadata = method.split('_')
             method_type = metadata[0]
 
             if method_type == 'arb':
                 method_type += metadata[1]
 
             importances_sum.setdefault(method_type, DataFrame())
-            rankings = data.loc[method, :]
+
+            if method in methods1:
+                rankings = data.loc[method, :]
+            else:
+                rankings = data.loc[methods1[0], :].loc[method, :]
+
             m, n = rankings.shape
 
             for i in range(m):

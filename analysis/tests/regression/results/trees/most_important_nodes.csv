@@ -1,9 +1,9 @@
 ,,sum
-arbmd,features,1.520046381594
-arbmdi,majority_class_size,1.190848132518
-arbmdic,unbalanced,1.244018456258
-classif,n_binary_features,2.16779889969
-cmb,n_binary_features,2.990980929958
-math,silhouette,1.097891394363
-scf,silhouette,1.289002017847
-vote,unbalanced,0.439388710945
+arbmd,features,1.54077611798808
+arbmdi,majority_class_size,1.2471788084105
+arbmdic,unbalanced,1.3540899344522002
+classif,n_binary_features,2.167039944251
+cmb,n_binary_features,3.001306560101
+math,silhouette,1.0661346707689998
+scf,silhouette,1.4853321355790001
+vote,unbalanced,0.44918910072499996

@@ -3,9 +3,12 @@ import sys
 sys.path.append('../evaluation/src/')
 
 from pandas import read_csv, concat, DataFrame
+from sklearn.tree import export_graphviz
 from .tree_analysis import TreeAnalysis
 from .path import ClassificationPath
+from sklearn.externals import joblib
 from metrics import summary
+from copy import deepcopy
 from glob import glob
 from os import path
 import numpy as np
@@ -103,6 +106,11 @@ class ClassificationAnalysis:
     @staticmethod
     def grow_trees():
         TreeAnalysis.grow_trees(DecisionTreeClassifier(), ClassificationPath())
+
+    @staticmethod
+    def get_important_nodes(analysis_datapath):
+        classification_path = ClassificationPath()
+        TreeAnalysis.get_important_nodes(analysis_datapath, classification_path)
 
     def __best_method_by_dataset(self, scores, evaluation_path):
         scores = [scores] if type(scores) is str else scores

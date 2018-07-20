@@ -107,6 +107,10 @@ class RegressionAnalysis:
     def grow_trees():
         TreeAnalysis.grow_trees(DecisionTreeRegressor(), RegressionPath())
 
+    @staticmethod
+    def get_important_nodes(analysis_datapath):
+        TreeAnalysis.get_important_nodes(analysis_datapath, RegressionPath())
+
     def __create_dataset_by_method(self, datasets_path, f1_scores, score):
         methods = f1_scores.columns.values
 

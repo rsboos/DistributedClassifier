@@ -33,7 +33,7 @@ def main(args):
         RegressionAnalysis.grow_trees()
 
     elif args.important_nodes == regression:
-        TreeAnalysis.get_important_nodes(analysis_data, RegressionPath())
+        RegressionAnalysis.get_important_nodes(analysis_data)
 
     # Classification
     elif args.process == classification:
@@ -46,6 +46,9 @@ def main(args):
 
     elif args.trees == classification:
         ClassificationAnalysis.grow_trees()
+
+    elif args.important_nodes == classification:
+        ClassificationAnalysis.get_important_nodes(analysis_data)
 
 
 if __name__ == "__main__":
