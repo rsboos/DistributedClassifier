@@ -47,7 +47,11 @@ class TreeAnalysis:
             model.fit(x, y)
 
             dataset_name = dataset_path.split('/')[-1]
-            tree_name = dataset_name[:-4]
+            method_name = dataset_name.split('_')
+
+            tree_name = '_'.join(method_name[:-1])
+            tree_name = type_path.concat_method_type(tree_name)
+            tree_name = '{}_{}'.format(tree_name, method_name[-1][:-4])
 
             # Save as text file
             tree_path = path.join(type_path.text_trees_path, tree_name + '.dot')
@@ -81,6 +85,15 @@ class TreeAnalysis:
 
         :return: None
         """
+        def sum_tree(tree, node):
+            if node < 0:
+                return [tree.value[node][0, 0]]
+
+            left_sum = sum_tree(tree, tree.children_left[node])
+            right_sum = sum_tree(tree, tree.children_right[node])
+
+            return [tree.value[node][0, 0]] + left_sum + right_sum
+
         paths = glob(path.join(type_path.data_path, '*'))
         data = read_csv(paths[0], header=0)
         features_names = data.columns.values
@@ -89,19 +102,6 @@ class TreeAnalysis:
         classes = sorted(set(y)) if type(y[0]) is str else [features_names[-1]]
 
         trees_filepath = glob(path.join(type_path.object_trees_path, '*'))
-
-        method_types = {'borda': 'scf',
-                        'copeland': 'scf',
-                        'dowdall': 'scf',
-                        'simpson': 'scf',
-                        'dtree': 'classif',
-                        'gnb': 'classif',
-                        'knn': 'classif',
-                        'mlp': 'classif',
-                        'svc': 'classif',
-                        'mean': 'math',
-                        'median': 'math',
-                        'plurality': 'vote'}
 
         important_nodes = {}
         columns = ['node_index',
@@ -112,16 +112,15 @@ class TreeAnalysis:
                    'value',
                    'child_left_diff',
                    'child_right_diff',
-                   'children_diff']
+                   'children_diff',
+                   'left_mean',
+                   'left_std',
+                   'right_mean',
+                   'right_std']
 
         for tree_filepath in trees_filepath:
             tree = joblib.load(tree_filepath)
-
             tree_name = tree_filepath.split('/')[-1][:-4]
-            metadata = tree_name.split('_')
-
-            if metadata[0] in method_types.keys():
-                tree_name = method_types[metadata[0]] + '_' + tree_name
 
             importances = tree.compute_feature_importances()
             features = np.argsort(importances)[::-1]
@@ -131,14 +130,23 @@ class TreeAnalysis:
                 if importances[feature_i] == 0:
                     break
 
-                if 3 in data.shape:
-                    break
-
                 possible_nodes = np.where(tree.feature == feature_i)[0]
 
-                node_index = possible_nodes[0]  # first node with this feature
+                node_index = possible_nodes[0]             # first node with this feature
                 left_i = tree.children_left[node_index]    # his left child
                 right_i = tree.children_right[node_index]  # his right child
+
+                left_value = tree.value[left_i][0, 0]
+                right_value = tree.value[right_i][0, 0]
+
+                left_values = sum_tree(tree, left_i)
+                right_values = sum_tree(tree, right_i)
+
+                left_mean = np.mean(left_values)
+                right_mean = np.mean(right_values)
+
+                left_std = np.std(left_values)
+                right_std = np.std(right_values)
 
                 feature = features_names[feature_i]
                 importance = importances[feature_i]
@@ -151,21 +159,14 @@ class TreeAnalysis:
                     impurity = tree.impurity[node_index]
                     threshold = tree.threshold[node_index]
 
-                    left_value = tree.value[left_i][0, 0]
-                    right_value = tree.value[right_i][0, 0]
-
                     child_left_diff = left_value - value
                     child_right_diff = right_value - value
                     children_diff = left_value - right_value
 
                     class_name = classes[j]
 
-                    if class_name in method_types.keys():
-                        class_name = method_types[class_name] + '_' + class_name
-
                     important_nodes.setdefault(class_name, {})
-                    important_nodes[class_name].\
-                        setdefault(tree_name, DataFrame(columns=columns))
+                    important_nodes[class_name].setdefault(tree_name, DataFrame(columns=columns))
 
                     ins = DataFrame([node_index,
                                      feature,
@@ -175,25 +176,25 @@ class TreeAnalysis:
                                      value,
                                      child_left_diff,
                                      child_right_diff,
-                                     children_diff], index=columns).T
+                                     children_diff,
+                                     left_mean,
+                                     left_std,
+                                     right_mean,
+                                     right_std], index=columns).T
 
-                    important_nodes[class_name][tree_name] = \
-                        important_nodes[class_name][tree_name].\
+                    important_nodes[class_name][tree_name] = important_nodes[class_name][tree_name].\
                         append(ins, ignore_index=True)
 
         for class_name in important_nodes:
             important_nodes[class_name] = concat(important_nodes[class_name])
 
-        concat(important_nodes).to_csv(path.join(type_path.trees_path,
-                                                 'important_nodes.csv'))
+        concat(important_nodes).to_csv(path.join(type_path.trees_path, 'important_nodes.csv'))
 
         cls.get_common_nodes(type_path)
 
-    @staticmethod
-    def get_common_nodes(type_path):
-        data = read_csv(path.join(type_path.trees_path, 'important_nodes.csv'),
-                        header=0,
-                        index_col=[0, 1])
+    @classmethod
+    def get_common_nodes(cls, type_path):
+        data = read_csv(path.join(type_path.trees_path, 'important_nodes.csv'), header=0, index_col=[0, 1])
 
         methods1, methods2 = zip(*data.index.values)
         methods1, methods2 = list(set(methods1)), list(set(methods2))
@@ -204,9 +205,6 @@ class TreeAnalysis:
         for method in methods:
             metadata = method.split('_')
             method_type = metadata[0]
-
-            if method_type == 'arb':
-                method_type += metadata[1]
 
             importances_sum.setdefault(method_type, DataFrame())
 
@@ -223,18 +221,19 @@ class TreeAnalysis:
                 importance = ins.loc['importance']
 
                 try:
-                    importances_sum[method_type].loc[feature, :] += importance
+                    importances_sum[method_type].loc[feature, 'importance'] += importance
                 except KeyError:
-                    importance_ins = DataFrame([importance],
-                                               index=[feature],
-                                               columns=['sum'])
+                    importance_ins = DataFrame(ins.iloc[1:]).T
+                    importance_ins = importance_ins.drop(['node_index', 'impurity', 'threshold', 'children_diff',
+                                                          'child_right_diff', 'child_left_diff', 'value', 'feature'],
+                                                         axis=1)
+
+                    importance_ins.index = [feature]
 
                     importances_sum[method_type] = \
                         importances_sum[method_type].append(importance_ins)
 
-            importances_sum[method_type].sort_values('sum',
-                                                     ascending=False,
-                                                     inplace=True)
+            importances_sum[method_type].sort_values('importance', ascending=False, inplace=True)
 
         sums = concat(importances_sum)
         most_important = {}
@@ -247,5 +246,5 @@ class TreeAnalysis:
             data = sums.loc[method_type, :].iloc[0, :]
             most_important[method_type] = DataFrame(data).T
 
-        concat(most_important).to_csv(path.join(type_path.trees_path,
-                                                'most_important_nodes.csv'))
+        df = concat(most_important)
+        df.to_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'))
