@@ -19,6 +19,30 @@ class Path:
 
         self.graphics_path = path.join(self.test_path, 'graphics/')
 
+    @staticmethod
+    def concat_method_type(name):
+        method_types = {'borda': 'scf',
+                        'copeland': 'scf',
+                        'dowdall': 'scf',
+                        'simpson': 'scf',
+                        'dtree': 'classif',
+                        'gnb': 'classif',
+                        'knn': 'classif',
+                        'mlp': 'classif',
+                        'svc': 'classif',
+                        'mean': 'math',
+                        'median': 'math',
+                        'plurality': 'vote'}
+
+        if name in method_types:
+            return '{}_{}'.format(method_types[name], name)
+
+        if name.startswith('arb'):
+            metadata = name.split('_')
+            name = 'arb{}_{}'.format(metadata[1], '_'.join(metadata[2:]))
+
+        return name
+
 
 class RegressionPath(Path):
 
