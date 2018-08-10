@@ -223,7 +223,7 @@ class TreeAnalysis:
                 importance = ins.loc['importance']
 
                 try:
-                    importances_sum[method_type].loc[feature, :] += importance
+                    importances_sum[method_type].loc[feature, 'sum'] += importance
                 except KeyError:
                     importance_ins = DataFrame([importance],
                                                index=[feature],
