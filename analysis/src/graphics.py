@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 from os import path
 from glob import glob
-from .path import Path
 from pandas import read_csv
+from .path import RegressionPath
 
 
 class Boxplot:
@@ -28,17 +28,18 @@ class Boxplot:
         :return: None
         """
         self.__make()
-        plt.savefig(path.join(Path.graphics_path, filename))
+        plt.savefig(path.join(RegressionPath().graphics_path, filename), bbox_inches='tight')
 
     def __getter_data(self, metric):
+        type_path = RegressionPath()
         metric = [metric, 'f1'] if 'f1_' in metric else [metric, metric]
         classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
         tests_path = '../evaluation/tests/'
 
-        datasets_folders = glob(path.join(tests_path, '*'))
+        datasets_folders = [p for p in glob(path.join(tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
-            data = read_csv(path.join(folder, Path.default_file),
+            data = read_csv(path.join(folder, type_path.default_file),
                             header=[0, 1], index_col=0)
 
             try:
