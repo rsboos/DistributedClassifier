@@ -206,6 +206,21 @@ class TreeAnalysis:
 
         importances_sum = {}
 
+        columns = ['importance_sum',
+                   'threshold_true_avg',
+                   'threshold_true_std',
+                   'threshold_false_avg',
+                   'threshold_false_std',
+                   'value_true_avg',
+                   'value_true_std',
+                   'value_false_avg',
+                   'value_false_std']
+
+        value_true = {}
+        value_false = {}
+        threshold_true = {}
+        threshold_false = {}
+
         for method in methods:
             metadata = method.split('_')
             method_type = metadata[0]
@@ -219,42 +234,44 @@ class TreeAnalysis:
 
             m, n = rankings.shape
 
-            value_true = []
-            value_false = []
-            threshold_true = []
-            threshold_false = []
+            value_true.setdefault(method_type, {})
+            value_false.setdefault(method_type, {})
+            threshold_true.setdefault(method_type, {})
+            threshold_false.setdefault(method_type, {})
 
             for i in range(m):
                 ins = rankings.iloc[i, :]
                 feature = ins.loc['feature']
                 importance = ins.loc['importance']
 
+                value_true[method_type].setdefault(feature, [])
+                value_false[method_type].setdefault(feature, [])
+                threshold_true[method_type].setdefault(feature, [])
+                threshold_false[method_type].setdefault(feature, [])
+
                 threshold = ins.loc['threshold']
                 value_left = ins.loc['value'] + ins.loc['child_left_diff']
                 value_right = ins.loc['value'] + ins.loc['child_right_diff']
 
                 if value_left > value_right:
-                    threshold_true.append(threshold)
-                    value_true.append(value_left)
+                    threshold_true[method_type][feature].append(threshold)
+                    value_true[method_type][feature].append(value_left)
                 else:
-                    threshold_false.append(threshold)
-                    value_false.append(value_right)
+                    threshold_false[method_type][feature].append(threshold)
+                    value_false[method_type][feature].append(value_right)
 
                 try:
-                    importances_sum[method_type].loc[feature, 'importance'] \
+                    importances_sum[method_type].loc[feature, columns[0]] \
                         += importance
                 except KeyError:
-                    importance_ins = DataFrame([[importance, 0, 0, 0, 0]],
-                                               columns=['importance_sum',
-                                                        'threshold_true_avg',
-                                                        'threshold_false_avg',
-                                                        'value_true_avg',
-                                                        'value_false_avg'])
+                    importance_ins = DataFrame([[importance, 0, 0, 0, 0, 0, 0, 0, 0]],
+                                               index=[feature],
+                                               columns=columns)
 
                     importances_sum[method_type] = \
                         importances_sum[method_type].append(importance_ins)
 
-            importances_sum[method_type].sort_values('importance',
+            importances_sum[method_type].sort_values(columns[0],
                                                      ascending=False,
                                                      inplace=True)
 
@@ -269,5 +286,19 @@ class TreeAnalysis:
             data = sums.loc[method_type, :].iloc[0, :]
             most_important[method_type] = DataFrame(data).T
 
+            feature = most_important[method_type].index.values[0]
+
+            most_important[method_type].loc[feature, 'value_true_avg'] = np.mean(value_true[method_type][feature])
+            most_important[method_type].loc[feature, 'value_true_std'] = np.std(value_true[method_type][feature])
+
+            most_important[method_type].loc[feature, 'value_false_avg'] = np.mean(value_false[method_type][feature])
+            most_important[method_type].loc[feature, 'value_false_std'] = np.std(value_false[method_type][feature])
+
+            most_important[method_type].loc[feature, 'threshold_true_avg'] = np.mean(threshold_true[method_type][feature])
+            most_important[method_type].loc[feature, 'threshold_true_std'] = np.std(threshold_true[method_type][feature])
+
+            most_important[method_type].loc[feature, 'threshold_false_avg'] = np.mean(threshold_false[method_type][feature])
+            most_important[method_type].loc[feature, 'threshold_false_std'] = np.std(threshold_false[method_type][feature])
+
         df = concat(most_important)
-        df.to_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'))
+        df.to_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'), na_rep='NaN')
