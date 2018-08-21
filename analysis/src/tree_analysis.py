@@ -283,22 +283,20 @@ class TreeAnalysis:
 
         # Get only the first for each method type
         for method_type in method_types:
-            data = sums.loc[method_type, :].iloc[0, :]
-            most_important[method_type] = DataFrame(data).T
+            most_important[method_type] = sums.loc[method_type, :].iloc[0:5, :]
 
-            feature = most_important[method_type].index.values[0]
+            for feature in most_important[method_type].index.values:
+                most_important[method_type].loc[feature, 'value_true_avg'] = np.mean(value_true[method_type][feature])
+                most_important[method_type].loc[feature, 'value_true_std'] = np.std(value_true[method_type][feature])
 
-            most_important[method_type].loc[feature, 'value_true_avg'] = np.mean(value_true[method_type][feature])
-            most_important[method_type].loc[feature, 'value_true_std'] = np.std(value_true[method_type][feature])
+                most_important[method_type].loc[feature, 'value_false_avg'] = np.mean(value_false[method_type][feature])
+                most_important[method_type].loc[feature, 'value_false_std'] = np.std(value_false[method_type][feature])
 
-            most_important[method_type].loc[feature, 'value_false_avg'] = np.mean(value_false[method_type][feature])
-            most_important[method_type].loc[feature, 'value_false_std'] = np.std(value_false[method_type][feature])
+                most_important[method_type].loc[feature, 'threshold_true_avg'] = np.mean(threshold_true[method_type][feature])
+                most_important[method_type].loc[feature, 'threshold_true_std'] = np.std(threshold_true[method_type][feature])
 
-            most_important[method_type].loc[feature, 'threshold_true_avg'] = np.mean(threshold_true[method_type][feature])
-            most_important[method_type].loc[feature, 'threshold_true_std'] = np.std(threshold_true[method_type][feature])
-
-            most_important[method_type].loc[feature, 'threshold_false_avg'] = np.mean(threshold_false[method_type][feature])
-            most_important[method_type].loc[feature, 'threshold_false_std'] = np.std(threshold_false[method_type][feature])
+                most_important[method_type].loc[feature, 'threshold_false_avg'] = np.mean(threshold_false[method_type][feature])
+                most_important[method_type].loc[feature, 'threshold_false_std'] = np.std(threshold_false[method_type][feature])
 
         df = concat(most_important)
         df.to_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'), na_rep='NaN')
