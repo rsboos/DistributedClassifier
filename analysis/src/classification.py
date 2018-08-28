@@ -3,10 +3,8 @@ import sys
 sys.path.append('../evaluation/src/')
 
 from pandas import read_csv, concat, DataFrame
-from sklearn.tree import export_graphviz
 from .tree_analysis import TreeAnalysis
 from .path import ClassificationPath
-from sklearn.externals import joblib
 from metrics import summary
 from copy import deepcopy
 from glob import glob
@@ -14,18 +12,22 @@ from os import path
 import numpy as np
 import os
 
-from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import make_scorer, f1_score, recall_score
 from sklearn.metrics import accuracy_score, precision_score
+from sklearn.model_selection import KFold, cross_validate
 
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
 
 
 class ClassificationAnalysis:
+
+    def __init__(self):
+        self.__method_dataset = "better_methods.csv"
+        self.__method_type_dataset = "better_types.csv"
 
     def process(self, datasets_path, evaluation_path):
         """Create a dataset for each method (classifiers, agreggators).
@@ -43,7 +45,10 @@ class ClassificationAnalysis:
         best_methods = self.__best_method_by_dataset([score, 'f1_micro'],
                                                      evaluation_path)
 
-        self.__create_dataset_by_method(datasets_path, best_methods)
+        best_types = self.__best_method_type_by_dataset(best_methods)
+
+        self.__create_dataset_by_method(datasets_path, best_methods, self.__method_dataset)
+        self.__create_dataset_by_method(datasets_path, best_types, self.__method_type_dataset)
 
     def evaluate(self, classifiers='*', scoring='*', cv=10, iterations=10):
         """Evaluate data in tests/classification/data/* and save results in
@@ -105,7 +110,7 @@ class ClassificationAnalysis:
 
     @staticmethod
     def grow_trees():
-        TreeAnalysis.grow_trees(DecisionTreeClassifier(), ClassificationPath())
+        TreeAnalysis.grow_trees(DecisionTreeClassifier(), ClassificationPath(), max_depth=5)
 
     @staticmethod
     def get_important_nodes(analysis_datapath):
@@ -151,7 +156,17 @@ class ClassificationAnalysis:
 
         return data
 
-    def __create_dataset_by_method(self, datasets_path, best_methods):
+    def __best_method_type_by_dataset(self, best_methods):
+        best_types = deepcopy(best_methods)
+        m, _ = best_types.shape
+
+        for i in range(m):
+            method_type = ClassificationPath.concat_method_type(best_types.iloc[i, -1])
+            best_types.iloc[i, -1] = method_type.split('_')[0]
+
+        return best_types
+
+    def __create_dataset_by_method(self, datasets_path, best_methods, output):
         methods = best_methods.index.values
 
         datasets_features = read_csv(datasets_path, header=0)
@@ -177,7 +192,7 @@ class ClassificationAnalysis:
             data = data.append(instance, ignore_index=True)
 
         data.to_csv(path.join(ClassificationPath().data_path,
-                              'better_methods.csv'), index=False)
+                              output), index=False)
 
     def __default_classifiers(self):
         return {"gnb": GaussianNB(),
