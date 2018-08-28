@@ -65,14 +65,15 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--evaluate",
                         dest="evaluate",
                         default=None,
+                        choices=['regression', 'classification'],
                         help="Type of evaluation (regression or "
-                             "__classification). Evaluate data sets.")
+                             "classification). Evaluate data sets.")
 
     parser.add_argument("-t", "--make-trees",
                         dest="trees",
                         default=None,
-                        choices=['regression'],
-                        help="Create trees from DecisionTreeRegressor.")
+                        choices=['regression', 'classification'],
+                        help="Create trees from DecisionTree's algorithm.")
 
     parser.add_argument("-i", "--get-important-nodes",
                         dest="important_nodes",
