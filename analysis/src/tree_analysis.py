@@ -194,6 +194,7 @@ class TreeAnalysis:
                                                  'important_nodes.csv'))
 
         cls.get_common_nodes(type_path)
+        cls.adjacency_matrix(type_path)
 
     @classmethod
     def get_common_nodes(cls, type_path):
@@ -300,3 +301,19 @@ class TreeAnalysis:
 
         df = concat(most_important)
         df.to_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'), na_rep='NaN')
+
+    @classmethod
+    def adjacency_matrix(cls, type_path):
+        data = read_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'),
+                        header=0, index_col=[0, 1])
+
+        indexes = list(data.index.values)
+        types, features = zip(*indexes)
+        types, features = set(types), set(features)
+
+        result = DataFrame(index=types, columns=features)
+
+        for index in product(types, features):
+            result.loc[index[0], index[1]] = 1 if index in indexes else 0
+
+        result.to_csv(path.join(type_path.trees_path, 'adjacency_matrix.csv'))
