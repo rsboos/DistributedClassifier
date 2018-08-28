@@ -1,0 +1,9 @@
+,unbalanced,n_binary_features,features,silhouette,targets,instances,minority_class_size,majority_class_size
+vote,1,1,1,1,1,0,0,0
+cmb,0,1,1,1,1,0,1,0
+math,1,0,0,1,1,1,0,1
+scf,1,1,1,1,0,0,0,1
+arbmdic,1,1,0,1,0,0,1,1
+classif,1,1,0,1,0,1,0,1
+arbmd,1,0,1,0,1,0,1,1
+arbmdi,0,0,1,1,1,0,1,1
