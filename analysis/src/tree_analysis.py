@@ -195,6 +195,7 @@ class TreeAnalysis:
 
         cls.get_common_nodes(type_path)
         cls.adjacency_matrix(type_path)
+        cls.most_important_intervals(type_path)
 
     @classmethod
     def get_common_nodes(cls, type_path):
@@ -317,3 +318,38 @@ class TreeAnalysis:
             result.loc[index[0], index[1]] = 1 if index in indexes else 0
 
         result.to_csv(path.join(type_path.trees_path, 'adjacency_matrix.csv'))
+
+    @classmethod
+    def most_important_intervals(cls, type_path):
+        data = read_csv(path.join(type_path.trees_path, 'most_important_nodes.csv'),
+                        header=0, index_col=[0, 1])
+
+        indexes = list(data.index.values)
+        types, features = zip(*indexes)
+        types, features = set(types), set(features)
+
+        result = DataFrame(index=types, columns=features)
+
+        true_none = "f > {tf:06.2f} -> ({vf:06.2f})"
+        false_none = "f <= {tt:06.2f} -> ({vt:06.2f})"
+        no_none = "f <= {tt:06.2f} and f > {tf:06.2f} -> ({vt:06.2f} - {vf:06.2f})"
+
+        for index in product(types, features):
+            if index in indexes:
+                thresh_true_avg = data.loc[index, 'threshold_true_avg']
+                thresh_false_avg = data.loc[index, 'threshold_false_avg']
+
+                value_true_avg = data.loc[index, 'value_true_avg']
+                value_false_avg = data.loc[index, 'value_false_avg']
+
+                if np.isnan(thresh_true_avg):
+                    result.loc[index[0], index[1]] = true_none.format(tf=thresh_false_avg, vf=value_false_avg)
+                elif np.isnan(thresh_false_avg):
+                    result.loc[index[0], index[1]] = false_none.format(tt=thresh_true_avg, vt=value_true_avg)
+                else:
+                    result.loc[index[0], index[1]] = no_none.format(tt=thresh_true_avg, tf=thresh_false_avg,
+                                                                    vt=value_true_avg, vf=value_false_avg)
+            else:
+                result.loc[index[0], index[1]] = 'No Relation'
+
+        result.to_csv(path.join(type_path.trees_path, 'intervals.csv'))
