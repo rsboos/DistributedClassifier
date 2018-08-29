@@ -332,7 +332,7 @@ class TreeAnalysis:
 
         true_none = "f > {tf:06.2f} -> ({vf:06.2f})"
         false_none = "f <= {tt:06.2f} -> ({vt:06.2f})"
-        no_none = "f <= {tt:06.2f} and f > {tf:06.2f} -> ({vt:06.2f} - {vf:06.2f})"
+        no_none = "f <= {tt:06.2f} or f > {tf:06.2f} -> ({vt:06.2f} - {vf:06.2f})"
 
         for index in product(types, features):
             if index in indexes:
