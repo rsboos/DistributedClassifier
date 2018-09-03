@@ -1,10 +1,8 @@
 import argparse
 
-from src.graphics import Boxplot
-from src.tree_analysis import TreeAnalysis
+from src.graphics import Boxplot, NewickTree
 from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
-from src.path import RegressionPath, ClassificationPath
 
 
 def main(args):
@@ -45,12 +43,24 @@ def main(args):
         ClassificationAnalysis.get_important_nodes(analysis_data)
 
     # Graphics
-    if args.graphics == 'boxplot':
+    if args.graphics == 'bp-ranking':
         graphic = Boxplot()
-        graphic.save('boxplot.png')
+        graphic.ranking()
+        graphic.save('bp-ranking.png')
 
         if args.show:
             graphic.show()
+    elif args.graphics == 'bp-performance':
+        graphic = Boxplot()
+        graphic.performance()
+        graphic.save('bp-performance.png')
+
+        if args.show:
+            graphic.show()
+
+    if args.newick is not None:
+        graphic = NewickTree()
+        graphic.create(args.newick)
 
 if __name__ == "__main__":
 
@@ -84,8 +94,14 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--graphics",
                         dest="graphics",
                         default=None,
-                        choices=['boxplot'],
+                        choices=['bp-ranking', 'bp-performance'],
                         help="Create a specified graphic.")
+
+    parser.add_argument("-n", "--newick",
+                        dest="newick",
+                        default=None,
+                        choices=['ward', 'average', 'complete'],
+                        help="Display a Newick Tree.")
 
     parser.add_argument("-s", "--show",
                         dest="show",
