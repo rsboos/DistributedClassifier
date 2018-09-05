@@ -1,0 +1,36 @@
+digraph Tree {
+node [shape=box, style="filled", color="black"] ;
+0 [label="silhouette <= 0.748\ngini = 0.77\nsamples = 276\nvalue = [77, 38, 5, 78, 17, 61]\nclass = classif", fillcolor="#399de501"] ;
+1 [label="n_binary_features <= 90.5\ngini = 0.773\nsamples = 246\nvalue = [77, 38, 5, 48, 17, 61]\nclass = arbmd", fillcolor="#e5813916"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="minority_class_size <= 2002.5\ngini = 0.629\nsamples = 132\nvalue = [69, 4, 5, 0, 17, 37]\nclass = arbmd", fillcolor="#e5813956"] ;
+1 -> 2 ;
+3 [label="unbalanced <= 0.271\ngini = 0.57\nsamples = 120\nvalue = [69, 4, 5, 0, 5, 37]\nclass = arbmd", fillcolor="#e5813962"] ;
+2 -> 3 ;
+4 [label="gini = 0.153\nsamples = 24\nvalue = [22, 0, 2, 0, 0, 0]\nclass = arbmd", fillcolor="#e58139e8"] ;
+3 -> 4 ;
+5 [label="n_binary_features <= 2.5\ngini = 0.606\nsamples = 96\nvalue = [47, 4, 3, 0, 5, 37]\nclass = arbmd", fillcolor="#e581392b"] ;
+3 -> 5 ;
+6 [label="gini = 0.547\nsamples = 84\nvalue = [45, 4, 1, 0, 0, 34]\nclass = arbmd", fillcolor="#e5813938"] ;
+5 -> 6 ;
+7 [label="gini = 0.708\nsamples = 12\nvalue = [2, 0, 2, 0, 5, 3]\nclass = cmb", fillcolor="#8139e539"] ;
+5 -> 7 ;
+8 [label="gini = 0.0\nsamples = 12\nvalue = [0, 0, 0, 0, 12, 0]\nclass = cmb", fillcolor="#8139e5ff"] ;
+2 -> 8 ;
+9 [label="unbalanced <= 0.379\ngini = 0.685\nsamples = 114\nvalue = [8, 34, 0, 48, 0, 24]\nclass = classif", fillcolor="#399de52d"] ;
+1 -> 9 ;
+10 [label="gini = 0.0\nsamples = 12\nvalue = [0, 12, 0, 0, 0, 0]\nclass = arbmdi", fillcolor="#9de539ff"] ;
+9 -> 10 ;
+11 [label="unbalanced <= 0.483\ngini = 0.671\nsamples = 102\nvalue = [8, 22, 0, 48, 0, 24]\nclass = classif", fillcolor="#399de54e"] ;
+9 -> 11 ;
+12 [label="gini = 0.105\nsamples = 18\nvalue = [0, 0, 0, 17, 0, 1]\nclass = classif", fillcolor="#399de5f0"] ;
+11 -> 12 ;
+13 [label="unbalanced <= 0.598\ngini = 0.711\nsamples = 84\nvalue = [8, 22, 0, 31, 0, 23]\nclass = classif", fillcolor="#399de521"] ;
+11 -> 13 ;
+14 [label="gini = 0.278\nsamples = 12\nvalue = [0, 10, 0, 0, 0, 2]\nclass = arbmdi", fillcolor="#9de539cc"] ;
+13 -> 14 ;
+15 [label="gini = 0.689\nsamples = 72\nvalue = [8, 12, 0, 31, 0, 21]\nclass = classif", fillcolor="#399de532"] ;
+13 -> 15 ;
+16 [label="gini = 0.0\nsamples = 30\nvalue = [0, 0, 0, 30, 0, 0]\nclass = classif", fillcolor="#399de5ff"] ;
+0 -> 16 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+}
