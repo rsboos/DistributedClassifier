@@ -48,12 +48,38 @@ def main(args):
         graphic.ranking()
         graphic.save('bp-ranking.png')
 
+        graphic.type_ranking()
+        graphic.save('bp-type-ranking.png')
+
+        clusters = {}
+
+        for name, cluster in clusters.items():
+            graphic = Boxplot()
+            graphic.ranking(cluster)
+            graphic.save('bp-ranking-{}.png'.format(name))
+
+            graphic.type_ranking(cluster)
+            graphic.save('bp-type-ranking-{}.png'.format(name))
+
         if args.show:
             graphic.show()
     elif args.graphics == 'bp-performance':
         graphic = Boxplot()
         graphic.performance()
         graphic.save('bp-performance.png')
+
+        graphic.type_performance()
+        graphic.save('bp-type-performance.png')
+
+        clusters = {}
+
+        for name, cluster in clusters.items:
+            graphic = Boxplot()
+            graphic.performance(cluster)
+            graphic.save('bp-performance-{}.png'.format(name))
+
+            graphic.type_performance(cluster)
+            graphic.save('bp-type-performance-{}.png'.format(name))
 
         if args.show:
             graphic.show()
