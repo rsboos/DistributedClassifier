@@ -43,43 +43,49 @@ def main(args):
         ClassificationAnalysis.get_important_nodes(analysis_data)
 
     # Graphics
+    clusters = {
+        'cluster1': ['yeast', 'vowel', 'g1318-95-9', 'cancer', 'sharkattack', 'iris', 'soybean', 'segmentation', 'glass'],
+        'cluster2': ['g2827-95-4', 'optdigits', 'sat', 'crack', 'heroine', 'amyl', 'katemine', 'vsa', 'meth', 'caff',
+                     'seed', 'unbalanced1140-68-6', 'lsd', 'legalh', 'amphet', 'benzos', 'mushrooms', 'coke', 'ecstasy',
+                     'alcohol', 'cannabis', 'nicotine'],
+        'cluster3': ['unbalanced9636-40-6', 'diabetics', 'brokenmachine', 'unbalanced8725-53-8'],
+        'cluster4': ['unbalanced5627-61-6', 'pageblocks', 'activityrecog', 'motionsense', 'pendigits', 'letter',
+                     'unbalanced5394-89-5', 'banking', 'g8848-86-2', 'g5946-47-2', 'g6576-46-2']
+    }
+
     if args.graphics == 'bp-ranking':
         graphic = Boxplot()
         graphic.ranking()
-        graphic.save('bp-ranking.png')
+        graphic.save('bp-ranking.pdf')
 
         graphic.type_ranking()
-        graphic.save('bp-type-ranking.png')
-
-        clusters = {}
+        graphic.save('bp-type-ranking.pdf')
 
         for name, cluster in clusters.items():
             graphic = Boxplot()
             graphic.ranking(cluster)
-            graphic.save('bp-ranking-{}.png'.format(name))
+            graphic.save('bp-ranking-{}.pdf'.format(name))
 
             graphic.type_ranking(cluster)
-            graphic.save('bp-type-ranking-{}.png'.format(name))
+            graphic.save('bp-type-ranking-{}.pdf'.format(name))
 
         if args.show:
             graphic.show()
     elif args.graphics == 'bp-performance':
         graphic = Boxplot()
         graphic.performance()
-        graphic.save('bp-performance.png')
+        graphic.save('bp-performance.pdf')
 
         graphic.type_performance()
-        graphic.save('bp-type-performance.png')
+        graphic.save('bp-type-performance.pdf')
 
-        clusters = {}
-
-        for name, cluster in clusters.items:
+        for name, cluster in clusters.items():
             graphic = Boxplot()
             graphic.performance(cluster)
-            graphic.save('bp-performance-{}.png'.format(name))
+            graphic.save('bp-performance-{}.pdf'.format(name))
 
             graphic.type_performance(cluster)
-            graphic.save('bp-type-performance-{}.png'.format(name))
+            graphic.save('bp-type-performance-{}.pdf'.format(name))
 
         if args.show:
             graphic.show()

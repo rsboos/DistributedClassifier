@@ -31,28 +31,56 @@ class Boxplot:
         """
         plt.savefig(path.join(RegressionPath().graphics_path, filename), bbox_inches='tight')
 
-    def ranking(self):
+    def ranking(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
-        self.__get_ranking()
+        folders = []
+        for c in list(cluster):
+            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
+            folders.append(found)
+
+        folders = list(np.ravel(folders))
+        self.__get_ranking(folders)
         self.__make('Rank Position')
 
-    def type_ranking(self):
+    def type_ranking(self, cluster='*', overlap='*'):
         """Create a boxplot with method's types ranking."""
-        self.__get_type_ranking()
+        folders = []
+        for c in list(cluster):
+            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
+            folders.append(found)
+
+        folders = list(np.ravel(folders))
+
+        self.__get_type_ranking(folders)
         self.__make('Rank Position')
 
-    def performance(self):
+    def performance(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
-        self.__get_performance()
+        folders = []
+        for c in list(cluster):
+            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
+            folders.append(found)
+
+        folders = list(np.ravel(folders))
+
+        self.__get_performance(folders)
         self.__make('F1 Score')
 
-    def type_performance(self):
+    def type_performance(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
-        self.__get_type_performance()
+        folders = []
+        for c in list(cluster):
+            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
+            folders.append(found)
+
+        folders = list(np.ravel(folders))
+
+        self.__get_type_performance(folders)
         self.__make('F1 Score')
 
     def __get_ranking(self, datasets_folders=[]):
         type_path = RegressionPath()
+        self.rankings = []
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
         classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
 
@@ -91,6 +119,7 @@ class Boxplot:
 
     def __get_type_ranking(self, datasets_folders=[]):
         type_path = RegressionPath()
+        self.rankings = []
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
 
         if len(datasets_folders) == 0:
@@ -133,6 +162,7 @@ class Boxplot:
 
     def __get_performance(self, datasets_folders=[]):
         type_path = RegressionPath()
+        self.rankings = []
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
         classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
 
@@ -168,6 +198,7 @@ class Boxplot:
 
     def __get_type_performance(self, datasets_folders=[]):
         type_path = RegressionPath()
+        self.rankings = []
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
 
         if len(datasets_folders) == 0:
