@@ -6,6 +6,7 @@ class Path:
     def __init__(self, main_folder):
         self.default_file = 'cv_summary.csv'
 
+        self.cluster_analysis = 'tests/cluster_analysis'
         self.test_path = path.join('tests/', main_folder)
         self.data_path = path.join(self.test_path, 'data/')
 

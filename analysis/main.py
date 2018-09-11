@@ -3,6 +3,7 @@ import argparse
 from src.graphics import Boxplot, NewickTree
 from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
+from src.cluster_analysis import ClusterAnalysis
 
 
 def main(args):
@@ -43,15 +44,7 @@ def main(args):
         ClassificationAnalysis.get_important_nodes(analysis_data)
 
     # Graphics
-    clusters = {
-        'cluster1': ['yeast', 'vowel', 'g1318-95-9', 'cancer', 'sharkattack', 'iris', 'soybean', 'segmentation', 'glass'],
-        'cluster2': ['g2827-95-4', 'optdigits', 'sat', 'crack', 'heroine', 'amyl', 'katemine', 'vsa', 'meth', 'caff',
-                     'seed', 'unbalanced1140-68-6', 'lsd', 'legalh', 'amphet', 'benzos', 'mushrooms', 'coke', 'ecstasy',
-                     'alcohol', 'cannabis', 'nicotine'],
-        'cluster3': ['unbalanced9636-40-6', 'diabetics', 'brokenmachine', 'unbalanced8725-53-8'],
-        'cluster4': ['unbalanced5627-61-6', 'pageblocks', 'activityrecog', 'motionsense', 'pendigits', 'letter',
-                     'unbalanced5394-89-5', 'banking', 'g8848-86-2', 'g5946-47-2', 'g6576-46-2']
-    }
+    clusters = ClusterAnalysis.clusters()
 
     if args.graphics == 'bp-ranking':
         graphic = Boxplot()
@@ -93,6 +86,10 @@ def main(args):
     if args.newick is not None:
         graphic = NewickTree()
         graphic.create(args.newick)
+
+    if args.cluster_analysis is not None:
+        analysis = ClusterAnalysis()
+        analysis.process()
 
 if __name__ == "__main__":
 
@@ -140,6 +137,11 @@ if __name__ == "__main__":
                         default=False,
                         choices=['true', 'false'],
                         help="Show or not a graphic.")
+
+    parser.add_argument("-c", "--cluster-analysis",
+                        dest="cluster_analysis",
+                        default=None,
+                        help="Make a feature analysis by each cluster.")
 
     args = parser.parse_args()
     main(args)
