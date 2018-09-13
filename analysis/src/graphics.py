@@ -242,13 +242,18 @@ class Boxplot:
         m, n = len(self.rankings), len(self.rankings[0])
         boxplot_data = np.reshape(self.rankings, (m, n))
 
+        if boxplot_data.max() <= 1:
+            ticks = [i / 10 for i in range(int(boxplot_data.min()), int(boxplot_data.max() * 10) + 1)]
+        else:
+            ticks = range(int(boxplot_data.min()), int(boxplot_data.max()) + 1)
+
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
 
         ax.set_xlabel('Methods')
         ax.set_ylabel(ylabel)
         ax.set_xticklabels(self.ordered_methods, rotation=90)
-        plt.yticks(range(int(boxplot_data.min()), int(boxplot_data.max()) + 1))
+        plt.yticks(ticks)
 
 
 class NewickTree:
