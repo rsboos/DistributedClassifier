@@ -199,6 +199,7 @@ class Boxplot:
     def __get_type_performance(self, datasets_folders=[]):
         type_path = RegressionPath()
         self.rankings = []
+        method_types = {}
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
 
         if len(datasets_folders) == 0:
@@ -216,34 +217,23 @@ class Boxplot:
             methods = list(map(lambda x: type_path.concat_method_type(x), data.index.values))
             data.index = methods
 
-            method_types = {}
             for m in methods:
                 method_type = m.split('_')[0]
                 method_types.setdefault(method_type, [])
                 method_types[method_type].append(data.loc[m])
 
-            for k in method_types:
-                method_types[k] = np.mean(method_types[k])
-
-            data = Series(method_types)
-            data = data.sort_values()
-
-            methods = data.index.values
-            ranking = data.values
-
-            positions = zip(methods, ranking)
-            positions = sorted(positions, key=lambda x: x[0])
-            methods, ranking = zip(*positions)
-            self.rankings.append(list(ranking))
+        positions = list(method_types.items())
+        positions = sorted(positions, key=lambda x: x[0])
+        methods, ranking = zip(*positions)
+        self.rankings = [np.array(v) for v in ranking]
 
         self.ordered_methods = list(methods)
 
     def __make(self, ylabel):
-        m, n = len(self.rankings), len(self.rankings[0])
-        boxplot_data = np.reshape(self.rankings, (m, n))
+        boxplot_data = self.rankings
 
-        if boxplot_data.max() <= 1:
-            ticks = [i / 10 for i in range(int(boxplot_data.min()), int(boxplot_data.max() * 10) + 1)]
+        if np.mean(boxplot_data) <= 1:
+            ticks = [i / 10 for i in range(0, 11)]
         else:
             ticks = range(int(boxplot_data.min()), int(boxplot_data.max()) + 1)
 
