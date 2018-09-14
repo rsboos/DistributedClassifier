@@ -170,22 +170,30 @@ class Boxplot:
             datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
-            data = read_csv(path.join(folder, type_path.default_file),
-                            header=[0, 1], index_col=0)
+            files = glob(path.join(folder, '*'))
+            files = set(files) - {path.join(folder, type_path.default_file), path.join(folder, 'params.json')}
 
-            try:
-                data = data.loc[:, 'mean'].loc[:, metric[0]]
-            except KeyError:
-                data = data.loc[:, 'mean'].loc[:, metric[1]]
+            for file in files:
+                data = read_csv(file, header=0, index_col=0)
 
-            data = data.sort_values()
-            ranking = list(data.values)
-            methods = list(data.index.values)
+                try:
+                    data = data.loc[:, metric[0]]
+                except KeyError:
+                    data = data.loc[:, metric[1]]
 
-            for m, r in zip(methods, ranking):
-                type_m = type_path.concat_method_type(m)
+                ranking = list(data.values)
+
+                method = file.split('/')[-1]
+                method = method.replace('cv_scores_', '')
+                method = method.replace('.csv', '')
+                if method.startswith('arb'):
+                    method_p = method.split('_')
+                    if method_p[1] not in ['md', 'mdi', 'mdic']:
+                        method = "{s[0]}_{s[2]}_{s[1]}".format(s=method_p)
+
+                type_m = type_path.concat_method_type(method)
                 methods_data.setdefault(type_m, [])
-                methods_data[type_m].append(r)
+                methods_data[type_m] += ranking
 
         positions = list(methods_data.items())
         positions = sorted(positions, key=lambda x: x[0])
@@ -195,29 +203,13 @@ class Boxplot:
         self.ordered_methods = list(methods)
 
     def __get_type_performance(self, datasets_folders=[]):
-        type_path = RegressionPath()
+        self.__get_performance(datasets_folders)
+
         method_types = {}
-        metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
-
-        if len(datasets_folders) == 0:
-            datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
-
-        for folder in datasets_folders:
-            data = read_csv(path.join(folder, type_path.default_file),
-                            header=[0, 1], index_col=0)
-
-            try:
-                data = data.loc[:, 'mean'].loc[:, metric[0]]
-            except KeyError:
-                data = data.loc[:, 'mean'].loc[:, metric[1]]
-
-            methods = list(map(lambda x: type_path.concat_method_type(x), data.index.values))
-            data.index = methods
-
-            for m in methods:
-                method_type = m.split('_')[0]
-                method_types.setdefault(method_type, [])
-                method_types[method_type].append(data.loc[m])
+        for method, ranking in zip(self.ordered_methods, self.rankings):
+            type_m = method.split('_')[0]
+            method_types.setdefault(type_m, [])
+            method_types[type_m] += ranking
 
         positions = list(method_types.items())
         positions = sorted(positions, key=lambda x: x[0])

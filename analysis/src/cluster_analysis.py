@@ -14,9 +14,9 @@ class ClusterAnalysis:
                          'lsd', 'legalh', 'amphet', 'benzos', 'mushrooms', 'coke', 'ecstasy',
                          'alcohol', 'cannabis', 'nicotine'],
             'cluster3': ['unbalanced9636-40-6', 'diabetics', 'brokenmachine', 'unbalanced8725-53-8'],
-            'cluster4': ['unbalanced5627-61-6', 'pageblocks', 'activityrecog', 'motionsense',
-                         'pendigits', 'letter', 'unbalanced5394-89-5', 'banking', 'g8848-86-2',
-                         'g5946-47-2', 'g6576-46-2']
+            'cluster4': ['unbalanced5627-61-6', 'pageblocks', 'unbalanced5394-89-5'],
+            'cluster5': ['activityrecog', 'motionsense', 'pendigits', 'letter'],
+            'cluster6': ['banking', 'g8848-86-2', 'g5946-47-2', 'g6576-46-2']
         }
 
     def process(self):
