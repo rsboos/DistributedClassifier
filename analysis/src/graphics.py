@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from os import path
 from glob import glob
+from math import fsum
 from .path import RegressionPath
 from pandas import read_csv, Series
 from sklearn.cluster import AgglomerativeClustering
@@ -162,9 +163,8 @@ class Boxplot:
 
     def __get_performance(self, datasets_folders=[]):
         type_path = RegressionPath()
-        self.rankings = []
+        methods_data = {}
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
-        classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
 
         if len(datasets_folders) == 0:
             datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
@@ -182,23 +182,20 @@ class Boxplot:
             ranking = list(data.values)
             methods = list(data.index.values)
 
-            i = 0
-            while len(methods) < 32:
-                methods.append(classifiers[i])
-                ranking.append(0)
-                i += 1
+            for m, r in zip(methods, ranking):
+                type_m = type_path.concat_method_type(m)
+                methods_data.setdefault(type_m, [])
+                methods_data[type_m].append(r)
 
-            methods = list(map(lambda x: type_path.concat_method_type(x), methods))
-            positions = zip(methods, ranking)
-            positions = sorted(positions, key=lambda x: x[0])
-            methods, ranking = zip(*positions)
-            self.rankings.append(list(ranking))
+        positions = list(methods_data.items())
+        positions = sorted(positions, key=lambda x: x[0])
+        methods, ranking = zip(*positions)
 
+        self.rankings = list(ranking)
         self.ordered_methods = list(methods)
 
     def __get_type_performance(self, datasets_folders=[]):
         type_path = RegressionPath()
-        self.rankings = []
         method_types = {}
         metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
 
@@ -225,17 +222,19 @@ class Boxplot:
         positions = list(method_types.items())
         positions = sorted(positions, key=lambda x: x[0])
         methods, ranking = zip(*positions)
-        self.rankings = [np.array(v) for v in ranking]
 
+        self.rankings = list(ranking)
         self.ordered_methods = list(methods)
 
     def __make(self, ylabel):
         boxplot_data = self.rankings
+        data_sum = [fsum(v) / len(v) for v in boxplot_data]
+        mean = fsum(data_sum) / len(data_sum)
 
-        if np.mean(boxplot_data) <= 1:
+        if mean <= 1:
             ticks = [i / 10 for i in range(0, 11)]
         else:
-            ticks = range(int(boxplot_data.min()), int(boxplot_data.max()) + 1)
+            ticks = range(int(np.min(boxplot_data)), int(np.max(boxplot_data)) + 1)
 
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
