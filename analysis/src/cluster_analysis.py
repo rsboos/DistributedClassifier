@@ -19,6 +19,17 @@ class ClusterAnalysis:
             'cluster6': ['banking', 'g8848-86-2', 'g5946-47-2', 'g6576-46-2']
         }
 
+    @classmethod
+    def dataset_cluster(cls):
+        clusters = cls.clusters()
+        datasets = {}
+
+        for c in clusters:
+            for dt in clusters[c]:
+                datasets[dt] = c
+
+        return datasets
+
     def process(self):
         data = read_csv('data/datasets.csv', header=0, index_col=None)
 

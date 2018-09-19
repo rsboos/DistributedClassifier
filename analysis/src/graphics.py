@@ -7,16 +7,17 @@ from glob import glob
 from math import fsum
 from .path import RegressionPath
 from pandas import read_csv, Series
+from .cluster_analysis import ClusterAnalysis
 from sklearn.cluster import AgglomerativeClustering
 
 
 class Boxplot:
 
-    def __init__(self, metric='f1_macro'):
-        self.rankings = []
-        self.ordered_methods = []
-        self.metric = metric
-        self.tests_path = '../evaluation/tests/'
+    def __init__(self, metric='f1_macro', type_path=RegressionPath()):
+        self.__metric = [metric, 'f1'] if 'f1_' in metric else [metric, metric]
+        self.__classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
+        self.__tests_path = '../evaluation/tests/'
+        self.__type_path = type_path
 
     def show(self):
         """Show boxplot."""
@@ -30,82 +31,85 @@ class Boxplot:
 
         :return: None
         """
-        plt.savefig(path.join(RegressionPath().graphics_path, filename), bbox_inches='tight')
+        plt.savefig(path.join(self.__type_path.graphics_path, filename), bbox_inches='tight')
 
     def ranking(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
-        folders = []
-        for c in list(cluster):
-            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
-            folders.append(found)
-
-        folders = list(np.ravel(folders))
-        self.__get_ranking(folders)
-        self.__make('Rank Position')
+        folders = self.__get_folders(cluster, overlap)
+        r, m = self.__get_ranking(folders)
+        self.__make(r, m, 'Rank Position')
 
     def type_ranking(self, cluster='*', overlap='*'):
         """Create a boxplot with method's types ranking."""
-        folders = []
-        for c in list(cluster):
-            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
-            folders.append(found)
-
-        folders = list(np.ravel(folders))
-
-        self.__get_type_ranking(folders)
-        self.__make('Rank Position')
+        folders = self.__get_folders(cluster, overlap)
+        r, m = self.__get_type_ranking(folders)
+        self.__make(r, m, 'Rank Position')
 
     def performance(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
-        folders = []
-        for c in list(cluster):
-            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
-            folders.append(found)
-
-        folders = list(np.ravel(folders))
-
-        self.__get_performance(folders)
-        self.__make('F1 Score')
+        folders = self.__get_folders(cluster, overlap)
+        r, m = self.__get_performance(folders)
+        self.__make(r, m, 'F1 Score')
 
     def type_performance(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
+        folders = self.__get_folders(cluster, overlap)
+        r, m = self.__get_type_performance(folders)
+        self.__make(r, m, 'F1 Score')
+
+    def dataset_performance(self, overlap='*'):
+        """Create a boxplot by ranking."""
+        folders = self.__get_folders('*', overlap)
+        methods_data = self.__get_dataset_performance(folders)
+
+        for method, datasets in methods_data.items():
+            positions = list(datasets.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods, ranking = zip(*positions)
+
+            self.__make(ranking, methods, 'F1 Score', 'Datasets')
+
+            named_overlap = '-' + str(overlap) if overlap != '*' else ''
+            self.save('bp-performance-{}{}.pdf'.format(method, named_overlap))
+
+    def cluster_performance(self, overlap='*'):
+        """Create a boxplot by ranking."""
+        # folders = self.__get_folders('*', overlap)
+        # r, m = self.__get_cluster_performance(folders)
+        # self.__make(r, m, 'F1 Score', "Datasets' Clusters")
+
+    def __get_folders(self, clusters, overlap):
         folders = []
-        for c in list(cluster):
-            found = glob(path.join(self.tests_path, '*' + c + '*' + '_{}'.format(overlap)))
+        for c in list(clusters):
+            found = glob(path.join(self.__tests_path, '*' + c + '*' + '_{}'.format(overlap)))
             folders.append(found)
 
-        folders = list(np.ravel(folders))
-
-        self.__get_type_performance(folders)
-        self.__make('F1 Score')
+        return list(np.ravel(folders))
 
     def __get_ranking(self, datasets_folders=[]):
-        type_path = RegressionPath()
-        self.rankings = []
-        metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
-        classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
+        rankings = []
 
         if len(datasets_folders) == 0:
-            datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
+            datasets_folders = [p for p in glob(path.join(self.__tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
             data = read_csv(path.join(folder, type_path.default_file),
                             header=[0, 1], index_col=0)
 
             try:
-                data = data.loc[:, 'mean'].loc[:, metric[0]]
+                data = data.loc[:, 'mean'].loc[:, self.__metric[0]]
             except KeyError:
-                data = data.loc[:, 'mean'].loc[:, metric[1]]
+                data = data.loc[:, 'mean'].loc[:, self.__metric[1]]
 
             data = data.sort_values()
             methods = list(data.index.values)
 
             i = 0
             while len(methods) < 32:
-                methods.append(classifiers[i])
+                methods.append(self.__classifiers[i])
                 i += 1
 
-            methods = list(map(lambda x: type_path.concat_method_type(x), methods))
+            methods = list(map(lambda x: self.__type_path.concat_method_type(x), methods))
             positions = list(enumerate(methods))
 
             # Sort by name
@@ -114,28 +118,26 @@ class Boxplot:
 
             # From 1 to 32
             ranking = list(map(lambda x: x + 1, ranking))
-            self.rankings.append(ranking)
+            rankings.append(ranking)
 
-        self.ordered_methods = ordered_methods
+        return rankings, list(ordered_methods)
 
     def __get_type_ranking(self, datasets_folders=[]):
-        type_path = RegressionPath()
-        self.rankings = []
-        metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
+        rankings = []
 
         if len(datasets_folders) == 0:
-            datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
+            datasets_folders = [p for p in glob(path.join(self.__tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
             data = read_csv(path.join(folder, type_path.default_file),
                             header=[0, 1], index_col=0)
 
             try:
-                data = data.loc[:, 'mean'].loc[:, metric[0]]
+                data = data.loc[:, 'mean'].loc[:, self.__metric[0]]
             except KeyError:
-                data = data.loc[:, 'mean'].loc[:, metric[1]]
+                data = data.loc[:, 'mean'].loc[:, self.__metric[1]]
 
-            methods = list(map(lambda x: type_path.concat_method_type(x), data.index.values))
+            methods = list(map(lambda x: self.__type_path.concat_method_type(x), data.index.values))
             data.index = methods
 
             method_types = {}
@@ -157,42 +159,33 @@ class Boxplot:
 
             # From 1 to 32
             ranking = list(map(lambda x: x + 1, ranking))
-            self.rankings.append(ranking)
+            rankings.append(ranking)
 
-        self.ordered_methods = ordered_methods
+        return rankings, list(ordered_methods)
 
     def __get_performance(self, datasets_folders=[]):
-        type_path = RegressionPath()
         methods_data = {}
-        metric = [self.metric, 'f1'] if 'f1_' in self.metric else [self.metric, self.metric]
 
         if len(datasets_folders) == 0:
-            datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
+            datasets_folders = [p for p in glob(path.join(self.__tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
             files = glob(path.join(folder, '*'))
-            files = set(files) - {path.join(folder, type_path.default_file), path.join(folder, 'params.json')}
+            files = set(files) - {path.join(folder, self.__type_path.default_file), path.join(folder, 'params.json')}
 
             for file in files:
                 data = read_csv(file, header=0, index_col=0)
 
                 try:
-                    data = data.loc[:, metric[0]]
+                    data = data.loc[:, self.__metric[0]]
                 except KeyError:
-                    data = data.loc[:, metric[1]]
+                    data = data.loc[:, self.__metric[1]]
 
                 ranking = list(data.values)
 
-                method = file.split('/')[-1]
-                method = method.replace('cv_scores_', '')
-                method = method.replace('.csv', '')
+                method = self.__type_path.fix_method_name(method)
+                type_m = self.__type_path.concat_method_type(method)
 
-                if method.startswith('arb'):
-                    method_p = method.split('_')
-                    if method_p[1] not in ['md', 'mdi', 'mdic']:
-                        method = "{s[0]}_{s[2]}_{s[1]}".format(s=method_p)
-
-                type_m = type_path.concat_method_type(method)
                 methods_data.setdefault(type_m, [])
                 methods_data[type_m] += ranking
 
@@ -200,14 +193,13 @@ class Boxplot:
         positions = sorted(positions, key=lambda x: x[0])
         methods, ranking = zip(*positions)
 
-        self.rankings = list(ranking)
-        self.ordered_methods = list(methods)
+        return list(ranking), list(methods)
 
     def __get_type_performance(self, datasets_folders=[]):
-        self.__get_performance(datasets_folders)
+        ranking, ordered_methods = self.__get_performance(datasets_folders)
 
         method_types = {}
-        for method, ranking in zip(self.ordered_methods, self.rankings):
+        for method, ranking in zip(ordered_methods, ranking):
             type_m = method.split('_')[0]
             method_types.setdefault(type_m, [])
             method_types[type_m] += ranking
@@ -216,11 +208,42 @@ class Boxplot:
         positions = sorted(positions, key=lambda x: x[0])
         methods, ranking = zip(*positions)
 
-        self.rankings = list(ranking)
-        self.ordered_methods = list(methods)
+        return list(ranking), list(methods)
 
-    def __make(self, ylabel):
-        boxplot_data = self.rankings
+    def __get_dataset_performance(self, datasets_folders=[]):
+        methods_data = {}
+        dataset_clusters = ClusterAnalysis.dataset_cluster()
+
+        if len(datasets_folders) == 0:
+            datasets_folders = [p for p in glob(path.join(self.__tests_path, '*')) if path.isdir(p)]
+
+        for folder in datasets_folders:
+            files = glob(path.join(folder, '*'))
+            files = set(files) - {path.join(folder, self.__type_path.default_file), path.join(folder, 'params.json')}
+
+            for file in files:
+                data = read_csv(file, header=0, index_col=0)
+
+                try:
+                    data = data.loc[:, self.__metric[0]]
+                except KeyError:
+                    data = data.loc[:, self.__metric[1]]
+
+                ranking = list(data.values)
+
+                dataset = file.split('/')[-2]
+                dataset = dataset.split('_')[0]
+                dataset = dataset_clusters[dataset] + '_' + dataset
+                
+                method = self.__type_path.fix_method_name(method)
+                type_m = self.__type_path.concat_method_type(method)
+
+                methods_data.setdefault(type_m, {})
+                methods_data[type_m][dataset] = ranking
+
+        return methods_data
+
+    def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods'):
         data_sum = [fsum(v) / len(v) for v in boxplot_data]
         mean = fsum(data_sum) / len(data_sum)
 
@@ -232,9 +255,9 @@ class Boxplot:
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
 
-        ax.set_xlabel('Methods')
+        ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        ax.set_xticklabels(self.ordered_methods, rotation=90)
+        ax.set_xticklabels(ordered_methods, rotation=90)
         plt.yticks(ticks)
 
 

@@ -44,6 +44,18 @@ class Path:
 
         return name
 
+    @staticmethod
+    def fix_method_name(method):
+        method = method.split('/')[-1]
+        method = method.replace('cv_scores_', '')
+        method = method.replace('.csv', '')
+
+        if method.startswith('arb'):
+            method_p = method.split('_')
+            if method_p[1] not in ['md', 'mdi', 'mdic']:
+                method = "{s[0]}_{s[2]}_{s[1]}".format(s=method_p)
+
+        return method
 
 class RegressionPath(Path):
 
