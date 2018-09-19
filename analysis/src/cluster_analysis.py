@@ -28,13 +28,34 @@ class ClusterAnalysis:
 
         result_mean = DataFrame(columns=data.columns.values)
         result_std = DataFrame(columns=data.columns.values)
+
+        result_max = DataFrame(columns=data.columns.values)
+        result_min = DataFrame(columns=data.columns.values)
         for name, cluster in self.clusters().items():
-            mean = data.loc[cluster, :].mean()
-            std = data.loc[cluster, :].std()
+            mean = DataFrame(data.loc[cluster, :].mean(), columns=[name]).T
+            std = DataFrame(data.loc[cluster, :].std(), columns=[name]).T
 
-            result_mean = result_mean.append(mean, ignore_index=True)
-            result_std = result_std.append(std, ignore_index=True)
+            max = DataFrame(data.loc[cluster, :].max(), columns=[name]).T
+            min = DataFrame(data.loc[cluster, :].min(), columns=[name]).T
 
+            result_mean = result_mean.append(mean)
+            result_std = result_std.append(std)
+
+            result_max = result_max.append(max)
+            result_min = result_min.append(min)
+
+        # Mean and std
         dpath = RegressionPath()
         df = concat([result_mean, result_std], keys=['mean', 'std']).T
-        df.to_csv(path.join(dpath.cluster_analysis, 'cluster_features.csv'), header=True, index=[0,1])
+        df.to_csv(path.join(dpath.cluster_analysis, 'cluster_features_mean_std.csv'), header=True, index=[0,1])
+
+        # Max and min
+        df = concat([result_min, result_max], keys=['min', 'max']).T
+        df.to_csv(path.join(dpath.cluster_analysis, 'cluster_features_min_max.csv'), header=True, index=[0, 1])
+
+        # Intervals from mean and std
+        lower = result_mean - result_std
+        higher = result_mean + result_std
+
+        df = concat([lower, higher], keys=['lower', 'higher']).T
+        df.to_csv(path.join(dpath.cluster_analysis, 'cluster_features_intervals.csv'), header=True, index=[0, 1])
