@@ -7,7 +7,7 @@ usage: main.py [-h] [-p {regression,classification}]
                [-e {regression,classification}]
                [-t {regression,classification}] [-i {regression}]
                [-g {bp-ranking,bp-performance}] [-n {ward,average,complete}]
-               [-s {true,false}]
+               [-s {true,false}] [-c CLUSTER_ANALYSIS]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -26,6 +26,8 @@ optional arguments:
                         Display a Newick Tree.
   -s {true,false}, --show {true,false}
                         Show or not a graphic.
+  -c CLUSTER_ANALYSIS, --cluster-analysis CLUSTER_ANALYSIS
+                        Make a feature analysis by each cluster.
 ```
 
 ## Note
