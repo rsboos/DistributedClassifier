@@ -71,12 +71,23 @@ class Boxplot:
 
             named_overlap = '-' + str(overlap) if overlap != '*' else ''
             self.save('bp-performance-{}{}.pdf'.format(method, named_overlap))
+            plt.close()
 
     def cluster_performance(self, overlap='*'):
         """Create a boxplot by ranking."""
-        # folders = self.__get_folders('*', overlap)
-        # r, m = self.__get_cluster_performance(folders)
-        # self.__make(r, m, 'F1 Score', "Datasets' Clusters")
+        folders = self.__get_folders('*', overlap)
+        clusters_data = self.__get_cluster_performance(folders)
+
+        for method, clusters in clusters_data.items():
+            positions = list(clusters.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods, ranking = zip(*positions)
+
+            self.__make(ranking, methods, 'F1 Score', 'Clusters')
+
+            named_overlap = '-' + str(overlap) if overlap != '*' else ''
+            self.save('bp-performance-clusters-{}{}.pdf'.format(method, named_overlap))
+            plt.close()
 
     def __get_folders(self, clusters, overlap):
         folders = []
@@ -183,7 +194,7 @@ class Boxplot:
 
                 ranking = list(data.values)
 
-                method = self.__type_path.fix_method_name(method)
+                method = self.__type_path.fix_method_name(file)
                 type_m = self.__type_path.concat_method_type(method)
 
                 methods_data.setdefault(type_m, [])
@@ -231,17 +242,32 @@ class Boxplot:
 
                 ranking = list(data.values)
 
-                dataset = file.split('/')[-2]
+                path_parts = file.split('/')
+
+                dataset = path_parts[-2]
                 dataset = dataset.split('_')[0]
                 dataset = dataset_clusters[dataset] + '_' + dataset
-                
-                method = self.__type_path.fix_method_name(method)
+
+                method = self.__type_path.fix_method_name(file)
                 type_m = self.__type_path.concat_method_type(method)
 
                 methods_data.setdefault(type_m, {})
                 methods_data[type_m][dataset] = ranking
 
         return methods_data
+
+    def __get_cluster_performance(self, datasets_folders=[]):
+        methods_data = self.__get_dataset_performance(datasets_folders)
+        clusters_data = {}
+
+        for method, data in methods_data.items():
+            for dataset in data.keys():
+                cluster = dataset.split('_')[0]
+                clusters_data.setdefault(method, {})
+                clusters_data[method].setdefault(cluster, [])
+                clusters_data[method][cluster] += data[dataset]
+
+        return clusters_data
 
     def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods'):
         data_sum = [fsum(v) / len(v) for v in boxplot_data]
@@ -258,6 +284,8 @@ class Boxplot:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_xticklabels(ordered_methods, rotation=90)
+
+        fig.set_size_inches(18.5, 10.5, forward=True)
         plt.yticks(ticks)
 
 

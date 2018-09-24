@@ -66,19 +66,22 @@ def main(args):
             graphic.show()
     elif args.graphics == 'bp-performance':
         graphic = Boxplot()
-        graphic.performance()
-        graphic.save('bp-performance.pdf')
+        graphic.performance(overlap=0)
+        graphic.save('bp-performance-0.pdf')
 
-        graphic.type_performance()
-        graphic.save('bp-type-performance.pdf')
+        graphic.type_performance(overlap=0)
+        graphic.save('bp-type-performance-0.pdf')
+
+        graphic.dataset_performance(overlap=0)
+        graphic.cluster_performance(overlap=0)
 
         for name, cluster in clusters.items():
             graphic = Boxplot()
-            graphic.performance(cluster)
-            graphic.save('bp-performance-{}.pdf'.format(name))
+            graphic.performance(cluster, 0)
+            graphic.save('bp-performance-{}-0.pdf'.format(name))
 
-            graphic.type_performance(cluster)
-            graphic.save('bp-type-performance-{}.pdf'.format(name))
+            graphic.type_performance(cluster, 0)
+            graphic.save('bp-type-performance-{}-0.pdf'.format(name))
 
         if args.show:
             graphic.show()
