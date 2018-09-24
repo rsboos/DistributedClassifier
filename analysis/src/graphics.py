@@ -46,19 +46,19 @@ class Boxplot:
         self.__make(r, m, 'Rank Position')
 
     def performance(self, cluster='*', overlap='*'):
-        """Create a boxplot by ranking."""
+        """Create a boxplot by performance."""
         folders = self.__get_folders(cluster, overlap)
         r, m = self.__get_performance(folders)
         self.__make(r, m, 'F1 Score')
 
     def type_performance(self, cluster='*', overlap='*'):
-        """Create a boxplot by ranking."""
+        """Create a boxplot with method's types performance."""
         folders = self.__get_folders(cluster, overlap)
         r, m = self.__get_type_performance(folders)
         self.__make(r, m, 'F1 Score')
 
     def dataset_performance(self, overlap='*'):
-        """Create a boxplot by ranking."""
+        """Create a boxplot with method's performance according to datasets."""
         folders = self.__get_folders('*', overlap)
         methods_data = self.__get_dataset_performance(folders)
 
@@ -74,7 +74,7 @@ class Boxplot:
             plt.close()
 
     def cluster_performance(self, overlap='*'):
-        """Create a boxplot by ranking."""
+        """Create a boxplot with method's performance according to cluster's datasets."""
         folders = self.__get_folders('*', overlap)
         clusters_data = self.__get_cluster_performance(folders)
 
