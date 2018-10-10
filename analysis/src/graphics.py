@@ -482,9 +482,10 @@ class GGPlot(Graphics):
         for mtype in data:
             data[mtype] = data[mtype].sort_values('dataset')
 
-            g = ggplot(aes(x='dataset', y='method', color='median', size='std'), data=data[mtype]) + \
-                geom_point() + \
+            g = ggplot(aes(x='dataset', y='method', color='median'), data=data[mtype]) + \
+                geom_point(aes(size='std')) + \
                 scale_color_gradient() + \
+                facet_wrap("clarity") + \
                 theme_bw() + \
                 xlab("Dataset") + \
                 ylab("Method") + \
