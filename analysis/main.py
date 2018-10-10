@@ -1,9 +1,9 @@
 import argparse
 
-from src.graphics import Boxplot, NewickTree
+from src.cluster_analysis import ClusterAnalysis
 from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
-from src.cluster_analysis import ClusterAnalysis
+from src.graphics import Boxplot, NewickTree, GGPlot
 
 
 def main(args):
@@ -85,6 +85,9 @@ def main(args):
 
         if args.show:
             graphic.show()
+    elif args.ggplot:
+        ggplot = GGPlot()
+        ggplot.dataset_by_methods(0)
 
     if args.newick is not None:
         graphic = NewickTree()
@@ -145,6 +148,12 @@ if __name__ == "__main__":
                         dest="cluster_analysis",
                         default=None,
                         help="Make a feature analysis by each cluster.")
+
+    parser.add_argument("-gg", "--ggplot",
+                        dest="ggplot",
+                        default=None,
+                        choices=['method-dataset'],
+                        help="Create a specified graphic.")
 
     args = parser.parse_args()
     main(args)
