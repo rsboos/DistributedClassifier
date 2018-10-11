@@ -457,6 +457,7 @@ class GGPlot(Graphics):
     def dataset_by_methods(self, overlap='*'):
         """Create a GGPlot with method's performance according to datasets."""
         data = {}
+        all_data = DataFrame(columns=['method', 'dataset', 'median', 'std'])
         folders = self.get_folders('*', overlap)
         methods_data = self._get_dataset_performance(folders)
 
@@ -473,23 +474,25 @@ class GGPlot(Graphics):
                 median = np.median(values)
                 std = np.std(values)
 
-                data[mtype] = data[mtype].append({'method': method_name,
-                                                  'dataset': dataset,
-                                                  'median': round(float(median), 3),
-                                                  'std': round(float(std) * 1000, 3)},
-                                                 ignore_index=True)
+                ins = {'method': method_name, 'dataset': dataset, 'median': round(float(median), 3),
+                       'std': round(float(std) * 1000, 3)}
 
+                data[mtype] = data[mtype].append(ins, ignore_index=True)
+
+                ins['method'] = method
+                all_data = all_data.append(ins, ignore_index=True)
+
+        data['all'] = all_data
         for mtype in data:
             data[mtype] = data[mtype].sort_values('dataset')
+
+            if mtype == 'all':
+                data[mtype] = data[mtype].sort_values('method')
 
             g = ggplot(aes(x='dataset', y='method', color='median'), data=data[mtype]) + \
                 geom_point(aes(size='std')) + \
                 scale_color_gradient() + \
-                facet_wrap("clarity") + \
                 theme_bw() + \
-                xlab("Dataset") + \
-                ylab("Method") + \
-                ggtitle("Method vs Dataset") + \
-                theme(x_axis_text=element_text(angle=90))
+                theme(axis_text_x=element_text(angle=90))
 
-            g.save(path.join(self.type_path.graphics_path, 'method_dataset_{}.pdf'.format(mtype)), 18.5, 10.5)
+            g.save(path.join(self.type_path.graphics_path, 'method_dataset_{}.pdf'.format(mtype)), 16.5, 8)
