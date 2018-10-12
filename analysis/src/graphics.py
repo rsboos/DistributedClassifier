@@ -3,12 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from os import path
-from ggplot import *
 from glob import glob
 from math import fsum
+from plotnine import *
 from .path import RegressionPath
 from .cluster_analysis import ClusterAnalysis
 from pandas import read_csv, Series, DataFrame
+from plotnine.guides import guides, guide_legend
 from sklearn.cluster import AgglomerativeClustering
 
 
@@ -471,11 +472,13 @@ class GGPlot(Graphics):
             for dataset in methods_data[method]:
                 values = methods_data[method][dataset]
 
-                median = np.median(values)
-                std = np.std(values)
+                median = float(np.median(values))
+                std = float(np.std(values))
 
-                ins = {'method': method_name, 'dataset': dataset, 'median': round(float(median), 3),
-                       'std': round(float(std) * 1000, 3)}
+                ins = {'method': method_name,
+                       'dataset': dataset,
+                       'median': median,
+                       'std': std}
 
                 data[mtype] = data[mtype].append(ins, ignore_index=True)
 
@@ -489,10 +492,16 @@ class GGPlot(Graphics):
             if mtype == 'all':
                 data[mtype] = data[mtype].sort_values('method')
 
-            g = ggplot(aes(x='dataset', y='method', color='median'), data=data[mtype]) + \
-                geom_point(aes(size='std')) + \
-                scale_color_gradient() + \
-                theme_bw() + \
+            g = ggplot(aes(x='dataset', y='method', size='std', color='median'), data=data[mtype]) + \
+                geom_point() + \
+                scale_color_gradient(low='#BDDCFA', high='#00376D') + \
+                guides(color=guide_legend()) + \
+                xlab("Dataset") + \
+                ylab("Method") + \
+                theme_minimal() + \
+                scale_size(rescaler=lambda x, _from: pow(1 - (x - _from[0]) / (_from[1] - _from[0]), 3)) + \
                 theme(axis_text_x=element_text(angle=90))
 
-            g.save(path.join(self.type_path.graphics_path, 'method_dataset_{}.pdf'.format(mtype)), 16.5, 8)
+            g.save(filename=path.join(self.type_path.graphics_path, 'method_dataset_{}.pdf'.format(mtype)),
+                   width=16.5,
+                   height=10.5)

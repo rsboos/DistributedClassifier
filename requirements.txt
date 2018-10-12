@@ -6,4 +6,4 @@ pandas
 scipy
 matplotlib
 ete3
-ggplot
+plotnine
