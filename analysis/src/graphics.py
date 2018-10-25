@@ -140,6 +140,23 @@ class Boxplot(Graphics):
             self.save('bp-performance-clusters-{}{}.pdf'.format(method, named_overlap))
             plt.close()
 
+    def dataset_method_performance(self, overlap='*'):
+        """Create a boxplot with methods' performances for each dataset."""
+        folders = self.get_folders('*', overlap)
+        datasets_data = self.__get_dataset_method_performance(folders)
+        clusters = ClusterAnalysis.dataset_cluster()
+
+        for dataset, methods in datasets_data.items():
+            positions = list(methods.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods, ranking = zip(*positions)
+
+            self.__make(ranking, methods, 'F1 Score', 'Methods')
+
+            cluster = clusters[dataset.split('_')[0]]
+            self.save('bp-performance-dt-{}-{}.pdf'.format(cluster, dataset))
+            plt.close()
+
     def __get_ranking(self, datasets_folders=[]):
         rankings = []
 
@@ -276,6 +293,37 @@ class Boxplot(Graphics):
                 clusters_data[method][cluster] += data[dataset]
 
         return clusters_data
+
+    def __get_dataset_method_performance(self, datasets_folders=[]):
+        datasets_data = {}
+
+        if len(datasets_folders) == 0:
+            datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
+
+        for folder in datasets_folders:
+            files = glob(path.join(folder, '*'))
+            files = set(files) - {path.join(folder, self.type_path.default_file), path.join(folder, 'params.json')}
+
+            last_folder = folder.split('/')[-1]
+            datasets_data[last_folder] = {}
+
+            for file in files:
+                data = read_csv(file, header=0, index_col=0)
+
+                try:
+                    data = data.loc[:, self.metric[0]]
+                except KeyError:
+                    data = data.loc[:, self.metric[1]]
+
+                ranking = list(data.values)
+
+                method = self.type_path.fix_method_name(file)
+                type_m = self.type_path.concat_method_type(method)
+
+                datasets_data[last_folder].setdefault(type_m, [])
+                datasets_data[last_folder][type_m] += ranking
+
+        return datasets_data
 
     def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods'):
         data_sum = [fsum(v) / len(v) for v in boxplot_data]
