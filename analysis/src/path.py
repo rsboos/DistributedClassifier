@@ -57,6 +57,7 @@ class Path:
 
         return method
 
+
 class RegressionPath(Path):
 
     def __init__(self):

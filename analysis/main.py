@@ -66,23 +66,40 @@ def main(args):
             graphic.show()
     elif args.graphics == 'bp-performance':
         graphic = Boxplot()
-        graphic.performance(overlap=0)
-        graphic.save('bp-performance-0.pdf')
-
-        graphic.type_performance(overlap=0)
-        graphic.save('bp-type-performance-0.pdf')
-
-        graphic.dataset_performance(overlap=0)
-        graphic.cluster_performance(overlap=0)
-        graphic.dataset_method_performance(overlap=0)
+        # graphic.performance(overlap=0)
+        # graphic.save('bp-performance-0.pdf')
+        #
+        # graphic.baselined_performance(overlap=0)
+        # graphic.save('bp-baseline-performance-0.pdf')
+        #
+        # graphic.type_performance(overlap=0)
+        # graphic.save('bp-type-performance-0.pdf')
+        #
+        # graphic.baselined_type_performance(overlap=0)
+        # graphic.save('bp-baseline-type-performance-0.pdf')
+        #
+        # graphic.dataset_performance(overlap=0)
+        # graphic.baselined_dataset_performance(overlap=0)
+        #
+        # graphic.cluster_performance(overlap=0)
+        # graphic.baselined_cluster_performance(overlap=0)
+        #
+        # graphic.dataset_method_performance(overlap=0)
+        graphic.baselined_dataset_method_performance(overlap=0)
 
         for name, cluster in clusters.items():
             graphic = Boxplot()
             graphic.performance(cluster, 0)
             graphic.save('bp-performance-{}-0.pdf'.format(name))
 
+            graphic.baselined_performance(cluster, 0)
+            graphic.save('bp-baseline-performance-{}-0.pdf'.format(name))
+
             graphic.type_performance(cluster, 0)
             graphic.save('bp-type-performance-{}-0.pdf'.format(name))
+
+            graphic.baselined_type_performance(cluster, 0)
+            graphic.save('bp-baseline-type-performance-{}-0.pdf'.format(name))
 
         if args.show:
             graphic.show()
@@ -97,6 +114,7 @@ def main(args):
     if args.cluster_analysis is not None:
         analysis = ClusterAnalysis()
         analysis.process()
+
 
 if __name__ == "__main__":
 

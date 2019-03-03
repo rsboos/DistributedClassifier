@@ -17,7 +17,7 @@ class Graphics:
 
     def __init__(self, metric, type_path):
         self.metric = [metric, 'f1'] if 'f1_' in metric else [metric, metric]
-        self.tests_path = '../evaluation/tests/'
+        self.tests_path = '../evaluation/research_tests/'
         self.type_path = type_path
 
     def get_folders(self, clusters, overlap):
@@ -102,11 +102,53 @@ class Boxplot(Graphics):
         r, m = self.__get_performance(folders)
         self.__make(r, m, 'F1 Score')
 
+    def baselined_performance(self, cluster='*', overlap='*'):
+        """Create a boxplot by performance."""
+        folders_overlap = self.get_folders(cluster, overlap)
+        folders_baseline = self.get_folders(cluster, 10)
+
+        rank_overlap, method_overlap = self.__get_performance(folders_overlap)
+        rank_baseline, method_baseline = self.__get_performance(folders_baseline)
+
+        ranking = []
+        for i in range(len(rank_baseline)):
+            base = np.array(rank_baseline[i])
+            overlap = np.array(rank_overlap[i])
+
+            if len(base) != len(overlap):
+                del method_baseline[i]
+                continue
+
+            ranking.append(base - overlap)
+
+        self.__make(ranking, method_baseline, 'F1 Score', ticks=[i/10 for i in range(-10, 11)])
+
     def type_performance(self, cluster='*', overlap='*'):
         """Create a boxplot with method's types performance."""
         folders = self.get_folders(cluster, overlap)
         r, m = self.__get_type_performance(folders)
         self.__make(r, m, 'F1 Score')
+
+    def baselined_type_performance(self, cluster='*', overlap='*'):
+        """Create a boxplot with method's types performance."""
+        folders_overlap = self.get_folders(cluster, overlap)
+        folders_baseline = self.get_folders(cluster, 10)
+
+        rank_overlap, method_overlap = self.__get_type_performance(folders_overlap)
+        rank_baseline, method_baseline = self.__get_type_performance(folders_baseline)
+
+        ranking = []
+        for i in range(len(rank_baseline)):
+            base = np.array(rank_baseline[i])
+            overlap = np.array(rank_overlap[i])
+
+            if len(base) != len(overlap):
+                del method_baseline[i]
+                continue
+
+            ranking.append(base - overlap)
+
+        self.__make(ranking, method_baseline, 'F1 Score', ticks=[i/10 for i in range(-10, 11)])
 
     def dataset_performance(self, overlap='*'):
         """Create a boxplot with method's performance according to datasets."""
@@ -124,6 +166,44 @@ class Boxplot(Graphics):
             self.save('bp-performance-{}{}.pdf'.format(method, named_overlap))
             plt.close()
 
+    def baselined_dataset_performance(self, overlap='*'):
+        """Create a boxplot with method's performance according to datasets."""
+        folders_overlap = self.get_folders('*', overlap)
+        folders_baseline = self.get_folders('*', 10)
+
+        methods_data_overlap = self._get_dataset_performance(folders_overlap)
+        methods_data_baseline = self._get_dataset_performance(folders_baseline)
+
+        for method in methods_data_baseline:
+
+            datasets_overlap = methods_data_overlap[method]
+            positions_overlap = list(datasets_overlap.items())
+            positions_overlap = sorted(positions_overlap, key=lambda x: x[0])
+            methods_overlap, rank_overlap = zip(*positions_overlap)
+
+            datasets_baseline = methods_data_baseline[method]
+            positions_baseline = list(datasets_baseline.items())
+            positions_baseline = sorted(positions_baseline, key=lambda x: x[0])
+            methods_baseline, rank_baseline = zip(*positions_baseline)
+            methods_baseline = list(methods_baseline)
+
+            ranking = []
+            for i in range(len(rank_overlap)):
+                base = np.array(rank_baseline[i])
+                overlaps = np.array(rank_overlap[i])
+
+                if len(base) != len(overlaps):
+                    del methods_baseline[i]
+                    continue
+
+                ranking.append(base - overlaps)
+
+            self.__make(ranking, methods_baseline, 'F1 Score', 'Datasets', ticks=[i/10 for i in range(-10, 11)])
+
+            named_overlap = '-' + str(overlap) if overlap != '*' else ''
+            self.save('bp-baseline-performance-{}{}.pdf'.format(method, named_overlap))
+            plt.close()
+
     def cluster_performance(self, overlap='*'):
         """Create a boxplot with method's performance according to cluster's datasets."""
         folders = self.get_folders('*', overlap)
@@ -138,6 +218,44 @@ class Boxplot(Graphics):
 
             named_overlap = '-' + str(overlap) if overlap != '*' else ''
             self.save('bp-performance-clusters-{}{}.pdf'.format(method, named_overlap))
+            plt.close()
+
+    def baselined_cluster_performance(self, overlap='*'):
+        """Create a boxplot with method's performance according to cluster's datasets."""
+        folders_overlap = self.get_folders('*', overlap)
+        folders_baseline = self.get_folders('*', 10)
+
+        clusters_data_overlap = self.__get_cluster_performance(folders_overlap)
+        clusters_data_baseline = self.__get_cluster_performance(folders_baseline)
+
+        for method in clusters_data_overlap:
+
+            clusters_overlap = clusters_data_overlap[method]
+            positions = list(clusters_overlap.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods_overlap, rank_overlap = zip(*positions)
+
+            clusters_baseline = clusters_data_baseline[method]
+            positions = list(clusters_baseline.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods_baseline, rank_baseline = zip(*positions)
+            methods_baseline = list(methods_baseline)
+
+            ranking = []
+            for i in range(len(rank_overlap)):
+                base = np.array(rank_baseline[i])
+                overlaps = np.array(rank_overlap[i])
+
+                if len(base) != len(overlaps):
+                    del methods_baseline[i]
+                    continue
+
+                ranking.append(base - overlaps)
+
+            self.__make(ranking, methods_baseline, 'F1 Score', 'Clusters', ticks=[i/10 for i in range(-10, 11)])
+
+            named_overlap = '-' + str(overlap) if overlap != '*' else ''
+            self.save('bp-baseline-performance-clusters-{}{}.pdf'.format(method, named_overlap))
             plt.close()
 
     def dataset_method_performance(self, overlap='*'):
@@ -157,6 +275,49 @@ class Boxplot(Graphics):
             self.save('bp-performance-dt-{}-{}.pdf'.format(cluster, dataset))
             plt.close()
 
+    def baselined_dataset_method_performance(self, overlap='*'):
+        """Create a boxplot with methods' performances for each dataset."""
+        folders_overlap = self.get_folders('*', overlap)
+        folders_baseline = self.get_folders('*', 10)
+
+        datasets_data_overlap = self.__get_dataset_method_performance(folders_overlap)
+        datasets_data_baseline = self.__get_dataset_method_performance(folders_baseline)
+
+        clusters = ClusterAnalysis.dataset_cluster()
+
+        for dataset in datasets_data_overlap:
+
+            methods = datasets_data_overlap[dataset]
+            positions = list(methods.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods_overlap, rank_overlap = zip(*positions)
+
+            dt = dataset.split('_')
+            dt[-1] = '10'
+            dt = '_'.join(dt)
+
+            methods = datasets_data_baseline[dt]
+            positions = list(methods.items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods_baseline, rank_baseline = zip(*positions)
+
+            ranking = []
+            for i in range(len(rank_overlap)):
+                base = np.array(rank_baseline[i])
+                overlaps = np.array(rank_overlap[i])
+
+                if len(base) != len(overlaps):
+                    del methods_baseline[i]
+                    continue
+
+                ranking.append(base - overlaps)
+
+            self.__make(ranking, methods_baseline, 'F1 Score', 'Methods', ticks=[i/10 for i in range(-10, 11)])
+
+            cluster = clusters[dataset.split('_')[0]]
+            self.save('bp-baseline-performance-dt-{}-{}.pdf'.format(cluster, dataset))
+            plt.close()
+
     def __get_ranking(self, datasets_folders=[]):
         rankings = []
 
@@ -164,7 +325,7 @@ class Boxplot(Graphics):
             datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
-            data = read_csv(path.join(folder, type_path.default_file),
+            data = read_csv(path.join(folder, self.type_path.default_file),
                             header=[0, 1], index_col=0)
 
             try:
@@ -200,7 +361,7 @@ class Boxplot(Graphics):
             datasets_folders = [p for p in glob(path.join(self.tests_path, '*')) if path.isdir(p)]
 
         for folder in datasets_folders:
-            data = read_csv(path.join(folder, type_path.default_file),
+            data = read_csv(path.join(folder, self.type_path.default_file),
                             header=[0, 1], index_col=0)
 
             try:
@@ -325,14 +486,18 @@ class Boxplot(Graphics):
 
         return datasets_data
 
-    def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods'):
+    def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods', ticks=None):
         data_sum = [fsum(v) / len(v) for v in boxplot_data]
         mean = fsum(data_sum) / len(data_sum)
 
-        if mean <= 1:
+        if ticks is None:
             ticks = [i / 10 for i in range(0, 11)]
+        elif mean <= 1:
+            ticks = [i / 10 for i in range(-10, 11)]
         else:
             ticks = range(int(np.min(boxplot_data)), int(np.max(boxplot_data)) + 1)
+
+        ticks = list(ticks)
 
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
