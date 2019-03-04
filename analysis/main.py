@@ -105,7 +105,7 @@ def main(args):
             graphic.show()
     elif args.ggplot:
         ggplot = GGPlot()
-        ggplot.dataset_by_methods(0)
+        ggplot.dataset_by_methods(9)
 
     if args.newick is not None:
         graphic = NewickTree()
