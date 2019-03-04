@@ -715,6 +715,7 @@ class GGPlot(Graphics):
                 scale_size(rescaler=lambda x, _from: pow(1 - (x - _from[0]) / (_from[1] - _from[0]), 3)) + \
                 theme(axis_text_x=element_text(angle=90))
 
-            g.save(filename=path.join(self.type_path.graphics_path, 'method_dataset_{}.pdf'.format(mtype)),
+            named_overlap = '-' + str(overlap) if overlap != '*' else ''
+            g.save(filename=path.join(self.type_path.graphics_path, 'method-dataset-{}{}.pdf'.format(mtype, named_overlap)),
                    width=16.5,
                    height=10.5)

@@ -66,25 +66,25 @@ def main(args):
             graphic.show()
     elif args.graphics == 'bp-performance':
         graphic = Boxplot()
-        # graphic.performance(overlap=0)
-        # graphic.save('bp-performance-0.pdf')
-        #
-        # graphic.baselined_performance(overlap=0)
-        # graphic.save('bp-baseline-performance-0.pdf')
-        #
-        # graphic.type_performance(overlap=0)
-        # graphic.save('bp-type-performance-0.pdf')
-        #
-        # graphic.baselined_type_performance(overlap=0)
-        # graphic.save('bp-baseline-type-performance-0.pdf')
-        #
-        # graphic.dataset_performance(overlap=0)
-        # graphic.baselined_dataset_performance(overlap=0)
-        #
-        # graphic.cluster_performance(overlap=0)
-        # graphic.baselined_cluster_performance(overlap=0)
-        #
-        # graphic.dataset_method_performance(overlap=0)
+        graphic.performance(overlap=0)
+        graphic.save('bp-performance-0.pdf')
+
+        graphic.baselined_performance(overlap=0)
+        graphic.save('bp-baseline-performance-0.pdf')
+
+        graphic.type_performance(overlap=0)
+        graphic.save('bp-type-performance-0.pdf')
+
+        graphic.baselined_type_performance(overlap=0)
+        graphic.save('bp-baseline-type-performance-0.pdf')
+
+        graphic.dataset_performance(overlap=0)
+        graphic.baselined_dataset_performance(overlap=0)
+
+        graphic.cluster_performance(overlap=0)
+        graphic.baselined_cluster_performance(overlap=0)
+
+        graphic.dataset_method_performance(overlap=0)
         graphic.baselined_dataset_method_performance(overlap=0)
 
         for name, cluster in clusters.items():
