@@ -8,9 +8,9 @@ from math import fsum
 from plotnine import *
 from .path import RegressionPath
 from .cluster_analysis import ClusterAnalysis
-from pandas import read_csv, Series, DataFrame
 from plotnine.guides import guides, guide_legend
 from sklearn.cluster import AgglomerativeClustering
+from pandas import read_csv, Series, DataFrame, concat
 
 
 class Graphics:
@@ -717,5 +717,34 @@ class GGPlot(Graphics):
 
             named_overlap = '-' + str(overlap) if overlap != '*' else ''
             g.save(filename=path.join(self.type_path.graphics_path, 'method-dataset-{}{}.pdf'.format(mtype, named_overlap)),
+                   width=16.5,
+                   height=10.5)
+
+
+class Histogram(Graphics):
+
+    def __init__(self, metric='f1_macro', type_path=RegressionPath()):
+        super().__init__(metric, type_path)
+
+    def feature_by_cluster(self):
+        """Create a Histrogram of datasets characteristics divided by cluster."""
+        datasets_char = read_csv('data/datasets_clusters.csv', header=0)
+
+        # dt_clusters = ClusterAnalysis.dataset_cluster()
+        # clusters_set = set(dt_clusters.values())
+
+        for feature in datasets_char.columns.values:
+
+            # for cluster in clusters_set:
+            #     data = datasets_char.where(datasets_char.loc[:, 'cluster'] == cluster)
+            #     data = data.dropna()
+
+            g = ggplot(datasets_char, aes(feature, y='..scaled..', fill='cluster', color='cluster')) + \
+                geom_density(alpha=0.1) + \
+                xlab(feature.replace('_', ' ').capitalize()) + \
+                ylab("Density") + \
+                theme_minimal()
+
+            g.save(filename=path.join(self.type_path.graphics_path, 'hist-density-{}.png'.format(feature)),
                    width=16.5,
                    height=10.5)

@@ -3,7 +3,7 @@ import argparse
 from src.cluster_analysis import ClusterAnalysis
 from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
-from src.graphics import Boxplot, NewickTree, GGPlot
+from src.graphics import Boxplot, NewickTree, GGPlot, Histogram
 
 
 def main(args):
@@ -106,6 +106,9 @@ def main(args):
     elif args.ggplot:
         ggplot = GGPlot()
         ggplot.dataset_by_methods(9)
+    elif args.hist:
+        hist = Histogram()
+        hist.feature_by_cluster()
 
     if args.newick is not None:
         graphic = NewickTree()
@@ -172,6 +175,11 @@ if __name__ == "__main__":
                         dest="ggplot",
                         default=None,
                         choices=['method-dataset'],
+                        help="Create a specified graphic.")
+
+    parser.add_argument("-hst", "--hist",
+                        dest="hist",
+                        default=None,
                         help="Create a specified graphic.")
 
     args = parser.parse_args()
