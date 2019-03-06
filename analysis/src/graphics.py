@@ -739,7 +739,7 @@ class Histogram(Graphics):
             #     data = datasets_char.where(datasets_char.loc[:, 'cluster'] == cluster)
             #     data = data.dropna()
 
-            g = ggplot(datasets_char, aes(feature, y='..scaled..', fill='cluster', color='cluster')) + \
+            g = ggplot(datasets_char, aes(feature, y='..scaled..', fill='Cluster', color='Cluster')) + \
                 geom_density(alpha=0.1) + \
                 xlab(feature.replace('_', ' ').capitalize()) + \
                 ylab("Density") + \
