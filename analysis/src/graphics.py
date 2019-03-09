@@ -558,7 +558,7 @@ class Boxplot(Graphics):
 
         ax.set_xlabel(xlabel, fontsize=28)
         ax.set_ylabel(ylabel, fontsize=28)
-        ax.set_xticklabels(ordered_methods)
+        ax.set_xticklabels(ordered_methods, rotation=90)
         ax.tick_params(labelsize=28)
 
         fig.set_size_inches(18.5, 10.5, forward=True)

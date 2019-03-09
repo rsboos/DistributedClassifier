@@ -100,16 +100,16 @@ def main(args):
             graphic.overlap_type_performance(cluster, name)
 
             graphic.performance(cluster, overlap)
-            graphic.save('bp-performance-{}-{}.png'.format(name, str(overlap)))
+            graphic.save('bp-performance-{}-{}.pdf'.format(name, str(overlap)))
 
             graphic.baselined_performance(cluster, overlap)
-            graphic.save('bp-baseline-performance-{}-{].png'.format(name, str(overlap)))
+            graphic.save('bp-baseline-performance-{}-{}.pdf'.format(name, str(overlap)))
 
             graphic.type_performance(cluster, overlap)
-            graphic.save('bp-type-performance-{}-0.png'.format(name, str(overlap)))
+            graphic.save('bp-type-performance-{}-{}.pdf'.format(name, str(overlap)))
 
             graphic.baselined_type_performance(cluster, overlap)
-            graphic.save('bp-baseline-type-performance-{}-{}.png'.format(name, str(overlap)))
+            graphic.save('bp-baseline-type-performance-{}-{}.pdf'.format(name, str(overlap)))
 
         if args.show:
             graphic.show()
