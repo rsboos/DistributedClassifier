@@ -150,6 +150,46 @@ class Boxplot(Graphics):
 
         self.__make(ranking, method_baseline, 'F1 Score', ticks=[i/10 for i in range(-10, 11)])
 
+    def overlap_performance(self, cluster='*', name=''):
+        """Create a boxplot with method's types performance."""
+        overlap_ranks = {i: [] for i in range(0, 11)}
+        cluster_name = '-' + name if len(name) else ''
+
+        for overlap in range(0, 11):
+            folders = self.get_folders(cluster, str(overlap))
+            overlap_ranks[overlap], methods = self.__get_performance(folders)
+
+        methods_len = len(methods)
+        for i in range(methods_len):
+            method = methods[i]
+            overlaps = list(range(0, 11))
+            ranking = [overlap_ranks[olp][i] for olp in overlaps]
+            overlaps = [olp * 10 for olp in overlaps]
+
+            self.__make(ranking, overlaps, 'F1 Score', 'Overlap (%)')
+            self.save('bp-overlap-performance{}-{}.pdf'.format(cluster_name, method))
+            plt.close()
+
+    def overlap_type_performance(self, cluster='*', name=''):
+        """Create a boxplot with method's types performance."""
+        overlap_ranks = {i: [] for i in range(0, 11)}
+        cluster_name = '-' + name if len(name) else ''
+
+        for overlap in range(0, 11):
+            folders = self.get_folders(cluster, str(overlap))
+            overlap_ranks[overlap], methods_classes = self.__get_type_performance(folders)
+
+        methods_len = len(methods_classes)
+        for i in range(methods_len):
+            type_m = methods_classes[i]
+            overlaps = list(range(0, 11))
+            ranking = [overlap_ranks[olp][i] for olp in overlaps]
+            overlaps = [olp * 10 for olp in overlaps]
+
+            self.__make(ranking, overlaps, 'F1 Score', 'Overlap (%)')
+            self.save('bp-overlap-type-performance{}-{}.pdf'.format(cluster_name, type_m))
+            plt.close()
+
     def dataset_performance(self, overlap='*'):
         """Create a boxplot with method's performance according to datasets."""
         folders = self.get_folders('*', overlap)
@@ -268,6 +308,7 @@ class Boxplot(Graphics):
             positions = list(methods.items())
             positions = sorted(positions, key=lambda x: x[0])
             methods, ranking = zip(*positions)
+            methods, ranking = list(methods), list(ranking)
 
             self.__make(ranking, methods, 'F1 Score', 'Methods')
 
@@ -745,6 +786,6 @@ class Histogram(Graphics):
                 ylab("Density") + \
                 theme_minimal()
 
-            g.save(filename=path.join(self.type_path.graphics_path, 'hist-density-{}.png'.format(feature)),
+            g.save(filename=path.join(self.type_path.graphics_path, 'hist-density-{}.pdf'.format(feature)),
                    width=16.5,
                    height=10.5)

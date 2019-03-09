@@ -13,6 +13,8 @@ def main(args):
     analysis_data = 'data/datasets.csv'
     evaluation_path = '../evaluation/tests'
 
+    overlap = 0
+
     # Regression
     if args.process == regression:
         regression = RegressionAnalysis()
@@ -66,46 +68,54 @@ def main(args):
             graphic.show()
     elif args.graphics == 'bp-performance':
         graphic = Boxplot()
-        graphic.performance(overlap=0)
-        graphic.save('bp-performance-0.pdf')
 
-        graphic.baselined_performance(overlap=0)
-        graphic.save('bp-baseline-performance-0.pdf')
+        graphic.overlap_performance()
+        graphic.overlap_type_performance()
 
-        graphic.type_performance(overlap=0)
-        graphic.save('bp-type-performance-0.pdf')
+        graphic.performance(overlap=overlap)
+        graphic.save('bp-performance-{}.pdf'.format(str(overlap)))
 
-        graphic.baselined_type_performance(overlap=0)
-        graphic.save('bp-baseline-type-performance-0.pdf')
+        graphic.baselined_performance(overlap=overlap)
+        graphic.save('bp-baseline-performance-{}.pdf'.format(str(overlap)))
 
-        graphic.dataset_performance(overlap=0)
-        graphic.baselined_dataset_performance(overlap=0)
+        graphic.type_performance(overlap=overlap)
+        graphic.save('bp-type-performance-{}.pdf'.format(str(overlap)))
 
-        graphic.cluster_performance(overlap=0)
-        graphic.baselined_cluster_performance(overlap=0)
+        graphic.baselined_type_performance(overlap=overlap)
+        graphic.save('bp-baseline-type-performance-{}.pdf'.format(str(overlap)))
 
-        graphic.dataset_method_performance(overlap=0)
-        graphic.baselined_dataset_method_performance(overlap=0)
+        graphic.dataset_performance(overlap=overlap)
+        graphic.baselined_dataset_performance(overlap=overlap)
+
+        graphic.cluster_performance(overlap=overlap)
+        graphic.baselined_cluster_performance(overlap=overlap)
+
+        graphic.dataset_method_performance(overlap=overlap)
+        graphic.baselined_dataset_method_performance(overlap=overlap)
 
         for name, cluster in clusters.items():
             graphic = Boxplot()
-            graphic.performance(cluster, 0)
-            graphic.save('bp-performance-{}-0.pdf'.format(name))
 
-            graphic.baselined_performance(cluster, 0)
-            graphic.save('bp-baseline-performance-{}-0.pdf'.format(name))
+            graphic.overlap_performance(cluster, name)
+            graphic.overlap_type_performance(cluster, name)
 
-            graphic.type_performance(cluster, 0)
-            graphic.save('bp-type-performance-{}-0.pdf'.format(name))
+            graphic.performance(cluster, overlap)
+            graphic.save('bp-performance-{}-{}.pdf'.format(name, str(overlap)))
 
-            graphic.baselined_type_performance(cluster, 0)
-            graphic.save('bp-baseline-type-performance-{}-0.pdf'.format(name))
+            graphic.baselined_performance(cluster, overlap)
+            graphic.save('bp-baseline-performance-{}-{].pdf'.format(name, str(overlap)))
+
+            graphic.type_performance(cluster, overlap)
+            graphic.save('bp-type-performance-{}-0.pdf'.format(name, str(overlap)))
+
+            graphic.baselined_type_performance(cluster, overlap)
+            graphic.save('bp-baseline-type-performance-{}-{}.pdf'.format(name, str(overlap)))
 
         if args.show:
             graphic.show()
     elif args.ggplot:
         ggplot = GGPlot()
-        ggplot.dataset_by_methods(9)
+        ggplot.dataset_by_methods(overlap)
     elif args.hist:
         hist = Histogram()
         hist.feature_by_cluster()
