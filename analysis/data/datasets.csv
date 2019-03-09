@@ -1,4 +1,4 @@
-instances,features,targets,silhouette,unbalanced,n_binary_features,majority_class_size,minority_class_size,features_with_na,missing_values,dataset
+instances,features,targets,silhouette_coefficient,imbalanced_coefficient,binary_features,majority_class_size,minority_class_size,features_with_na,missing_values,dataset
 249,35,14,0.126649856851,0.924282081647,17,40,9,0,0,soybean
 1885,136,7,0.037507616484,0.422428732237,125,1490,4,0,0,katemine
 1885,136,7,0.0368468548417,0.705479280819,125,1038,19,0,0,coke

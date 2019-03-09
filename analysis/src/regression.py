@@ -128,27 +128,16 @@ class RegressionAnalysis:
             datasets = set(datasets)
 
             for dataset in datasets:
-                dataset_instance = DataFrame(
-                    datasets_features.loc[dataset, :]).T
+                dataset_instance = DataFrame(datasets_features.loc[dataset, :]).T
+                dataset_instance.index = [(dataset_instance.index.values[0], 0)]
 
                 dataset_f1 = DataFrame(method_f1.loc[dataset, :])
                 dataset_f1.columns = [score]
 
-                n = dataset_f1.shape[0]
-                dataset_instance = concat([dataset_instance] * n)
-
-                _, overlaps = zip(*dataset_f1.index.values)
-                overlaps = np.array(overlaps)
-
-                dataset_f1.index = overlaps
-                dataset_instance.index = overlaps
-
-                overlaps = DataFrame({'overlap': overlaps / 10})
-
-                instances = concat([dataset_instance, overlaps, dataset_f1],
-                                   axis=1)
+                instances = concat([dataset_instance, dataset_f1], axis=1)
                 data = data.append(instances)
 
+            data.columns = list(map(lambda x: x.capitalize().replace('_', ' '), data.columns.values))
             data.to_csv(path.join(RegressionPath().data_path,
                                   '{}_f1.csv'.format(method)),
                         index=False)
@@ -156,7 +145,7 @@ class RegressionAnalysis:
     def __scores_by_method(self, scores, evaluation_path):
         scores = [scores] if type(scores) is str else scores
 
-        evaluation_paths = path.join(evaluation_path, '*')
+        evaluation_paths = path.join(evaluation_path, '*_0*')
         evaluation_folders = glob(evaluation_paths)
 
         f1_scores_by_dataset = {}

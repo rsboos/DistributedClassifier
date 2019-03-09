@@ -110,7 +110,7 @@ class ClassificationAnalysis:
 
     @staticmethod
     def grow_trees():
-        TreeAnalysis.grow_trees(DecisionTreeClassifier(), ClassificationPath(), max_depth=5)
+        TreeAnalysis.grow_trees(DecisionTreeClassifier(), ClassificationPath(), max_depth=10)
 
     @staticmethod
     def get_important_nodes(analysis_datapath):

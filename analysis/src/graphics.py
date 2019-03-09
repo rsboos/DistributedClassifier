@@ -125,9 +125,22 @@ class Boxplot(Graphics):
 
     def type_performance(self, cluster='*', overlap='*'):
         """Create a boxplot with method's types performance."""
+        type_m = {
+            'arbmd': 'Arbiter MD',
+            'arbmdi': 'Arbiter MDI',
+            'arbmdic': 'Arbiter MDIC',
+            'classif': 'Base classifiers',
+            'cmb': 'Combiners',
+            'math': 'Arithmetic-based',
+            'scf': 'Social Choice Functions',
+            'vote': 'Plurality'
+        }
+
         folders = self.get_folders(cluster, overlap)
         r, m = self.__get_type_performance(folders)
-        self.__make(r, m, 'F1 Score')
+
+        methods = list(map(lambda x: type_m[x], m))
+        self.__make(r, methods, 'F1 Score', "Classes of model's trainers")
 
     def baselined_type_performance(self, cluster='*', overlap='*'):
         """Create a boxplot with method's types performance."""
@@ -187,7 +200,7 @@ class Boxplot(Graphics):
             overlaps = [olp * 10 for olp in overlaps]
 
             self.__make(ranking, overlaps, 'F1 Score', 'Overlap (%)')
-            self.save('bp-overlap-type-performance{}-{}.pdf'.format(cluster_name, type_m))
+            self.save('bp-overlap-type-performance{}-{}.png'.format(cluster_name, type_m))
             plt.close()
 
     def dataset_performance(self, overlap='*'):
@@ -543,9 +556,10 @@ class Boxplot(Graphics):
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
 
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.set_xticklabels(ordered_methods, rotation=90)
+        ax.set_xlabel(xlabel, fontsize=28)
+        ax.set_ylabel(ylabel, fontsize=28)
+        ax.set_xticklabels(ordered_methods)
+        ax.tick_params(labelsize=28)
 
         fig.set_size_inches(18.5, 10.5, forward=True)
         plt.yticks(ticks)
@@ -784,7 +798,8 @@ class Histogram(Graphics):
                 geom_density(alpha=0.1) + \
                 xlab(feature.replace('_', ' ').capitalize()) + \
                 ylab("Density") + \
-                theme_minimal()
+                theme_minimal() + \
+                theme(axis_text=element_text(size=28), axis_title=element_text(size=28), legend_text=element_text(size=28))
 
             g.save(filename=path.join(self.type_path.graphics_path, 'hist-density-{}.pdf'.format(feature)),
                    width=16.5,
