@@ -200,7 +200,7 @@ class Boxplot(Graphics):
             overlaps = [olp * 10 for olp in overlaps]
 
             self.__make(ranking, overlaps, 'F1 Score', 'Overlap (%)')
-            self.save('bp-overlap-type-performance{}-{}.png'.format(cluster_name, type_m))
+            self.save('bp-overlap-type-performance{}-{}.pdf'.format(cluster_name, type_m))
             plt.close()
 
     def dataset_performance(self, overlap='*'):

@@ -61,11 +61,11 @@ class TreeAnalysis:
                             class_names=classes,
                             filled=True)
 
-            # Save as png
+            # Save as pdf
             png_tree_path = path.join(type_path.visible_trees_path,
-                                      tree_name + '.png')
+                                      tree_name + '.pdf')
 
-            os.system('dot -Tpng ' + tree_path + ' -o ' + png_tree_path)
+            os.system('dot -Tpdf ' + tree_path + ' -o ' + png_tree_path)
 
             # Save as object
             obj_tree_path = path.join(type_path.object_trees_path,

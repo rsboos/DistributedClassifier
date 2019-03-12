@@ -120,8 +120,14 @@ class RegressionAnalysis:
         datasets_features.index = datasets
         datasets_features.drop('dataset', axis=1, inplace=True)
 
+        data_methods_type = {}
+
         for method in methods:
             method_f1 = f1_scores.loc[:, method]
+
+            method_type = RegressionPath.concat_method_type(method).split('_')[0]
+            data_methods_type.setdefault(method_type, DataFrame())
+
             data = DataFrame()
 
             datasets, _ = zip(*method_f1.index.values)
@@ -135,12 +141,17 @@ class RegressionAnalysis:
                 dataset_f1.columns = [score]
 
                 instances = concat([dataset_instance, dataset_f1], axis=1)
+
                 data = data.append(instances)
+                data_methods_type[method_type] = data_methods_type[method_type].append(instances)
 
             data.columns = list(map(lambda x: x.capitalize().replace('_', ' '), data.columns.values))
-            data.to_csv(path.join(RegressionPath().data_path,
-                                  '{}_f1.csv'.format(method)),
-                        index=False)
+            data.to_csv(path.join(RegressionPath().data_path, '{}_f1.csv'.format(method)), index=False)
+
+        for method_type in data_methods_type:
+            data = data_methods_type[method_type]
+            data.columns = list(map(lambda x: x.capitalize().replace('_', ' '), data.columns.values))
+            data.to_csv(path.join(RegressionPath().data_path, '{}_f1.csv'.format(method_type)), index=False)
 
     def __scores_by_method(self, scores, evaluation_path):
         scores = [scores] if type(scores) is str else scores
@@ -193,11 +204,13 @@ class RegressionAnalysis:
             x = np.where(scores == 0)
             removed_instances += list(x[0])
 
-        removed_instances = set(removed_instances)
+        removed_instances = list(set(removed_instances))
 
         for data_file in data_files:
             data = read_csv(data_file, header=0)
-            data = data.drop(removed_instances)
+            n_lines = data.shape[0]
+            remove = [i for i in range(n_lines) if i in removed_instances]
+            data = data.drop(remove)
             data.to_csv(data_file, index=False)
 
     def __remove_nan(self):

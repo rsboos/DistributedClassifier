@@ -11,7 +11,7 @@ node [shape=box, style="filled", color="black"] ;
 3 -> 4 ;
 5 [label="mse = 0.002\nsamples = 3\nvalue = 0.495", fillcolor="#e581396d"] ;
 3 -> 5 ;
-6 [label="Minority class size <= 99.5\nmse = 0.003\nsamples = 10\nvalue = 0.948", fillcolor="#e58139f0"] ;
+6 [label="Silhouette coefficient <= 0.51\nmse = 0.003\nsamples = 10\nvalue = 0.948", fillcolor="#e58139f0"] ;
 2 -> 6 ;
 7 [label="Minority class size <= 25.5\nmse = 0.0\nsamples = 5\nvalue = 0.895", fillcolor="#e58139e1"] ;
 6 -> 7 ;

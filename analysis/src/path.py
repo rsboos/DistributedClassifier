@@ -15,7 +15,7 @@ class Path:
 
         self.trees_path = path.join(self.results_path, 'trees/')
         self.text_trees_path = path.join(self.trees_path, 'dots/')
-        self.visible_trees_path = path.join(self.trees_path, 'png/')
+        self.visible_trees_path = path.join(self.trees_path, 'pdf/')
         self.object_trees_path = path.join(self.trees_path, 'pkl/')
 
         self.graphics_path = path.join(self.test_path, 'graphics/')
@@ -40,7 +40,8 @@ class Path:
 
         if name.startswith('arb'):
             metadata = name.split('_')
-            name = 'arb{}_{}'.format(metadata[1], '_'.join(metadata[2:]))
+            if len(metadata) > 2:
+                name = 'arb{}_{}'.format(metadata[1], '_'.join(metadata[2:]))
 
         return name
 
