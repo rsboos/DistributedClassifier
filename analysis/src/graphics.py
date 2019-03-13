@@ -543,6 +543,7 @@ class Boxplot(Graphics):
     def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods', ticks=None):
         data_sum = [fsum(v) / len(v) for v in boxplot_data]
         mean = fsum(data_sum) / len(data_sum)
+        font_size = 24
 
         if ticks is None:
             ticks = [i / 10 for i in range(0, 11)]
@@ -556,12 +557,12 @@ class Boxplot(Graphics):
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
 
-        ax.set_xlabel(xlabel, fontsize=28)
-        ax.set_ylabel(ylabel, fontsize=28)
+        ax.set_xlabel(xlabel, fontsize=font_size)
+        ax.set_ylabel(ylabel, fontsize=font_size)
         ax.set_xticklabels(ordered_methods, rotation=90)
-        ax.tick_params(labelsize=28)
+        ax.tick_params(labelsize=font_size)
 
-        fig.set_size_inches(18.5, 10.5, forward=True)
+        fig.set_size_inches(16.5, 10.5, forward=True)
         plt.yticks(ticks)
 
 
@@ -784,7 +785,7 @@ class Histogram(Graphics):
     def feature_by_cluster(self):
         """Create a Histrogram of datasets characteristics divided by cluster."""
         datasets_char = read_csv('data/datasets_clusters.csv', header=0)
-
+        font_size = 24
         # dt_clusters = ClusterAnalysis.dataset_cluster()
         # clusters_set = set(dt_clusters.values())
 
@@ -795,11 +796,13 @@ class Histogram(Graphics):
             #     data = data.dropna()
 
             g = ggplot(datasets_char, aes(feature, y='..scaled..', fill='Cluster', color='Cluster')) + \
-                geom_density(alpha=0.1) + \
+                geom_density(alpha=0.1, size=1.5) + \
                 xlab(feature.replace('_', ' ').capitalize()) + \
                 ylab("Density") + \
                 theme_minimal() + \
-                theme(axis_text=element_text(size=28), axis_title=element_text(size=28), legend_text=element_text(size=28))
+                theme(axis_text=element_text(size=font_size),
+                      axis_title=element_text(size=font_size),
+                      legend_text=element_text(size=font_size))
 
             g.save(filename=path.join(self.type_path.graphics_path, 'hist-density-{}.pdf'.format(feature)),
                    width=16.5,

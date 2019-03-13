@@ -121,7 +121,7 @@ def main(args):
         hist.feature_by_cluster()
 
     if args.newick is not None:
-        graphic = NewickTree()
+        graphic = NewickTree('', '')
         graphic.create(args.newick)
 
     if args.cluster_analysis is not None:
