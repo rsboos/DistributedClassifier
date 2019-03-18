@@ -123,6 +123,8 @@ class Voter(Aggregator):
         scoring = kwargs.get('scoring', {})
 
         # rankings = a rank by class by social choice function
+        plurality = 'plurality'
+        methods = self.methods
         class_ranks = dict()
         scores = dict()
         ranks = dict()
@@ -130,12 +132,20 @@ class Voter(Aggregator):
         n_learners = len(y_proba)        # # of learners = length of proba
         _, n_classes = y_proba[0].shape  # # of classes = # of columns
 
+        if plurality in self.methods:
+            methods = list(set(self.methods) - {plurality})
+
+            sc_ranks = Profile.plurality(y_proba, y_pred)
+
+            class_ranks.setdefault(plurality, [])
+            class_ranks[plurality] = sc_ranks
+
         for c in range(n_classes):
             # Get class c's probabilities
             proba = [y_proba[i][:, c] for i in range(n_learners)]
 
             # Aggregate ranks
-            sc_ranks = Profile.aggr_rank(proba, self.methods, y_pred)
+            sc_ranks = Profile.aggr_rank(proba, methods)
 
             # Join ranks by social choice function
             for scf, r in sc_ranks.items():
