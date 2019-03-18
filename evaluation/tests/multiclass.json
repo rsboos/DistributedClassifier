@@ -23,30 +23,14 @@
         "precision_micro": "sklearn.metrics.precision_score(average='micro')"
     },
     "voter": {
-        "borda": "borda",
-        "simpson": "simpson",
-        "dowdall": "dowdall",
-        "copeland": "copeland",
         "plurality":  "plurality"
     },
-    "combiner": {
-        "cmb_gnb": "sklearn.naive_bayes.GaussianNB()",
-        "cmb_svc": "sklearn.svm.SVC(probability=True)",
-        "cmb_mlp": "sklearn.neural_network.MLPClassifier()",
-        "cmb_dtree": "sklearn.tree.DecisionTreeClassifier()",
-        "cmb_knn": "sklearn.neighbors.KNeighborsClassifier()"
-    },
+    "combiner": {},
     "arbiter": {
-        "classes": ["ArbiterMetaDiff", "ArbiterMetaDiffInc", "ArbiterMetaDiffIncCorr"],
-        "methods": {
-            "gnb": "sklearn.naive_bayes.GaussianNB()",
-            "svc": "sklearn.svm.SVC(probability=True)",
-            "mlp": "sklearn.neural_network.MLPClassifier()",
-            "dtree": "sklearn.tree.DecisionTreeClassifier()",
-            "knn": "sklearn.neighbors.KNeighborsClassifier()"
-        }
+        "classes": [],
+        "methods": {}
     },
     "mathematician": {
-        "max": ["mean", "median"]
+        "max": []
     }
 }
