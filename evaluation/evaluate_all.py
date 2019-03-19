@@ -10,12 +10,13 @@ tested = [folder.replace('tests/', '') for folder in glob('tests/*')]
 tested = ','.join(tested)
 
 for dataset in glob('datasets/*'):
-
-    if dataset.replace('datasets/', '')[:-4] in tested:
-        continue
+    dataset_name = dataset.replace('datasets/', '')[:-4]
 
     overlap = float(0)
     while overlap < 1:
-        print('{} {}'.format(overlap, dataset))
-        main({'dataset_path': dataset, 'params_path': None, 'overlap': overlap})
+        dt_file = dataset_name + '_' + str(int(overlap * 10))
+        if dt_file not in tested:
+            print('{} {}'.format(overlap, dataset))
+            main({'dataset_path': dataset, 'params_path': None, 'overlap': overlap})
+
         overlap += 0.1
