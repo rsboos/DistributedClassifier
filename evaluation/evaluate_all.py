@@ -12,7 +12,6 @@ for dataset in glob('datasets/*'):
     overlap = float(0)
     while overlap < 1:
         tested = [folder.replace('tests/', '') for folder in glob('tests/*')]
-        tested = ','.join(tested)
 
         dt_file = dataset_name + '_' + str(int(overlap * 10))
 
