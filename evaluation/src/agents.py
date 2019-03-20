@@ -140,17 +140,18 @@ class Voter(Aggregator):
             class_ranks.setdefault(plurality, [])
             class_ranks[plurality] = sc_ranks
 
-        for c in range(n_classes):
-            # Get class c's probabilities
-            proba = [y_proba[i][:, c] for i in range(n_learners)]
+        if len(methods) > 0:
+            for c in range(n_classes):
+                # Get class c's probabilities
+                proba = [y_proba[i][:, c] for i in range(n_learners)]
 
-            # Aggregate ranks
-            sc_ranks = Profile.aggr_rank(proba, methods)
+                # Aggregate ranks
+                sc_ranks = Profile.aggr_rank(proba, methods)
 
-            # Join ranks by social choice function
-            for scf, r in sc_ranks.items():
-                class_ranks.setdefault(scf, [])
-                class_ranks[scf].append(r)
+                # Join ranks by social choice function
+                for scf, r in sc_ranks.items():
+                    class_ranks.setdefault(scf, [])
+                    class_ranks[scf].append(r)
 
         # Get winners
         # k = social choice function
