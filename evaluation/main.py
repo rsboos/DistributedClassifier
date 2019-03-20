@@ -93,6 +93,8 @@ def main(args):
     if os.path.exists(result_path):
         return
 
+    os.makedirs(result_path)
+
     # Load params and run test
     params = open(params_path, 'r')
     p = json.load(params)
