@@ -10,12 +10,12 @@ for dataset in glob('datasets/*'):
     dataset_name = dataset.replace('datasets/', '')[:-4]
 
     overlap = float(0)
-    while overlap < 1:
+    for overlap in range(11):
         t = int(time())
 
-        print('{} {}'.format(overlap, dataset))
+        print('{}% {}'.format(overlap*10, dataset))
 
-        main({'dataset_path': dataset, 'params_path': None, 'overlap': overlap})
+        main({'dataset_path': dataset, 'params_path': None, 'overlap': overlap / 10})
 
         end = (int(time()) - t) // 60
         print('Completed in {} minutes.'.format(end))
