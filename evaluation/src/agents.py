@@ -61,16 +61,16 @@ class Learner():
 		"""
 		train_i, val_i, test_i = fold
 
-		x_train = self.X[train_i, :]
-		y_train = self.y[train_i]
+		# x_train = self.X[train_i, :]
+		# y_train = self.y[train_i]
 
 		x_val = self.X[val_i, :]
-		y_val = self.y[val_i]
+		# y_val = self.y[val_i]
 
 		x_test = self.X[test_i, :]
 		y_test = self.y[test_i]
 
-		self.fit(x_train, y_train)
+		# self.fit(x_train, y_train)
 
 		y_pred = self.predict(x_test)
 		y_proba_val = self.predict_proba(x_val)
