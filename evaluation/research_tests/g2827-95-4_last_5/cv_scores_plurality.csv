@@ -1,4 +1,4 @@
-,f1_macro,f1_micro,recall_macro,recall_micro,specificity_macro,sensitivity_macro,specificity_micro,sensitivity_micro,accuracy,precision_macro,precision_micro
+,accuracy,f1_macro,f1_micro,precision_macro,precision_micro,recall_macro,recall_micro,sensitivity_macro,sensitivity_micro,specificity_macro,specificity_micro
 0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
 1,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
 2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0

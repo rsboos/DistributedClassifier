@@ -1,4 +1,4 @@
-,auc,f1,recall,specificity,sensitivity,accuracy,precision
+,accuracy,auc,f1,precision,recall,sensitivity,specificity
 0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
 1,1.0,1.0,1.0,1.0,1.0,1.0,1.0
 2,1.0,1.0,1.0,1.0,1.0,1.0,1.0
