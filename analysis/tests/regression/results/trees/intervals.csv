@@ -1,9 +1,9 @@
-,unbalanced,minority_class_size,targets,n_binary_features,majority_class_size,instances,silhouette,features
-math,f <= 000.45 or f > 000.50 -> (000.86 - 000.36),No Relation,f <= 004.75 -> (000.58),No Relation,f <= 1072.00 or f > 1071.50 -> (000.29 - 000.79),f <= 2854.00 or f > 943.50 -> (000.69 - 001.00),f > 000.26 -> (000.84),No Relation
-cmb,No Relation,f <= 280.83 or f > 118.50 -> (000.61 - 000.91),f <= 004.88 -> (000.78),f <= 070.38 -> (000.84),No Relation,No Relation,f > 000.44 -> (000.97),f <= 094.50 or f > 017.38 -> (000.41 - 000.86)
-scf,f <= 000.73 -> (000.89),No Relation,No Relation,f <= 015.67 or f > 802.50 -> (000.88 - 000.45),f > 1565.12 -> (000.76),No Relation,f <= 000.75 or f > 000.21 -> (000.76 - 000.97),f <= 024.00 or f > 009.50 -> (000.94 - 000.90)
-vote,f <= 000.45 -> (000.88),No Relation,f <= 004.50 -> (000.48),f <= 000.50 -> (000.57),No Relation,No Relation,f > 000.51 -> (000.98),f <= 025.00 -> (000.94)
-arbmdi,No Relation,f <= 087.25 or f > 074.67 -> (000.32 - 000.87),f <= 007.17 -> (000.70),No Relation,f > 1055.20 -> (000.84),No Relation,f <= -00.08 or f > 000.11 -> (000.59 - 000.90),f <= 054.00 -> (000.89)
-arbmdic,f <= 000.67 or f > 000.62 -> (000.78 - 000.86),f <= 124.67 or f > 044.50 -> (000.55 - 000.83),No Relation,f <= 034.38 -> (000.91),f <= 536.50 or f > 1439.75 -> (000.43 - 000.84),No Relation,f <= 000.01 or f > 000.41 -> (000.71 - 000.98),No Relation
-arbmd,f <= 000.84 or f > 000.90 -> (000.76 - 000.36),f <= 073.25 or f > 022.50 -> (000.49 - 000.88),f <= 004.10 -> (000.78),No Relation,f > 873.30 -> (000.74),No Relation,No Relation,f <= 094.40 -> (000.73)
-classif,f <= 000.60 or f > 000.94 -> (000.89 - 000.80),No Relation,No Relation,f <= 023.00 -> (000.85),f <= 269.50 or f > 991.17 -> (000.57 - 000.70),f <= 6124.33 or f > 854.50 -> (000.86 - 000.90),f > 000.34 -> (000.92),No Relation
+,Features,Instances,Majority class size,Binary features,Minority class size,Silhouette coefficient,Targets,Imbalanced coefficient
+arbmdic,No Relation,f <= 4987.17 or f > 3753.00 -> (000.81 - 000.96),f <= 065.00 or f > 946.90 -> (000.71 - 000.76),f <= 011.80 -> (000.89),No Relation,f > 000.08 -> (000.72),No Relation,f <= 000.57 or f > 000.64 -> (000.72 - 000.90)
+scf,f <= 024.00 or f > 018.67 -> (000.93 - 000.74),No Relation,f > 753.80 -> (000.79),f <= 018.50 or f > 062.50 -> (000.82 - 000.81),No Relation,f <= 000.75 or f > 000.15 -> (000.74 - 000.84),No Relation,f <= 000.45 or f > 000.98 -> (000.82 - 001.00)
+classif,No Relation,No Relation,f > 971.70 -> (000.70),f <= 018.50 -> (000.82),No Relation,f <= -00.23 or f > 000.60 -> (000.93 - 000.92),f <= 009.25 -> (000.81),f <= 000.75 or f > 000.82 -> (000.76 - 000.87)
+arbmd,f <= 067.60 or f > 112.50 -> (000.73 - 000.61),f <= 6652.92 -> (000.78),f > 1343.10 -> (000.76),No Relation,No Relation,f <= 000.49 or f > 000.47 -> (000.46 - 000.86),f <= 007.00 -> (000.82),No Relation
+math,No Relation,f <= 2854.00 -> (000.69),f > 958.67 -> (000.67),No Relation,f <= 126.33 -> (000.49),f > 000.34 -> (000.89),No Relation,f <= 000.68 or f > 000.50 -> (000.66 - 000.37)
+arbmdi,f <= 037.10 or f > 008.50 -> (000.61 - 000.52),No Relation,f > 1081.00 -> (000.77),No Relation,No Relation,f <= 000.01 or f > 000.18 -> (000.70 - 000.79),f <= 005.50 -> (000.72),f <= 000.83 or f > 000.62 -> (000.80 - 000.65)
+vote,No Relation,No Relation,f <= 1562.25 -> (000.91),f <= 000.50 -> (000.87),No Relation,f > -00.05 -> (000.93),f <= 018.00 -> (000.89),f <= 000.62 or f > 000.98 -> (000.89 - 000.92)
+cmb,f > 019.90 -> (000.84),f <= 9818.00 or f > 943.50 -> (000.83 - 001.00),No Relation,f <= 062.08 -> (000.74),No Relation,f > 000.17 -> (000.91),No Relation,f <= 000.79 or f > 000.87 -> (000.73 - 000.72)

@@ -1,9 +1,9 @@
-,unbalanced,minority_class_size,targets,n_binary_features,majority_class_size,instances,silhouette,features
-math,1,0,1,0,1,1,1,0
-cmb,0,1,1,1,0,0,1,1
-scf,1,0,0,1,1,0,1,1
-vote,1,0,1,1,0,0,1,1
-arbmdi,0,1,1,0,1,0,1,1
-arbmdic,1,1,0,1,1,0,1,0
-arbmd,1,1,1,0,1,0,0,1
-classif,1,0,0,1,1,1,1,0
+,Features,Instances,Majority class size,Binary features,Minority class size,Silhouette coefficient,Targets,Imbalanced coefficient
+arbmdic,0,1,1,1,0,1,0,1
+scf,1,0,1,1,0,1,0,1
+classif,0,0,1,1,0,1,1,1
+arbmd,1,1,1,0,0,1,1,0
+math,0,1,1,0,1,1,0,1
+arbmdi,1,0,1,0,0,1,1,1
+vote,0,0,1,1,0,1,1,1
+cmb,1,1,0,1,0,1,0,1
