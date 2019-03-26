@@ -17,7 +17,7 @@ node [shape=box, style="filled", color="black"] ;
 6 -> 7 ;
 8 [label="instances <= 4914.5\ngini = 0.52\nsamples = 78\nvalue = [42, 1, 1, 0, 0, 34]\nclass = arbmd", fillcolor="#e581392e"] ;
 6 -> 8 ;
-9 [label="instances <= 1480.0\ngini = 0.535\nsamples = 42\nvalue = [17, 1, 1, 0, 0, 23]\nclass = scf", fillcolor="#e5399d3d"] ;
+9 [label="minority_class_size <= 309.5\ngini = 0.535\nsamples = 42\nvalue = [17, 1, 1, 0, 0, 23]\nclass = scf", fillcolor="#e5399d3d"] ;
 8 -> 9 ;
 10 [label="overlap <= 0.45\ngini = 0.553\nsamples = 30\nvalue = [16, 1, 1, 0, 0, 12]\nclass = arbmd", fillcolor="#e5813939"] ;
 9 -> 10 ;

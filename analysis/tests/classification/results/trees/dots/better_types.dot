@@ -11,7 +11,7 @@ node [shape=box, style="filled", color="black"] ;
 3 -> 4 ;
 5 [label="binary_features <= 2.5\ngini = 0.716\nsamples = 88\nvalue = [39, 5, 5, 0, 9, 22, 8]\nclass = arbmd", fillcolor="#e5813942"] ;
 4 -> 5 ;
-6 [label="features <= 6.0\ngini = 0.652\nsamples = 72\nvalue = [37, 5, 3, 0, 2, 19, 6]\nclass = arbmd", fillcolor="#e5813957"] ;
+6 [label="instances <= 179.5\ngini = 0.652\nsamples = 72\nvalue = [37, 5, 3, 0, 2, 19, 6]\nclass = arbmd", fillcolor="#e5813957"] ;
 5 -> 6 ;
 7 [label="gini = 0.625\nsamples = 8\nvalue = [2, 4, 0, 0, 2, 0, 0]\nclass = arbmdi", fillcolor="#b7e53955"] ;
 6 -> 7 ;

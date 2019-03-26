@@ -42,13 +42,12 @@ class ClassificationAnalysis:
         :return: None
         """
         score = 'f1'
-        best_methods = self.__best_method_by_dataset([score, 'f1_micro'],
-                                                     evaluation_path)
-
+        best_methods = self.__best_method_by_dataset([score, 'f1_micro'], evaluation_path)
         best_types = self.__best_method_type_by_dataset(best_methods)
 
         self.__create_dataset_by_method(datasets_path, best_methods, self.__method_dataset)
         self.__create_dataset_by_method(datasets_path, best_types, self.__method_type_dataset)
+        self.__create_dataset_by_method_with_overlap(self.__method_dataset, 0)
 
     def evaluate(self, classifiers='*', scoring='*', cv=10, iterations=10):
         """Evaluate data in tests/classification/data/* and save results in
@@ -193,6 +192,16 @@ class ClassificationAnalysis:
 
         data.to_csv(path.join(ClassificationPath().data_path,
                               output), index=False)
+
+    def __create_dataset_by_method_with_overlap(self, output, overlap):
+        data = read_csv(path.join(ClassificationPath().data_path, output), header=0, index_col=None)
+        m, _ = data.shape
+
+        must_drop = [i for i in range(m) if data.iloc[i, :].loc['overlap'] != overlap]
+        data = data.drop(must_drop, axis=0)
+
+        output = '{}_{}.csv'.format(output[:-4], int(overlap * 10))
+        data.to_csv(path.join(ClassificationPath().data_path, output), index=False)
 
     def __default_classifiers(self):
         return {"gnb": GaussianNB(),
