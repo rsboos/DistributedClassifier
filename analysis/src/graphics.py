@@ -83,6 +83,7 @@ class Boxplot(Graphics):
         :return: None
         """
         plt.savefig(path.join(self.type_path.graphics_path, filename), bbox_inches='tight')
+        plt.close('all')
 
     def ranking(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
@@ -111,12 +112,14 @@ class Boxplot(Graphics):
         rank_baseline, method_baseline = self.__get_performance(folders_baseline)
 
         ranking = []
+        deleted = 0
         for i in range(len(rank_baseline)):
             base = np.array(rank_baseline[i])
             overlap = np.array(rank_overlap[i])
 
             if len(base) != len(overlap):
-                del method_baseline[i]
+                del method_baseline[i - deleted]
+                deleted += 1
                 continue
 
             ranking.append(base - overlap)
@@ -151,12 +154,14 @@ class Boxplot(Graphics):
         rank_baseline, method_baseline = self.__get_type_performance(folders_baseline)
 
         ranking = []
+        deleted = 0
         for i in range(len(rank_baseline)):
             base = np.array(rank_baseline[i])
             overlap = np.array(rank_overlap[i])
 
             if len(base) != len(overlap):
-                del method_baseline[i]
+                del method_baseline[i - deleted]
+                deleted += 1
                 continue
 
             ranking.append(base - overlap)
@@ -241,12 +246,14 @@ class Boxplot(Graphics):
             methods_baseline = list(methods_baseline)
 
             ranking = []
+            deleted = 0
             for i in range(len(rank_overlap)):
                 base = np.array(rank_baseline[i])
                 overlaps = np.array(rank_overlap[i])
 
                 if len(base) != len(overlaps):
-                    del methods_baseline[i]
+                    del methods_baseline[i - deleted]
+                    deleted += 1
                     continue
 
                 ranking.append(base - overlaps)
@@ -295,12 +302,14 @@ class Boxplot(Graphics):
             methods_baseline = list(methods_baseline)
 
             ranking = []
+            deleted = 0
             for i in range(len(rank_overlap)):
                 base = np.array(rank_baseline[i])
                 overlaps = np.array(rank_overlap[i])
 
                 if len(base) != len(overlaps):
-                    del methods_baseline[i]
+                    del methods_baseline[i - deleted]
+                    deleted += 1
                     continue
 
                 ranking.append(base - overlaps)
@@ -354,14 +363,17 @@ class Boxplot(Graphics):
             positions = list(methods.items())
             positions = sorted(positions, key=lambda x: x[0])
             methods_baseline, rank_baseline = zip(*positions)
+            methods_baseline = list(methods_baseline)
 
             ranking = []
+            deleted = 0
             for i in range(len(rank_overlap)):
                 base = np.array(rank_baseline[i])
                 overlaps = np.array(rank_overlap[i])
 
                 if len(base) != len(overlaps):
-                    del methods_baseline[i]
+                    del methods_baseline[i - deleted]
+                    deleted += 1
                     continue
 
                 ranking.append(base - overlaps)
@@ -776,6 +788,8 @@ class GGPlot(Graphics):
                    width=16.5,
                    height=10.5)
 
+            plt.close('all')
+
 
 class Histogram(Graphics):
 
@@ -807,3 +821,5 @@ class Histogram(Graphics):
             g.save(filename=path.join(self.type_path.graphics_path, 'hist-density-{}.pdf'.format(feature)),
                    width=16.5,
                    height=10.5)
+
+            plt.close('all')
