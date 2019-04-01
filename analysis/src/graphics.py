@@ -743,27 +743,59 @@ class GGPlot(Graphics):
         folders = self.get_folders('*', overlap)
         methods_data = self._get_dataset_performance(folders)
 
+        methods = {
+            "vote_plurality": "Plurality",
+            "scf_simpson": "Social Choice Function Simpson",
+            "scf_dowdall": "Social Choice Function Dowdall",
+            "scf_copeland": "Social Choice Function Copeland",
+            "scf_borda": "Social Choice Function Borda",
+            "math_median": "Arithmetic-based Median",
+            "math_mean": "Arithmetic-based Mean",
+            "cmb_svc": "Combiner SVC",
+            "cmb_mlp": "Combiner MLP",
+            "cmb_knn": "Combiner KNN",
+            "cmb_gnb": "Combiner GNB",
+            "cmb_dtree": "Combiner DTREE",
+            "classif_svc": "Base Classifier SVC",
+            "classif_mlp": "Base Classifier MLP",
+            "classif_knn": "Base Classifier KNN",
+            "classif_gnb": "Base Classifier GNB",
+            "classif_dtree": "Base Classifier DTREE",
+            "arbmdic_svc": "Arbiter MDIC SVC",
+            "arbmdic_mlp": "Arbiter MDIC MLP",
+            "arbmdic_knn": "Arbiter MDIC KNN",
+            "arbmdic_gnb": "Arbiter MDIC GNB",
+            "arbmdic_dtree": "Arbiter MDIC DTREE",
+            "arbmdi_svc": "Arbiter MDI SVC",
+            "arbmdi_mlp": "Arbiter MDI MLP",
+            "arbmdi_knn": "Arbiter MDI KNN",
+            "arbmdi_gnb": "Arbiter MDI GNB",
+            "arbmdi_dtree": "Arbiter MDI DTREE",
+            "arbmd_svc": "Arbiter MD SVC",
+            "arbmd_mlp": "Arbiter MD MLP",
+            "arbmd_knn": "Arbiter MD KNN",
+            "arbmd_gnb": "Arbiter MD GNB",
+            "arbmd_dtree": "Arbiter MD DTREE"
+        }
+
         for method in methods_data:
             method_parts = method.split('_')
             mtype = method_parts[0]
-            method_name = '_'.join(method_parts[1:])
 
-            data.setdefault(mtype, DataFrame(columns=['method', 'dataset', 'median', 'std']))
+            data.setdefault(mtype, DataFrame(columns=['method', 'dataset', 'Median', 'Standard Deviation']))
 
             for dataset in methods_data[method]:
                 values = methods_data[method][dataset]
+                dataset_name = dataset.capitalize().replace('_', ') ').replace('Cluster', '(Cluster ')
 
                 median = float(np.median(values))
                 std = float(np.std(values))
 
-                ins = {'method': method_name,
-                       'dataset': dataset,
-                       'median': median,
-                       'std': std}
+                ins = {'method': methods[method], 'dataset': dataset_name, 'Median': median, 'Standard Deviation': std}
 
                 data[mtype] = data[mtype].append(ins, ignore_index=True)
 
-                ins['method'] = method
+                ins['method'] = methods[method]
                 all_data = all_data.append(ins, ignore_index=True)
 
         data['all'] = all_data
@@ -773,7 +805,7 @@ class GGPlot(Graphics):
             if mtype == 'all':
                 data[mtype] = data[mtype].sort_values('method')
 
-            g = ggplot(aes(x='dataset', y='method', size='std', color='median'), data=data[mtype]) + \
+            g = ggplot(aes(x='dataset', y='method', size='Standard Deviation', color='Median'), data=data[mtype]) + \
                 geom_point() + \
                 scale_color_gradient(low='#BDDCFA', high='#00376D') + \
                 guides(color=guide_legend()) + \
