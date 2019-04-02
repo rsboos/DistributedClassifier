@@ -6,11 +6,11 @@ from os import path
 from glob import glob
 from math import fsum
 from plotnine import *
-from .path import RegressionPath
+from .path import RegressionPath, Path
 from .cluster_analysis import ClusterAnalysis
+from pandas import read_csv, Series, DataFrame
 from plotnine.guides import guides, guide_legend
 from sklearn.cluster import AgglomerativeClustering
-from pandas import read_csv, Series, DataFrame, concat
 
 
 class Graphics:
@@ -128,16 +128,7 @@ class Boxplot(Graphics):
 
     def type_performance(self, cluster='*', overlap='*'):
         """Create a boxplot with method's types performance."""
-        type_m = {
-            'arbmd': 'Arbiter MD',
-            'arbmdi': 'Arbiter MDI',
-            'arbmdic': 'Arbiter MDIC',
-            'classif': 'Base classifiers',
-            'cmb': 'Combiners',
-            'math': 'Arithmetic-based',
-            'scf': 'Social Choice Functions',
-            'vote': 'Plurality'
-        }
+        type_m = Path.human_readable_types()
 
         folders = self.get_folders(cluster, overlap)
         r, m = self.__get_type_performance(folders)
@@ -384,6 +375,28 @@ class Boxplot(Graphics):
             self.save('bp-baseline-performance-dt-{}-{}.pdf'.format(cluster, dataset))
             plt.close()
 
+    def regression_performance(self):
+        evaluation_path = RegressionPath().evaluation_path
+        folders = glob(path.join(evaluation_path, '*'))
+        readables = Path.human_readable_methods()
+        data = {}
+
+        for method in folders:
+            method_name = Path.fix_method_name(method)
+            method_name = Path.concat_method_type(method_name)
+            readable = readables[method_name]
+
+            results = read_csv(path.join(method, 'decision_tree.csv'), header=0, index_col=None)
+
+            data.setdefault(readable, results.loc[:, 'mean_square'].values)
+
+        positions = list(data.items())
+        positions = sorted(positions, key=lambda x: x[0])
+        methods, ranks = zip(*positions)
+        methods = list(methods)
+
+        self.__make(ranks, methods, 'Mean Squared Error', 'Methods')
+
     def __get_ranking(self, datasets_folders=[]):
         rankings = []
 
@@ -554,13 +567,10 @@ class Boxplot(Graphics):
 
     def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods', ticks=None):
         data_sum = [fsum(v) / len(v) for v in boxplot_data]
-        mean = fsum(data_sum) / len(data_sum)
         font_size = 24
 
         if ticks is None:
             ticks = [i / 10 for i in range(0, 11)]
-        elif mean <= 1:
-            ticks = [i / 10 for i in range(-10, 11)]
         else:
             ticks = range(int(np.min(boxplot_data)), int(np.max(boxplot_data)) + 1)
 
@@ -574,7 +584,7 @@ class Boxplot(Graphics):
         ax.set_xticklabels(ordered_methods, rotation=90)
         ax.tick_params(labelsize=font_size)
 
-        fig.set_size_inches(16.5, 10.5, forward=True)
+        fig.set_size_inches(26.5, 10.5, forward=True)
         plt.yticks(ticks)
 
 
@@ -743,40 +753,7 @@ class GGPlot(Graphics):
         folders = self.get_folders('*', overlap)
         methods_data = self._get_dataset_performance(folders)
 
-        methods = {
-            "vote_plurality": "Plurality",
-            "scf_simpson": "Social Choice Function Simpson",
-            "scf_dowdall": "Social Choice Function Dowdall",
-            "scf_copeland": "Social Choice Function Copeland",
-            "scf_borda": "Social Choice Function Borda",
-            "math_median": "Arithmetic-based Median",
-            "math_mean": "Arithmetic-based Mean",
-            "cmb_svc": "Combiner SVC",
-            "cmb_mlp": "Combiner MLP",
-            "cmb_knn": "Combiner KNN",
-            "cmb_gnb": "Combiner GNB",
-            "cmb_dtree": "Combiner DTREE",
-            "classif_svc": "Base Classifier SVC",
-            "classif_mlp": "Base Classifier MLP",
-            "classif_knn": "Base Classifier KNN",
-            "classif_gnb": "Base Classifier GNB",
-            "classif_dtree": "Base Classifier DTREE",
-            "arbmdic_svc": "Arbiter MDIC SVC",
-            "arbmdic_mlp": "Arbiter MDIC MLP",
-            "arbmdic_knn": "Arbiter MDIC KNN",
-            "arbmdic_gnb": "Arbiter MDIC GNB",
-            "arbmdic_dtree": "Arbiter MDIC DTREE",
-            "arbmdi_svc": "Arbiter MDI SVC",
-            "arbmdi_mlp": "Arbiter MDI MLP",
-            "arbmdi_knn": "Arbiter MDI KNN",
-            "arbmdi_gnb": "Arbiter MDI GNB",
-            "arbmdi_dtree": "Arbiter MDI DTREE",
-            "arbmd_svc": "Arbiter MD SVC",
-            "arbmd_mlp": "Arbiter MD MLP",
-            "arbmd_knn": "Arbiter MD KNN",
-            "arbmd_gnb": "Arbiter MD GNB",
-            "arbmd_dtree": "Arbiter MD DTREE"
-        }
+        methods = Path.human_readable_methods()
 
         for method in methods_data:
             method_parts = method.split('_')
