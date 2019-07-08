@@ -94,7 +94,6 @@ def main(args):
         graphic.baselined_dataset_method_performance(overlap=overlap)
 
         graphic.regression_performance()
-        graphic.save('bp-performance-regression-trees.pdf')
 
         for name, cluster in clusters.items():
             graphic = Boxplot()
@@ -116,6 +115,7 @@ def main(args):
 
         if args.show:
             graphic.show()
+            
     elif args.ggplot:
         ggplot = GGPlot()
         ggplot.dataset_by_methods(overlap)

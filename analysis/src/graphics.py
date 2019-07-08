@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from os import path
 from glob import glob
-from math import fsum
 from plotnine import *
+from math import fsum, ceil
 from .path import RegressionPath, Path
 from .cluster_analysis import ClusterAnalysis
 from pandas import read_csv, Series, DataFrame
@@ -385,17 +385,26 @@ class Boxplot(Graphics):
             method_name = Path.fix_method_name(method)
             method_name = Path.concat_method_type(method_name)
             readable = readables[method_name]
+            files = glob(path.join(method, '*.csv'))
 
-            results = read_csv(path.join(method, 'decision_tree.csv'), header=0, index_col=None)
+            for file in files:
+                if 'cv_summary.csv' in file:
+                    continue
 
-            data.setdefault(readable, results.loc[:, 'mean_square'].values)
+                results = read_csv(file, header=0, index_col=None)
 
-        positions = list(data.items())
-        positions = sorted(positions, key=lambda x: x[0])
-        methods, ranks = zip(*positions)
-        methods = list(methods)
+                filename = file.split('/')[-1][:-4]
+                data.setdefault(filename, {})
+                data[filename].setdefault(readable, results.loc[:, 'mean_square'].values)
 
-        self.__make(ranks, methods, 'Mean Squared Error', 'Methods')
+        for regression_method in data:
+            positions = list(data[regression_method].items())
+            positions = sorted(positions, key=lambda x: x[0])
+            methods, ranks = zip(*positions)
+            methods, ranks = list(methods), list(ranks)
+
+            self.__make(ranks, methods, 'Mean Squared Error', 'Methods', ticks=[])
+            self.save('bp-performance-regression-{}.pdf'.format(regression_method))
 
     def __get_ranking(self, datasets_folders=[]):
         rankings = []
@@ -566,15 +575,7 @@ class Boxplot(Graphics):
         return datasets_data
 
     def __make(self, boxplot_data, ordered_methods, ylabel, xlabel='Methods', ticks=None):
-        data_sum = [fsum(v) / len(v) for v in boxplot_data]
         font_size = 24
-
-        if ticks is None:
-            ticks = [i / 10 for i in range(0, 11)]
-        else:
-            ticks = range(int(np.min(boxplot_data)), int(np.max(boxplot_data)) + 1)
-
-        ticks = list(ticks)
 
         fig, ax = plt.subplots()
         ax.boxplot(boxplot_data)
@@ -585,7 +586,15 @@ class Boxplot(Graphics):
         ax.tick_params(labelsize=font_size)
 
         fig.set_size_inches(26.5, 10.5, forward=True)
-        plt.yticks(ticks)
+
+        # if ticks is None:
+        #     ticks = [i / 10 for i in range(0, 11)]
+        # else:
+        #     bp_data = np.array(boxplot_data)
+        #     ticks = range(int(bp_data.min()), ceil(bp_data.max()) + 1)
+        #
+        # ticks = list(ticks)
+        # plt.yticks(ticks)
 
 
 class NewickTree(Graphics):
