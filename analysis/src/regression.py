@@ -115,10 +115,10 @@ class RegressionAnalysis:
         methods = f1_scores.columns.values
 
         datasets_features = read_csv(datasets_path, header=0)
-        datasets = datasets_features.loc[:, 'dataset']
+        datasets = datasets_features.loc[:, 'Dataset']
 
         datasets_features.index = datasets
-        datasets_features.drop('dataset', axis=1, inplace=True)
+        datasets_features.drop('Dataset', axis=1, inplace=True)
 
         data_methods_type = {}
 

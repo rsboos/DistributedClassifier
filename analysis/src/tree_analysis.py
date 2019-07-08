@@ -37,6 +37,13 @@ class TreeAnalysis:
 
         for dataset_path in dataset_paths:
             data = read_csv(dataset_path)
+
+            if 'Overlap' in data.columns.values:
+                sum_overlap = data.sum().loc['overlap']
+
+                if sum_overlap == 0:
+                    data = data.drop(['overlap'], axis=1)
+
             features = data.columns.values[:-1]
             data = data.values
 

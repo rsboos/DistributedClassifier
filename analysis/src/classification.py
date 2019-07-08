@@ -151,7 +151,7 @@ class ClassificationAnalysis:
                                                             ignore_index=True)
 
         data = concat(best_method_by_dataset)
-        data.columns = ['overlap', 'best_method']
+        data.columns = ['Overlap', 'Best Method']
 
         return data
 
@@ -169,10 +169,10 @@ class ClassificationAnalysis:
         methods = best_methods.index.values
 
         datasets_features = read_csv(datasets_path, header=0)
-        datasets = datasets_features.loc[:, 'dataset']
+        datasets = datasets_features.loc[:, 'Dataset']
 
         datasets_features.index = datasets
-        datasets_features.drop('dataset', axis=1, inplace=True)
+        datasets_features.drop('Dataset', axis=1, inplace=True)
 
         datasets_features_cols = datasets_features.columns.values
         best_methods_cols = best_methods.columns.values
@@ -197,7 +197,7 @@ class ClassificationAnalysis:
         data = read_csv(path.join(ClassificationPath().data_path, output), header=0, index_col=None)
         m, _ = data.shape
 
-        must_drop = [i for i in range(m) if data.iloc[i, :].loc['overlap'] != overlap]
+        must_drop = [i for i in range(m) if data.iloc[i, :].loc['Overlap'] != overlap]
         data = data.drop(must_drop, axis=0)
 
         output = '{}_{}.csv'.format(output[:-4], int(overlap * 10))
