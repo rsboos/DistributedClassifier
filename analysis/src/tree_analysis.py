@@ -74,12 +74,6 @@ class TreeAnalysis:
 
             os.system('dot -Tpdf ' + tree_path + ' -o ' + png_tree_path)
 
-            # Save as object
-            obj_tree_path = path.join(type_path.object_trees_path,
-                                      tree_name + '.pkl')
-
-            joblib.dump(model.tree_, obj_tree_path)
-
     @classmethod
     def get_important_nodes(cls, analysis_datapath, type_path):
         """Get the most important nodes.
