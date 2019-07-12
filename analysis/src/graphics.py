@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 from os import path
 from glob import glob
 from plotnine import *
-from math import fsum, ceil
-from .path import RegressionPath, Path
 from .cluster_analysis import ClusterAnalysis
 from pandas import read_csv, Series, DataFrame
 from plotnine.guides import guides, guide_legend
 from sklearn.cluster import AgglomerativeClustering
+from .path import RegressionPath, ClassificationPath, Path
 
 
 class Graphics:
@@ -66,7 +65,7 @@ class Graphics:
 
 class Boxplot(Graphics):
 
-    def __init__(self, metric='f1_macro', type_path=RegressionPath()):
+    def __init__(self, metric='f1_micro', type_path=RegressionPath()):
         super().__init__(metric, type_path)
         self.__classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
 
@@ -376,7 +375,13 @@ class Boxplot(Graphics):
             plt.close()
 
     def regression_performance(self):
-        evaluation_path = RegressionPath().evaluation_path
+        self.__problem_type_performance('mean_square', 'Mean Squared Error', 'regression')
+
+    def classification_performance(self):
+        self.__problem_type_performance('f1_micro', 'F1 Score', 'classification')
+
+    def __problem_type_performance(self, metric, ylabel, problem_type):
+        evaluation_path = self.type_path.evaluation_path
         folders = glob(path.join(evaluation_path, '*'))
         readables = Path.human_readable_methods()
         data = {}
@@ -384,7 +389,7 @@ class Boxplot(Graphics):
         for method in folders:
             method_name = Path.fix_method_name(method)
             method_name = Path.concat_method_type(method_name)
-            readable = readables[method_name]
+            readable = readables[method_name] if method_name in readables else method_name
             files = glob(path.join(method, '*.csv'))
 
             for file in files:
@@ -395,7 +400,7 @@ class Boxplot(Graphics):
 
                 filename = file.split('/')[-1][:-4]
                 data.setdefault(filename, {})
-                data[filename].setdefault(readable, results.loc[:, 'mean_square'].values)
+                data[filename].setdefault(readable, results.loc[:, metric].values)
 
         for regression_method in data:
             positions = list(data[regression_method].items())
@@ -403,8 +408,8 @@ class Boxplot(Graphics):
             methods, ranks = zip(*positions)
             methods, ranks = list(methods), list(ranks)
 
-            self.__make(ranks, methods, 'Mean Squared Error', 'Methods', ticks=[])
-            self.save('bp-performance-regression-{}.pdf'.format(regression_method))
+            self.__make(ranks, methods, ylabel, 'Methods', ticks=[])
+            self.save('bp-performance-{}-{}.pdf'.format(problem_type, regression_method))
 
     def __get_ranking(self, datasets_folders=[]):
         rankings = []

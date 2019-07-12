@@ -4,6 +4,7 @@ from src.cluster_analysis import ClusterAnalysis
 from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
 from src.graphics import Boxplot, NewickTree, GGPlot, Histogram
+from src.path import ClassificationPath
 
 
 def main(args):
@@ -67,6 +68,9 @@ def main(args):
         if args.show:
             graphic.show()
     elif args.graphics == 'bp-performance':
+        graphic = Boxplot(type_path=ClassificationPath())
+        graphic.classification_performance()
+
         graphic = Boxplot()
 
         graphic.overlap_performance()
@@ -115,7 +119,7 @@ def main(args):
 
         if args.show:
             graphic.show()
-            
+
     elif args.ggplot:
         ggplot = GGPlot()
         ggplot.dataset_by_methods(overlap)
