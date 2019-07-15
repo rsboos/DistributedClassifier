@@ -1,4 +1,5 @@
 import ete3
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -638,8 +639,12 @@ class NewickTree(Graphics):
 
         np.random.seed(0)
 
-        clusterer = AgglomerativeClustering(linkage=linkage, n_clusters=X.shape[0])
-        clusterer.fit(X)
+        clusterer = AgglomerativeClustering(linkage=linkage, n_clusters=6)
+        clusters = clusterer.fit_predict(X)
+
+        data_clusters = DataFrame({'Cluster': clusters})
+        data_clusters = data.join(data_clusters)
+        data_clusters.to_csv('data/datasets_clusters.csv', header=True, index=False)
 
         spanner = self.__get_cluster_spanner(clusterer)
         newick_tree = self.__build_newick_tree(clusterer.children_, clusterer.n_leaves_, X, y, spanner)
@@ -648,7 +653,7 @@ class NewickTree(Graphics):
 
     def __build_newick_tree(self, children, n_leaves, X, leaf_labels, spanner):
         """
-        build_Newick_tree(children,n_leaves,X,leaf_labels,spanner)
+        build_newick_tree(children,n_leaves,X,leaf_labels,spanner)
 
         Get a string representation (Newick tree) from the sklearn
         AgglomerativeClustering.fit output.
