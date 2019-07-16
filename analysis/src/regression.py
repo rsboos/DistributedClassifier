@@ -3,6 +3,7 @@ import sys
 sys.path.append('../evaluation/src/')
 
 import os
+import pickle
 import numpy as np
 from os import path
 from glob import glob
@@ -23,7 +24,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.tree import DecisionTreeRegressor
 from .tree_analysis import TreeAnalysis
-from .path import RegressionPath
+from .path import RegressionPath, Path
 
 
 class RegressionAnalysis:
@@ -102,6 +103,65 @@ class RegressionAnalysis:
             cv_summary.index = list(scores.keys())
 
             cv_summary.to_csv(summary_path)
+
+            # Save regressor
+            # data = read_csv(dataset_path, header=[0], index_col=None)
+            # x, y = data[:, :-1], data[:, -1]
+            #
+            # for regressor, obj in regressors.items():
+            #     obj.fit(x, y)
+            #     filepath = path.join(scores_path, regressor + '.pkl')
+            #
+            #     with open(filepath, 'wb') as file:
+            #         pickle.dump(obj, file)
+
+    def analyse(self):
+        r_path = RegressionPath()
+        evaluation_path = r_path.evaluation_path
+        folders = glob(path.join(evaluation_path, '*'))
+        summary = {}
+
+        for aggr in folders:
+            file = path.join(aggr, 'cv_summary.csv')
+            aggr_name = Path.fix_method_name(aggr)
+
+            results = read_csv(file, header=[0, 1], index_col=0)
+
+            mean_values = results.loc[:, 'mean'].loc[:, 'mean_square']
+            std_values = results.loc[:, 'std'].loc[:, 'mean_square']
+
+            best_regression_in_mean = mean_values.idxmin()
+            best_regression_in_std = std_values.idxmin()
+
+            mse_mean_of_best_regressor_in_mean = mean_values.loc[best_regression_in_mean]
+            mse_std_of_best_regressor_in_mean = std_values.loc[best_regression_in_mean]
+
+            mse_mean_of_best_regressor_in_std = mean_values.loc[best_regression_in_std]
+            mse_std_of_best_regressor_in_std = std_values.loc[best_regression_in_std]
+
+            summary.setdefault('aggregation_method', [])
+            summary['aggregation_method'].append(aggr_name)
+
+            summary.setdefault('best_regressor_in_mean', [])
+            summary['best_regressor_in_mean'].append(best_regression_in_mean)
+
+            summary.setdefault('best_regressor_in_std', [])
+            summary['best_regressor_in_std'].append(best_regression_in_std)
+
+            summary.setdefault('mse_mean_of_best_regressor_in_mean', [])
+            summary['mse_mean_of_best_regressor_in_mean'].append(mse_mean_of_best_regressor_in_mean)
+
+            summary.setdefault('mse_std_of_best_regressor_in_mean', [])
+            summary['mse_std_of_best_regressor_in_mean'].append(mse_std_of_best_regressor_in_mean)
+
+            summary.setdefault('mse_mean_of_best_regressor_in_std', [])
+            summary['mse_mean_of_best_regressor_in_std'].append(mse_mean_of_best_regressor_in_std)
+
+            summary.setdefault('mse_std_of_best_regressor_in_std', [])
+            summary['mse_std_of_best_regressor_in_std'].append(mse_std_of_best_regressor_in_std)
+
+        df = DataFrame(summary)
+        df.to_csv(path.join(r_path.analysis_path, 'best_regressors.csv'), header=True, index=False)
 
     @staticmethod
     def grow_trees():
@@ -223,8 +283,7 @@ class RegressionAnalysis:
 
     @staticmethod
     def __default_regressors():
-        return {'ransac': RANSACRegressor(),
-                'huber': HuberRegressor(),
+        return {'huber': HuberRegressor(),
                 'theil_sen': TheilSenRegressor(),
                 'linear': LinearRegression(),
                 'ard': ARDRegression(),
@@ -238,8 +297,6 @@ class RegressionAnalysis:
                 'decision_tree': DecisionTreeRegressor(),
                 'svr': SVR(),
                 'nu_svr': NuSVR(),
-                'linear_svr': LinearSVR(),
-                'mlp': MLPRegressor(),
                 'kernel_ridge': KernelRidge()}
 
     @staticmethod

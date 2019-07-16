@@ -39,6 +39,10 @@ def main(args):
         regression = RegressionAnalysis()
         regression.evaluate()
 
+    elif args.analysis == regression:
+        regression = RegressionAnalysis()
+        regression.analyse()
+
     elif args.trees == regression:
         RegressionAnalysis.grow_trees()
 
@@ -167,6 +171,12 @@ if __name__ == "__main__":
                         choices=['regression', 'classification'],
                         help="Type of evaluation (regression or "
                              "classification). Evaluate data sets.")
+
+    parser.add_argument("-a", "--analysis",
+                        dest="analysis",
+                        default=None,
+                        choices=['regression', 'classification'],
+                        help="Type of analysis (regression or classification).")
 
     parser.add_argument("-t", "--make-trees",
                         dest="trees",

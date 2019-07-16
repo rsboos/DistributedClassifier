@@ -10,6 +10,7 @@ class Path:
         self.test_path = path.join('tests/', main_folder)
         self.data_path = path.join(self.test_path, 'data/')
 
+        self.analysis_path = path.join(self.test_path, 'analysis/')
         self.results_path = path.join(self.test_path, 'results/')
         self.evaluation_path = path.join(self.results_path, 'evaluation/')
 
