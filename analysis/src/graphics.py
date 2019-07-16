@@ -1,16 +1,16 @@
 import ete3
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
 from os import path
 from glob import glob
 from plotnine import *
+from scipy import stats
+from .path import RegressionPath, Path
 from .cluster_analysis import ClusterAnalysis
 from pandas import read_csv, Series, DataFrame
 from plotnine.guides import guides, guide_legend
 from sklearn.cluster import AgglomerativeClustering
-from .path import RegressionPath, ClassificationPath, Path
 
 
 class Graphics:
@@ -380,6 +380,34 @@ class Boxplot(Graphics):
 
     def classification_performance(self):
         self.__problem_type_performance('f1_micro', 'F1 Score', 'classification')
+
+    def regression_by_aggregator(self):
+        evaluation_path = self.type_path.evaluation_path
+        folders = glob(path.join(evaluation_path, '*'))
+
+        for aggr in folders:
+            data = {}
+            aggr_name = Path.fix_method_name(aggr)
+            aggr_name = Path.concat_method_type(aggr_name)
+            files = glob(path.join(aggr, '*.csv'))
+
+            for file in files:
+                if 'cv_summary.csv' in file:
+                    continue
+
+                results = read_csv(file, header=0, index_col=None)
+                regressor_name = file.split('/')[-1][:-4]
+
+                values = results.loc[:, 'mean_square'].values
+                data.setdefault(regressor_name, values)
+
+            positions = list(data.items())
+            positions = sorted(positions, key=lambda x: np.mean(x[1]))
+            methods, ranks = zip(*positions)
+            methods, ranks = list(methods), list(ranks)
+
+            self.__make(ranks, methods, 'Mean Squared Error', 'Methods')
+            self.save('bp-performance-regression-aggr-{}.pdf'.format(aggr_name))
 
     def __problem_type_performance(self, metric, ylabel, problem_type):
         evaluation_path = self.type_path.evaluation_path
