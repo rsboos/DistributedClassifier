@@ -727,7 +727,7 @@ class NewickTree(Graphics):
         """
         if aggClusterer.linkage == 'ward':
             if aggClusterer.affinity == 'euclidean':
-                spanner = lambda x: np.sum((x - aggClusterer.pooling_func(x, axis=0)) ** 2)
+                spanner = lambda x: np.sum((x - np.mean(x, axis=0)) ** 2)
         elif aggClusterer.linkage == 'complete':
             if aggClusterer.affinity == 'euclidean':
                 spanner = lambda x: np.max(np.sum((x[:, None, :] - x[None, :, :]) ** 2, axis=2))

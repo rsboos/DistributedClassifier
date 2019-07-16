@@ -5,6 +5,8 @@ from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
 from src.graphics import Boxplot, NewickTree, GGPlot, Histogram
 from src.path import ClassificationPath
+from theobserver import Observer
+from glob import glob
 
 
 def main(args):
@@ -15,9 +17,21 @@ def main(args):
     evaluation_path = '../evaluation/research_tests'
 
     overlap = 0
+    if args.process == 'datasets':
+        with open('data/datasets.csv', 'w') as file:
+            file.write('Number of Instances,Number of Features,Number of Targets,Silhouette coefficient,Imbalance '
+                       'coefficient,Number of binary features,Majority class size,Minority class size,Dataset\n')
+
+            for dataset in glob('../evaluation/datasets/*.csv'):
+                obs = Observer(dataset)
+                info = obs.extract()
+
+                name = dataset.split('/')[-1][:-4]
+                info_str = ','.join([str(i) for i in info[:-2]]) + ',' + name
+                file.write(info_str + '\n')
 
     # Regression
-    if args.process == regression:
+    elif args.process == regression:
         regression = RegressionAnalysis()
         regression.process(analysis_data, evaluation_path)
 
@@ -143,7 +157,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--process",
                         dest="process",
                         default=None,
-                        choices=['regression', 'classification'],
+                        choices=['regression', 'classification', 'datasets'],
                         help="Create data sets for evaluation.")
 
     parser.add_argument("-e", "--evaluate",

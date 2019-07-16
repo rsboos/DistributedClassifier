@@ -3,7 +3,6 @@ import numpy as np
 from os import path
 from glob import glob
 from itertools import product
-from sklearn.externals import joblib
 from sklearn.tree import export_graphviz
 from pandas import read_csv, DataFrame, concat
 
@@ -120,7 +119,7 @@ class TreeAnalysis:
                    'right_std']
 
         for tree_filepath in trees_filepath:
-            tree = joblib.load(tree_filepath)
+            tree = None  # joblib.load(tree_filepath)
             tree_name = tree_filepath.split('/')[-1][:-4]
 
             importances = tree.compute_feature_importances()
