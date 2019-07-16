@@ -112,6 +112,7 @@ def main(args):
         graphic.baselined_dataset_method_performance(overlap=overlap)
 
         graphic.regression_performance()
+        graphic.regression_by_aggregator()
 
         for name, cluster in clusters.items():
             graphic = Boxplot()
