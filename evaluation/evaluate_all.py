@@ -6,7 +6,8 @@ from time import time
 
 warnings.filterwarnings("ignore")
 
-for dataset in glob('datasets/*'):
+for dataset in ['credit', 'emg', 'income', 'lifeexpectancy', 'politics', 'pulsar', 'sky', 'speech']:  # glob('datasets/*'):
+    dataset = 'datasets/' + dataset + '_last.csv'
     dataset_name = dataset.replace('datasets/', '')[:-4]
 
     overlap = float(0)
