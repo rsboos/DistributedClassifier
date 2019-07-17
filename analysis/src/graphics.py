@@ -392,7 +392,7 @@ class Boxplot(Graphics):
             files = glob(path.join(aggr, '*.csv'))
 
             for file in files:
-                if 'cv_summary.csv' in file:
+                if self.type_path.default_file in file:
                     continue
 
                 results = read_csv(file, header=0, index_col=None)
@@ -422,7 +422,7 @@ class Boxplot(Graphics):
             files = glob(path.join(method, '*.csv'))
 
             for file in files:
-                if 'cv_summary.csv' in file:
+                if self.type_path.default_file in file:
                     continue
 
                 results = read_csv(file, header=0, index_col=None)
