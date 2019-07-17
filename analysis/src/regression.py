@@ -3,10 +3,10 @@ import sys
 sys.path.append('../evaluation/src/')
 
 import os
-import pickle
 import numpy as np
 from os import path
 from glob import glob
+from copy import deepcopy
 from metrics import summary
 from pandas import read_csv, DataFrame, concat
 from sklearn.model_selection import KFold, cross_validate
@@ -14,17 +14,16 @@ from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
     mean_squared_error, median_absolute_error, r2_score, make_scorer
 
-from sklearn.linear_model import RANSACRegressor, HuberRegressor, \
+from sklearn.linear_model import HuberRegressor, \
     TheilSenRegressor, BayesianRidge, OrthogonalMatchingPursuit, ElasticNet, \
     LinearRegression, ARDRegression, LassoLars, Lasso, Ridge
 
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.svm import SVR, NuSVR, LinearSVR
-from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.kernel_ridge import KernelRidge
 from .tree_analysis import TreeAnalysis
 from .path import RegressionPath, Path
+from sklearn.svm import SVR, NuSVR
 
 
 class RegressionAnalysis:
@@ -104,17 +103,6 @@ class RegressionAnalysis:
 
             cv_summary.to_csv(summary_path)
 
-            # Save regressor
-            # data = read_csv(dataset_path, header=[0], index_col=None)
-            # x, y = data[:, :-1], data[:, -1]
-            #
-            # for regressor, obj in regressors.items():
-            #     obj.fit(x, y)
-            #     filepath = path.join(scores_path, regressor + '.pkl')
-            #
-            #     with open(filepath, 'wb') as file:
-            #         pickle.dump(obj, file)
-
     def analyse(self):
         r_path = RegressionPath()
         evaluation_path = r_path.evaluation_path
@@ -162,6 +150,63 @@ class RegressionAnalysis:
 
         df = DataFrame(summary)
         df.to_csv(path.join(r_path.analysis_path, 'best_regressors.csv'), header=True, index=False)
+
+    def rank(self, evaluation_path, scores, regressors='*'):
+        r_path = RegressionPath()
+        best_regressors_path = path.join(r_path.analysis_path, 'best_regressors_cleaned.csv')
+        best_regressors = read_csv(best_regressors_path, header=[0], index_col=[0])
+
+        if regressors == '*':
+            regressors = self.__default_regressors()
+
+        regressors_mdl = {}
+
+        # Train best regressors
+        for aggr in best_regressors.indexes.values:
+            regressor_name = best_regressors.loc[aggr, 'best_regressor']
+            mdl = deepcopy(regressors[regressor_name])
+
+            data_filename = aggr + '_f1.csv'
+            data_filepath = path.join(r_path.data_path, data_filename)
+            data = read_csv(data_filepath, header=[0], index_col=None)
+            x, y = data.iloc[:, :-1], data.iloc[:, -1]
+
+            mdl.fit(x, y)
+            regressors_mdl[aggr] = mdl
+
+        # Create ranks for each dataset
+        test_data_path = path.join(evaluation_path, '../datasets_test')
+        datasets_folders = glob(path.join(test_data_path, '*_0'))
+        datasets_info = read_csv('data/datasets.csv', header=[0], index_col=[-1])
+
+        for folder in datasets_folders:
+            dataset_name = folder.split('/')[-1][:-2]
+            summary_path = path.join(folder, 'cv_summary.csv')
+            summary = read_csv(summary_path, header=[0, 1], index_col=[0])
+
+            try:
+                summary = summary.loc[:, 'mean'].loc[:, scores[0]]
+                score = scores[0]
+            except KeyError:
+                summary = summary.loc[:, 'mean'].loc[:, scores[1]]
+                score = scores[1]
+
+            summary.sort_values(score, inplace=True, ascending=False)
+
+            rank_path = path.join(r_path.analysis_path, '{}_true_rank.csv'.format(dataset_name))
+            summary.to_csv(rank_path, header=True, index=True)
+
+            dataset_info = datasets_info.loc[dataset_name, :].values
+            rank = {}
+            for aggr in regressors_mdl:
+                rank[aggr] = regressors_mdl[aggr].predict([dataset_info])[0]
+
+            rank = DataFrame(rank)
+            rank = rank.T
+            rank.columns.values = ['', score]
+
+            rank_path = path.join(r_path.analysis_path, '{}_predicted_rank.csv'.format(dataset_name))
+            rank.to_csv(rank_path, header=True, index=True)
 
     @staticmethod
     def grow_trees():
