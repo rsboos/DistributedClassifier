@@ -8,6 +8,7 @@ from os import path
 from glob import glob
 from copy import deepcopy
 from metrics import summary
+from itertools import product
 from pandas import read_csv, DataFrame, concat
 from sklearn.model_selection import KFold, cross_validate
 
@@ -204,9 +205,36 @@ class RegressionAnalysis:
             rank = DataFrame(rank)
             rank = rank.T
             rank.columns.values = ['', score]
+            rank.sort_values(score, inplace=True, ascending=False)
 
             rank_path = path.join(r_path.analysis_path, '{}_predicted_rank.csv'.format(dataset_name))
             rank.to_csv(rank_path, header=True, index=True)
+
+    def compare_ranks(self, evaluation_path):
+        r_path = RegressionPath()
+        test_data_path = path.join(evaluation_path, '../datasets_test')
+        datasets = [folder.split('/')[-1][:-2] for folder in glob(path.join(test_data_path, '*_0'))]
+
+        data = []
+        for dataset_name in datasets:
+            true_rank_path = path.join(r_path.analysis_path, '{}_true_rank.csv'.format(dataset_name))
+            pred_rank_path = path.join(r_path.analysis_path, '{}_predicted_rank.csv'.format(dataset_name))
+
+            true_rank = read_csv(true_rank_path, header=[0], index_col=None)
+            pred_rank = read_csv(pred_rank_path, header=[0], index_col=None)
+
+            true_rank_values = true_rank.iloc[:, 0].values
+            pred_rank_values = pred_rank.iloc[:, 0].values
+
+            score = self.__kendall_tau(true_rank_values, pred_rank_values)
+
+            data.append((dataset_name, score))
+
+        data.sort(key=lambda x: x[1])
+
+        results_path = path.join(r_path.analysis_path, 'ranks_scores.csv')
+        with open(results_path, 'w') as file:
+            [file.write("{},{}".format(dt, score)) for dt, score in data]
 
     @staticmethod
     def grow_trees():
@@ -384,3 +412,26 @@ class RegressionAnalysis:
                     pass
 
         return scores
+
+    def __kendall_tau(self, rank1, rank2):
+        rank1 = list(rank1)
+        rank2 = list(rank2)
+
+        p = [(i, j) for i, j in product(rank1, rank2) if i != j]
+        penalties = [self.__penalty(i, j, rank1, rank2) for i, j in p]
+
+        return sum(penalties)
+
+    def __penalty(self, i, j, rank1, rank2):
+        order1_i = rank1.index(i)
+        order2_i = rank2.index(i)
+
+        order1_j = rank1.index(j)
+        order2_j = rank2.index(j)
+
+        # if i and j are in the same order in rank1 and rank2
+        if order1_i == order2_i and order1_j == order2_j:
+            return 0
+
+        # if i and j are in the opposite order
+        return 1
