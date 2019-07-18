@@ -43,6 +43,11 @@ def main(args):
         regression = RegressionAnalysis()
         regression.analyse()
 
+    elif args.rank == regression:
+        regression = RegressionAnalysis()
+        regression.rank(evaluation_path, ['f1', 'f1_micro'])
+        regression.compare_ranks(evaluation_path)
+
     elif args.trees == regression:
         RegressionAnalysis.grow_trees()
 
@@ -177,6 +182,12 @@ if __name__ == "__main__":
                         default=None,
                         choices=['regression', 'classification'],
                         help="Type of analysis (regression or classification).")
+
+    parser.add_argument("-r", "--rank",
+                        dest="rank",
+                        default=None,
+                        choices=['regression', 'classification'],
+                        help="Type of ranking (regression or classification).")
 
     parser.add_argument("-t", "--make-trees",
                         dest="trees",

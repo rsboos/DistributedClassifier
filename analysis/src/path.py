@@ -106,6 +106,8 @@ class Path:
             method_p = method.split('_')
             if method_p[1] not in ['md', 'mdi', 'mdic']:
                 method = "{s[0]}_{s[2]}_{s[1]}".format(s=method_p)
+            if len(method_p) == 4 and method_p[2] == 'arb':
+                method = "{s[0]}_{s[1]}_{s[3]}".format(s=method_p)
 
         return method
 

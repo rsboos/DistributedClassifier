@@ -163,7 +163,7 @@ class RegressionAnalysis:
         regressors_mdl = {}
 
         # Train best regressors
-        for aggr in best_regressors.indexes.values:
+        for aggr in best_regressors.index.values:
             regressor_name = best_regressors.loc[aggr, 'best_regressor']
             mdl = deepcopy(regressors[regressor_name])
 
@@ -176,7 +176,7 @@ class RegressionAnalysis:
             regressors_mdl[aggr] = mdl
 
         # Create ranks for each dataset
-        test_data_path = path.join(evaluation_path, '../datasets_test')
+        test_data_path = path.join(evaluation_path, '../datasets_tests')
         datasets_folders = glob(path.join(test_data_path, '*_0'))
         datasets_info = read_csv('data/datasets.csv', header=[0], index_col=[-1])
 
@@ -185,14 +185,17 @@ class RegressionAnalysis:
             summary_path = path.join(folder, 'cv_summary.csv')
             summary = read_csv(summary_path, header=[0, 1], index_col=[0])
 
+            index_values = [Path.fix_method_name(i) for i in summary.index.values]
+            summary = DataFrame(summary.loc[:, 'mean'].to_dict('list'), index=index_values)
+
             try:
-                summary = summary.loc[:, 'mean'].loc[:, scores[0]]
+                summary = summary.loc[:, scores[0]]
                 score = scores[0]
             except KeyError:
-                summary = summary.loc[:, 'mean'].loc[:, scores[1]]
+                summary = summary.loc[:, scores[1]]
                 score = scores[1]
 
-            summary.sort_values(score, inplace=True, ascending=False)
+            summary = summary.sort_values(ascending=False)
 
             rank_path = path.join(r_path.analysis_path, '{}_true_rank.csv'.format(dataset_name))
             summary.to_csv(rank_path, header=True, index=True)
@@ -200,11 +203,10 @@ class RegressionAnalysis:
             dataset_info = datasets_info.loc[dataset_name, :].values
             rank = {}
             for aggr in regressors_mdl:
-                rank[aggr] = regressors_mdl[aggr].predict([dataset_info])[0]
+                rank[aggr] = [regressors_mdl[aggr].predict([dataset_info])[0]]
 
-            rank = DataFrame(rank)
+            rank = DataFrame(rank, index=[score])
             rank = rank.T
-            rank.columns.values = ['', score]
             rank.sort_values(score, inplace=True, ascending=False)
 
             rank_path = path.join(r_path.analysis_path, '{}_predicted_rank.csv'.format(dataset_name))
@@ -212,7 +214,7 @@ class RegressionAnalysis:
 
     def compare_ranks(self, evaluation_path):
         r_path = RegressionPath()
-        test_data_path = path.join(evaluation_path, '../datasets_test')
+        test_data_path = path.join(evaluation_path, '../datasets_tests')
         datasets = [folder.split('/')[-1][:-2] for folder in glob(path.join(test_data_path, '*_0'))]
 
         data = []
@@ -223,8 +225,18 @@ class RegressionAnalysis:
             true_rank = read_csv(true_rank_path, header=[0], index_col=None)
             pred_rank = read_csv(pred_rank_path, header=[0], index_col=None)
 
-            true_rank_values = true_rank.iloc[:, 0].values
-            pred_rank_values = pred_rank.iloc[:, 0].values
+            true_rank_values = list(true_rank.iloc[:, 0].values)
+            pred_rank_values = list(pred_rank.iloc[:, 0].values)
+
+            true_rank_set = set(true_rank_values)
+            pred_rank_set = set(pred_rank_values)
+
+            if len(true_rank_values) > len(pred_rank_values):
+                diff_values = true_rank_set - pred_rank_set
+                true_rank_values = list(true_rank_set - diff_values)
+            elif len(true_rank_values) < len(pred_rank_values):
+                diff_values = pred_rank_set - true_rank_set
+                pred_rank_values = list(pred_rank_set - diff_values)
 
             score = self.__kendall_tau(true_rank_values, pred_rank_values)
 
@@ -234,7 +246,8 @@ class RegressionAnalysis:
 
         results_path = path.join(r_path.analysis_path, 'ranks_scores.csv')
         with open(results_path, 'w') as file:
-            [file.write("{},{}".format(dt, score)) for dt, score in data]
+            for dt, score in data:
+                file.write("{},{}\n".format(dt, score))
 
     @staticmethod
     def grow_trees():
