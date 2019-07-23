@@ -9,7 +9,7 @@ from glob import glob
 from copy import deepcopy
 from metrics import summary
 from itertools import product
-from pandas import read_csv, DataFrame, concat
+from pandas import read_csv, DataFrame, concat, Index
 from sklearn.model_selection import KFold, cross_validate
 
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
@@ -154,6 +154,7 @@ class RegressionAnalysis:
 
     def rank(self, evaluation_path, scores, regressors='*'):
         r_path = RegressionPath()
+        classes = {'arbmd', 'arbmdi', 'arbmdic', 'classif', 'cmb', 'math', 'scf', 'vote'}
         best_regressors_path = path.join(r_path.analysis_path, 'best_regressors_cleaned.csv')
         best_regressors = read_csv(best_regressors_path, header=[0], index_col=[0])
 
@@ -203,7 +204,8 @@ class RegressionAnalysis:
             dataset_info = datasets_info.loc[dataset_name, :].values
             rank = {}
             for aggr in regressors_mdl:
-                rank[aggr] = [regressors_mdl[aggr].predict([dataset_info])[0]]
+                if aggr not in classes:
+                    rank[aggr] = [regressors_mdl[aggr].predict([dataset_info])[0]]
 
             rank = DataFrame(rank, index=[score])
             rank = rank.T
@@ -433,18 +435,21 @@ class RegressionAnalysis:
         p = [(i, j) for i, j in product(rank1, rank2) if i != j]
         penalties = [self.__penalty(i, j, rank1, rank2) for i, j in p]
 
-        return sum(penalties)
+        return sum(penalties) / len(p)
 
     def __penalty(self, i, j, rank1, rank2):
-        order1_i = rank1.index(i)
-        order2_i = rank2.index(i)
+        x_i = rank1.index(i)
+        y_i = rank2.index(i)
 
-        order1_j = rank1.index(j)
-        order2_j = rank2.index(j)
+        x_j = rank1.index(j)
+        y_j = rank2.index(j)
 
-        # if i and j are in the same order in rank1 and rank2
-        if order1_i == order2_i and order1_j == order2_j:
-            return 0
+        # concordantes
+        # if (x_i > x_j and y_i > y_j) or (x_i < x_j and y_i < y_j):
+        #     return 1
 
-        # if i and j are in the opposite order
-        return 1
+        # discordantes
+        if (x_i > x_j and y_i < y_j) or (x_i < x_j and y_i > y_j):
+            return 1
+
+        return 0
