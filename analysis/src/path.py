@@ -21,8 +21,8 @@ class Path:
 
         self.graphics_path = path.join(self.test_path, 'graphics/')
 
-    @staticmethod
-    def concat_method_type(name):
+    @classmethod
+    def concat_method_type(cls, name):
         method_types = {'borda': 'scf',
                         'copeland': 'scf',
                         'dowdall': 'scf',
@@ -39,12 +39,7 @@ class Path:
         if name in method_types:
             return '{}_{}'.format(method_types[name], name)
 
-        if name.startswith('arb'):
-            metadata = name.split('_')
-            if len(metadata) > 2:
-                name = 'arb{}_{}'.format(metadata[1], '_'.join(metadata[2:]))
-
-        return name
+        return cls.fix_method_name(name)
 
     @staticmethod
     def human_readable_methods():
