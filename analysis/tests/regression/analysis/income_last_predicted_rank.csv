@@ -5,6 +5,7 @@ arb_mdi_gnb,1.01
 arb_mdi_mlp,1.0
 arb_md_dtree,0.99
 arb_md_svc,0.76
+cmb_mlp,0.73
 arb_mdic_dtree,0.69
 arb_mdi_knn,0.68
 arb_md_mlp,0.68
@@ -22,11 +23,10 @@ mean,0.55
 svc,0.55
 simpson,0.54
 arb_mdic_svc,0.51
+arb_md_gnb,0.51
 copeland,0.5
-arb_md_gnb,0.5
 arb_mdic_gnb,0.45
-cmb_knn,0.41
-cmb_mlp,0.4
-cmb_svc,0.38
-cmb_dtree,0.31
-gnb,0.13
+cmb_knn,0.4
+cmb_svc,0.4
+gnb,0.14
+cmb_dtree,0.14

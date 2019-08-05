@@ -227,16 +227,16 @@ class RegressionAnalysis:
             true_rank = read_csv(true_rank_path, header=None, index_col=None)
             pred_rank = read_csv(pred_rank_path, header=None, index_col=None)
 
-            score = self.__kendall_tau(true_rank, pred_rank)
+            score, buckets_mean = self.__kendall_tau(true_rank, pred_rank)
 
-            data.append((dataset_name, score))
+            data.append((dataset_name, score, buckets_mean))
 
         data.sort(key=lambda x: x[1])
 
         results_path = path.join(r_path.analysis_path, 'ranks_scores.csv')
         with open(results_path, 'w') as file:
-            for dt, score in data:
-                file.write("{},{}\n".format(dt, score))
+            for dt, score, buckets_mean in data:
+                file.write("{},{},{}\n".format(dt, score, buckets_mean))
 
     @staticmethod
     def grow_trees():
@@ -466,9 +466,17 @@ class RegressionAnalysis:
             rank2_items = list(rank2_set - diff_values)
 
         p = [(i, j) for i, j in product(rank1_items, rank2_items) if i != j]
-        penalties = [self.__penalty(i, j, buckets1, buckets2) for i, j in p]
 
-        return sum(penalties) / len(p)
+        penalties = []
+        buckets_mean = []
+        for i, j in p:
+            penalty, bs = self.__penalty(i, j, buckets1, buckets2)
+            penalties.append(penalty)
+
+            if penalty > 0:
+                buckets_mean.append(sum(bs) / len(bs))
+
+        return sum(penalties) / len(p), sum(buckets_mean) / len(buckets_mean)
 
     def __penalty(self, i, j, buckets1, buckets2):
         b1_i = self.__find_bucket(buckets1, i)
@@ -483,23 +491,25 @@ class RegressionAnalysis:
         pos2_i = self.__pos(buckets2, b2_i)
         pos2_j = self.__pos(buckets2, b2_j)
 
+        penalty = 0
+
         # Case 1
         # # Same order
         if (pos1_i > pos1_j and pos2_i > pos2_j) or (pos1_i < pos1_j and pos2_i < pos2_j):
-            return 0
+            penalty = 0
 
         # # Opposite order
-        if (pos1_i > pos1_j and pos2_i < pos2_j) or (pos1_i < pos1_j and pos2_i > pos2_j):
-            return 1
+        elif (pos1_i > pos1_j and pos2_i < pos2_j) or (pos1_i < pos1_j and pos2_i > pos2_j):
+            penalty = 1
 
         # Case 2
         # # i and j are in the same bucket (tied)
-        if b1_i == b1_j and b2_i == b2_j:
-            return 0
+        elif b1_i == b1_j and b2_i == b2_j:
+            penalty = 0
 
         # Case 3
         # # i and j are in the same bucket in just one rank
-        if (b1_i == b1_j and b2_i != b2_j) or (b1_i != b1_j and b2_i == b2_j):
-            return 1 / 2
+        elif (b1_i == b1_j and b2_i != b2_j) or (b1_i != b1_j and b2_i == b2_j):
+            penalty = 1 / 2
 
-        return 0
+        return penalty, (b1_i, b1_j, b2_i, b2_j)
