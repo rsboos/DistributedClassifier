@@ -6,12 +6,12 @@ from time import time
 
 warnings.filterwarnings("ignore")
 
-for dataset in ['credit', 'emg', 'income', 'lifeexpectancy', 'politics', 'pulsar', 'sky', 'speech']:  # glob('datasets/*'):
+for dataset in ['plates', 'theorem']:  # glob('datasets/*'):
     dataset = 'datasets/' + dataset + '_last.csv'
     dataset_name = dataset.replace('datasets/', '')[:-4]
 
     overlap = float(0)
-    for overlap in range(11):
+    for overlap in range(1):
         t = int(time())
 
         print('{}% {}'.format(overlap*10, dataset))

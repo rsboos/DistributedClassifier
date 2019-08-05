@@ -9,7 +9,7 @@ from glob import glob
 from copy import deepcopy
 from metrics import summary
 from itertools import product
-from pandas import read_csv, DataFrame, concat
+from pandas import read_csv, DataFrame, concat, Series
 from sklearn.model_selection import KFold, cross_validate
 
 from sklearn.metrics import explained_variance_score, mean_absolute_error, \
@@ -154,6 +154,7 @@ class RegressionAnalysis:
 
     def rank(self, evaluation_path, scores, regressors='*'):
         r_path = RegressionPath()
+        classes = {'arbmd', 'arbmdi', 'arbmdic', 'classif', 'cmb', 'math', 'scf', 'vote'}
         best_regressors_path = path.join(r_path.analysis_path, 'best_regressors_cleaned.csv')
         best_regressors = read_csv(best_regressors_path, header=[0], index_col=[0])
 
@@ -190,27 +191,28 @@ class RegressionAnalysis:
 
             try:
                 summary = summary.loc[:, scores[0]]
-                score = scores[0]
             except KeyError:
                 summary = summary.loc[:, scores[1]]
-                score = scores[1]
 
             summary = summary.sort_values(ascending=False)
+            summary = summary.map(lambda a: round(a, 2))
 
             rank_path = path.join(r_path.analysis_path, '{}_true_rank.csv'.format(dataset_name))
-            summary.to_csv(rank_path, header=True, index=True)
+            summary.to_csv(rank_path, header=False, index=True)
 
             dataset_info = datasets_info.loc[dataset_name, :].values
             rank = {}
             for aggr in regressors_mdl:
-                rank[aggr] = [regressors_mdl[aggr].predict([dataset_info])[0]]
+                if aggr not in classes:
+                    rank[aggr] = regressors_mdl[aggr].predict([dataset_info])[0]
 
-            rank = DataFrame(rank, index=[score])
-            rank = rank.T
-            rank.sort_values(score, inplace=True, ascending=False)
+            rank = Series(list(rank.values()), index=list(rank.keys()))
+            rank.sort_values(inplace=True, ascending=False)
+
+            rank = rank.map(lambda a: round(a, 2))
 
             rank_path = path.join(r_path.analysis_path, '{}_predicted_rank.csv'.format(dataset_name))
-            rank.to_csv(rank_path, header=True, index=True)
+            rank.to_csv(rank_path, header=False, index=True)
 
     def compare_ranks(self, evaluation_path):
         r_path = RegressionPath()
@@ -222,32 +224,19 @@ class RegressionAnalysis:
             true_rank_path = path.join(r_path.analysis_path, '{}_true_rank.csv'.format(dataset_name))
             pred_rank_path = path.join(r_path.analysis_path, '{}_predicted_rank.csv'.format(dataset_name))
 
-            true_rank = read_csv(true_rank_path, header=[0], index_col=None)
-            pred_rank = read_csv(pred_rank_path, header=[0], index_col=None)
+            true_rank = read_csv(true_rank_path, header=None, index_col=None)
+            pred_rank = read_csv(pred_rank_path, header=None, index_col=None)
 
-            true_rank_values = list(true_rank.iloc[:, 0].values)
-            pred_rank_values = list(pred_rank.iloc[:, 0].values)
+            score, buckets_mean = self.__kendall_tau(true_rank, pred_rank)
 
-            true_rank_set = set(true_rank_values)
-            pred_rank_set = set(pred_rank_values)
-
-            if len(true_rank_values) > len(pred_rank_values):
-                diff_values = true_rank_set - pred_rank_set
-                true_rank_values = list(true_rank_set - diff_values)
-            elif len(true_rank_values) < len(pred_rank_values):
-                diff_values = pred_rank_set - true_rank_set
-                pred_rank_values = list(pred_rank_set - diff_values)
-
-            score = self.__kendall_tau(true_rank_values, pred_rank_values)
-
-            data.append((dataset_name, score))
+            data.append((dataset_name, score, buckets_mean))
 
         data.sort(key=lambda x: x[1])
 
         results_path = path.join(r_path.analysis_path, 'ranks_scores.csv')
         with open(results_path, 'w') as file:
-            for dt, score in data:
-                file.write("{},{}\n".format(dt, score))
+            for dt, score, buckets_mean in data:
+                file.write("{},{},{}\n".format(dt, score, buckets_mean))
 
     @staticmethod
     def grow_trees():
@@ -426,25 +415,101 @@ class RegressionAnalysis:
 
         return scores
 
+    def __get_buckets(self, data):
+        buckets = {(0.00, 0.50): [],
+                   (0.51, 0.75): [],
+                   (0.76, 0.90): [],
+                   (0.91, 1.00): []}
+
+        for i in range(data.shape[0]):
+            f1 = data.iloc[i, 1]
+            f1 = 1 if f1 > 1 else f1
+
+            for drange in buckets:
+                if drange[0] <= f1 <= drange[1]:
+                    buckets[drange].append(data.iloc[i, 0])
+                    break
+
+        return list(buckets.values())
+
+    def __find_bucket(self, buckets, element):
+        n = len(buckets)
+
+        for i in range(n):
+            if element in buckets[i]:
+                return i
+
+        return None
+
+    def __pos(self, buckets, i):
+        lens = [0]
+        for j in range(i):
+            lens.append(len(buckets[j]))
+
+        return sum(lens) + (len(buckets[i]) + 1) / 2
+
     def __kendall_tau(self, rank1, rank2):
-        rank1 = list(rank1)
-        rank2 = list(rank2)
+        buckets1 = self.__get_buckets(rank1)
+        buckets2 = self.__get_buckets(rank2)
 
-        p = [(i, j) for i, j in product(rank1, rank2) if i != j]
-        penalties = [self.__penalty(i, j, rank1, rank2) for i, j in p]
+        rank1_items = rank1.iloc[:, 0].values
+        rank2_items = rank2.iloc[:, 0].values
 
-        return sum(penalties)
+        rank1_set = set(rank1_items)
+        rank2_set = set(rank2_items)
 
-    def __penalty(self, i, j, rank1, rank2):
-        order1_i = rank1.index(i)
-        order2_i = rank2.index(i)
+        if len(rank1_items) > len(rank2_items):
+            diff_values = rank1_set - rank2_set
+            rank1_items = list(rank1_set - diff_values)
+        elif len(rank1_items) < len(rank2_items):
+            diff_values = rank2_set - rank1_set
+            rank2_items = list(rank2_set - diff_values)
 
-        order1_j = rank1.index(j)
-        order2_j = rank2.index(j)
+        p = [(i, j) for i, j in product(rank1_items, rank2_items) if i != j]
 
-        # if i and j are in the same order in rank1 and rank2
-        if order1_i == order2_i and order1_j == order2_j:
-            return 0
+        penalties = []
+        buckets_mean = []
+        for i, j in p:
+            penalty, bs = self.__penalty(i, j, buckets1, buckets2)
+            penalties.append(penalty)
 
-        # if i and j are in the opposite order
-        return 1
+            if penalty > 0:
+                buckets_mean.append(sum(bs) / len(bs))
+
+        return sum(penalties) / len(p), sum(buckets_mean) / len(buckets_mean)
+
+    def __penalty(self, i, j, buckets1, buckets2):
+        b1_i = self.__find_bucket(buckets1, i)
+        b1_j = self.__find_bucket(buckets1, j)
+
+        b2_i = self.__find_bucket(buckets2, i)
+        b2_j = self.__find_bucket(buckets2, j)
+
+        pos1_i = self.__pos(buckets1, b1_i)
+        pos1_j = self.__pos(buckets1, b1_j)
+
+        pos2_i = self.__pos(buckets2, b2_i)
+        pos2_j = self.__pos(buckets2, b2_j)
+
+        penalty = 0
+
+        # Case 1
+        # # Same order
+        if (pos1_i > pos1_j and pos2_i > pos2_j) or (pos1_i < pos1_j and pos2_i < pos2_j):
+            penalty = 0
+
+        # # Opposite order
+        elif (pos1_i > pos1_j and pos2_i < pos2_j) or (pos1_i < pos1_j and pos2_i > pos2_j):
+            penalty = 1
+
+        # Case 2
+        # # i and j are in the same bucket (tied)
+        elif b1_i == b1_j and b2_i == b2_j:
+            penalty = 0
+
+        # Case 3
+        # # i and j are in the same bucket in just one rank
+        elif (b1_i == b1_j and b2_i != b2_j) or (b1_i != b1_j and b2_i == b2_j):
+            penalty = 1 / 2
+
+        return penalty, (b1_i, b1_j, b2_i, b2_j)
