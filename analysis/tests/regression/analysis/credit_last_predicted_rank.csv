@@ -1,13 +1,12 @@
 arb_mdic_dtree,0.79
-simpson,0.73
 cmb_mlp,0.73
-cmb_knn,0.72
+simpson,0.7
 cmb_gnb,0.69
 cmb_svc,0.69
 arb_md_mlp,0.68
 arb_mdic_mlp,0.68
-cmb_dtree,0.67
 arb_md_gnb,0.67
+cmb_dtree,0.67
 arb_mdic_knn,0.66
 borda,0.66
 plurality,0.66
@@ -28,5 +27,6 @@ arb_mdi_dtree,0.51
 arb_md_knn,0.51
 arb_mdi_svc,0.5
 arb_mdic_svc,0.49
+cmb_knn,0.48
 arb_mdic_gnb,0.46
 arb_mdi_mlp,0.44
