@@ -1,11 +1,11 @@
-cmb_svc,1.0
 arb_md_gnb,1.0
+cmb_knn,0.89
 arb_mdi_knn,0.86
 arb_md_dtree,0.85
+simpson,0.83
 arb_mdi_gnb,0.81
-cmb_knn,0.8
 arb_mdi_mlp,0.8
-simpson,0.74
+cmb_svc,0.78
 arb_mdic_dtree,0.71
 cmb_mlp,0.71
 arb_md_mlp,0.68

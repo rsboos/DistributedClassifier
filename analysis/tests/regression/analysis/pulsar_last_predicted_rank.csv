@@ -10,7 +10,6 @@ mlp,0.91
 dowdall,0.9
 plurality,0.9
 arb_mdic_mlp,0.9
-gnb,0.9
 borda,0.89
 arb_mdic_svc,0.89
 cmb_knn,0.89
@@ -20,6 +19,7 @@ arb_mdic_knn,0.88
 dtree,0.88
 cmb_dtree,0.87
 simpson,0.83
+gnb,0.82
 arb_mdic_gnb,0.81
 copeland,0.81
 cmb_svc,0.78
