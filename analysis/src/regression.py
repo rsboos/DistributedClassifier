@@ -219,6 +219,17 @@ class RegressionAnalysis:
         test_data_path = path.join(evaluation_path, '../datasets_tests')
         datasets = [folder.split('/')[-1][:-2] for folder in glob(path.join(test_data_path, '*_0'))]
 
+        readable_dt_name = {'sky_last': 'Sloan digital sky',
+                            'emg_last': 'Gesture',
+                            'plates_last': 'Steel plates’ fault',
+                            'theorem_last': 'First order theorem',
+                            'lifeexpectancy_last': 'Life expectancy',
+                            'credit_last': 'Credit',
+                            'pulsar_last': 'Pulsar star',
+                            'politics_last': 'Turkey political opinions',
+                            'speech_last': 'Speech',
+                            'income_last': 'Income'}
+
         data = []
         for dataset_name in datasets:
             true_rank_path = path.join(r_path.analysis_path, '{}_true_rank.csv'.format(dataset_name))
@@ -227,16 +238,31 @@ class RegressionAnalysis:
             true_rank = read_csv(true_rank_path, header=None, index_col=None)
             pred_rank = read_csv(pred_rank_path, header=None, index_col=None)
 
-            score, buckets_mean = self.__kendall_tau(true_rank, pred_rank)
+            score_rank, score_bucket, buckets_count = self.__kendall_tau(true_rank, pred_rank)
 
-            data.append((dataset_name, score, buckets_mean))
-
-        data.sort(key=lambda x: x[1])
+            data.append((readable_dt_name[dataset_name],
+                         score_rank,
+                         score_bucket,
+                         buckets_count[0],
+                         buckets_count[1],
+                         buckets_count[2],
+                         buckets_count[3]))
 
         results_path = path.join(r_path.analysis_path, 'ranks_scores.csv')
         with open(results_path, 'w') as file:
-            for dt, score, buckets_mean in data:
-                file.write("{},{},{}\n".format(dt, score, buckets_mean))
+            file.write('dataset,score_rank,score_bucket,1,2,3,4\n')
+            for dt, score_rank, score_bucket, b1, b2, b3, b4 in data:
+                file.write("{},{},{},{},{},{},{}\n".format(dt, score_rank, score_bucket, b1, b2, b3, b4))
+
+        _, _, _, b1, b2, b3, b4 = zip(*data)
+        b1_mean, b2_mean, b3_mean, b4_mean = np.mean(b1), np.mean(b2), np.mean(b3), np.mean(b4)
+        b1_std, b2_std, b3_std, b4_std = np.std(b1), np.std(b2), np.std(b3), np.std(b4)
+
+        results_path = path.join(r_path.analysis_path, 'buckets_results.csv')
+        with open(results_path, 'w') as file:
+            file.write('mean,std\n')
+            for b_mean, b_std in [(b1_mean, b1_std), (b2_mean, b2_std), (b3_mean, b3_std), (b4_mean, b4_std)]:
+                file.write("{},{}\n".format(b_mean, b_std))
 
     @staticmethod
     def grow_trees():
@@ -417,20 +443,20 @@ class RegressionAnalysis:
 
     def __get_buckets(self, data):
         buckets = {(0.00, 0.50): [],
-                   (0.51, 0.75): [],
-                   (0.76, 0.90): [],
-                   (0.91, 1.00): []}
+                   (0.50, 0.75): [],
+                   (0.75, 0.90): [],
+                   (0.90, 1.01): []}
 
         for i in range(data.shape[0]):
             f1 = data.iloc[i, 1]
             f1 = 1 if f1 > 1 else f1
 
             for drange in buckets:
-                if drange[0] <= f1 <= drange[1]:
+                if drange[0] <= f1 < drange[1]:
                     buckets[drange].append(data.iloc[i, 0])
                     break
 
-        return list(buckets.values())
+        return buckets
 
     def __find_bucket(self, buckets, element):
         n = len(buckets)
@@ -452,8 +478,13 @@ class RegressionAnalysis:
         buckets1 = self.__get_buckets(rank1)
         buckets2 = self.__get_buckets(rank2)
 
-        rank1_items = rank1.iloc[:, 0].values
-        rank2_items = rank2.iloc[:, 0].values
+        buckets1_values = list(buckets1.values())
+        buckets2_values = list(buckets2.values())
+
+        buckets1_intervals = list(buckets1.keys())
+
+        rank1_items = list(rank1.iloc[:, 0].values)
+        rank2_items = list(rank2.iloc[:, 0].values)
 
         rank1_set = set(rank1_items)
         rank2_set = set(rank2_items)
@@ -467,18 +498,32 @@ class RegressionAnalysis:
 
         p = [(i, j) for i, j in product(rank1_items, rank2_items) if i != j]
 
-        penalties = []
-        buckets_mean = []
+        penalties_rank = []
+        penalties_bucket = []
+        buckets_count = [0] * len(buckets1_intervals)
+
         for i, j in p:
-            penalty, bs = self.__penalty(i, j, buckets1, buckets2)
-            penalties.append(penalty)
+            penalty_rank = self.__penalty_with_ranks(i, j, rank1_items, rank2_items)
+            penalty_bucket, b1_i, b1_j, b2_i, b2_j = self.__penalty_with_buckets(i, j, buckets1_values, buckets2_values)
 
-            if penalty > 0:
-                buckets_mean.append(sum(bs) / len(bs))
+            penalties_rank.append(penalty_rank)
+            penalties_bucket.append(penalty_bucket)
 
-        return sum(penalties) / len(p), sum(buckets_mean) / len(buckets_mean)
+            if penalty_bucket > 0:
+                buckets_count[b1_i] += 1
 
-    def __penalty(self, i, j, buckets1, buckets2):
+                if b1_j != b1_i:
+                    buckets_count[b1_j] += 1
+
+                if b2_i != b1_i and b2_i != b1_j:
+                    buckets_count[b2_i] += 1
+
+                if b2_j != b1_i and b2_j != b1_j and b2_j != b2_i:
+                    buckets_count[b2_j] += 1
+
+        return sum(penalties_rank) / len(p), sum(penalties_bucket) / len(p), np.array(buckets_count) / len(p)
+
+    def __penalty_with_buckets(self, i, j, buckets1, buckets2):
         b1_i = self.__find_bucket(buckets1, i)
         b1_j = self.__find_bucket(buckets1, j)
 
@@ -512,4 +557,21 @@ class RegressionAnalysis:
         elif (b1_i == b1_j and b2_i != b2_j) or (b1_i != b1_j and b2_i == b2_j):
             penalty = 1 / 2
 
-        return penalty, (b1_i, b1_j, b2_i, b2_j)
+        return penalty, b1_i, b1_j, b2_i, b2_j
+
+    def __penalty_with_ranks(self, i, j, rank1, rank2):
+        x_i = rank1.index(i)
+        y_i = rank2.index(i)
+
+        x_j = rank1.index(j)
+        y_j = rank2.index(j)
+
+        # concordantes
+        if (x_i > x_j and y_i > y_j) or (x_i < x_j and y_i < y_j):
+            return 0
+
+        # discordantes
+        if (x_i > x_j and y_i < y_j) or (x_i < x_j and y_i > y_j):
+            return 1
+
+        return 0
