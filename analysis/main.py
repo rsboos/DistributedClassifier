@@ -3,7 +3,7 @@ import argparse
 from src.cluster_analysis import ClusterAnalysis
 from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
-from src.graphics import Boxplot, NewickTree, GGPlot, Histogram
+from src.graphics import Boxplot, NewickTree, GGPlot, Histogram, Heatmap
 from src.path import ClassificationPath
 from theobserver import Observer
 from glob import glob
@@ -154,14 +154,18 @@ def main(args):
         hist = Histogram()
         hist.feature_by_cluster()
 
-    if args.newick is not None:
+    if args.newick:
         graphic = NewickTree('', '')
         graphic.create(args.newick)
 
-    if args.cluster_analysis is not None:
+    if args.cluster_analysis:
         analysis = ClusterAnalysis()
         analysis.process()
 
+    if args.heatmap:
+        hm = Heatmap()
+        hm.rank_buckets()
+        hm.save('heatmap-buckets.pdf')
 
 if __name__ == "__main__":
 
@@ -235,6 +239,11 @@ if __name__ == "__main__":
 
     parser.add_argument("-hst", "--hist",
                         dest="hist",
+                        default=None,
+                        help="Create a specified graphic.")
+
+    parser.add_argument("-hm", "--heatmap",
+                        dest="heatmap",
                         default=None,
                         help="Create a specified graphic.")
 

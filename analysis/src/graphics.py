@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from os import path
 from glob import glob
+import seaborn as sns
 from plotnine import *
-from scipy import stats
 from .path import RegressionPath, Path
 from .cluster_analysis import ClusterAnalysis
 from pandas import read_csv, Series, DataFrame
@@ -63,17 +63,6 @@ class Graphics:
 
         return methods_data
 
-
-class Boxplot(Graphics):
-
-    def __init__(self, metric='f1_micro', type_path=RegressionPath()):
-        super().__init__(metric, type_path)
-        self.__classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
-
-    def show(self):
-        """Show boxplot."""
-        plt.show()
-
     def save(self, filename):
         """Save figure in Path.graphics_path.
 
@@ -84,6 +73,17 @@ class Boxplot(Graphics):
         """
         plt.savefig(path.join(self.type_path.graphics_path, filename), bbox_inches='tight')
         plt.close('all')
+
+
+class Boxplot(Graphics):
+
+    def __init__(self, metric='f1_micro', type_path=RegressionPath()):
+        super().__init__(metric, type_path)
+        self.__classifiers = ['gnb', 'dtree', 'svc', 'knn', 'mlp']
+
+    def show(self):
+        """Show boxplot."""
+        plt.show()
 
     def ranking(self, cluster='*', overlap='*'):
         """Create a boxplot by ranking."""
@@ -822,7 +822,7 @@ class NewickTree(Graphics):
 
 class GGPlot(Graphics):
 
-    def __init__(self, metric='f1_macro', type_path=RegressionPath()):
+    def __init__(self, metric='f1_micro', type_path=RegressionPath()):
         super().__init__(metric, type_path)
 
     def dataset_by_methods(self, overlap='*'):
@@ -881,7 +881,7 @@ class GGPlot(Graphics):
 
 class Histogram(Graphics):
 
-    def __init__(self, metric='f1_macro', type_path=RegressionPath()):
+    def __init__(self, metric='f1_micro', type_path=RegressionPath()):
         super().__init__(metric, type_path)
 
     def feature_by_cluster(self):
@@ -911,3 +911,20 @@ class Histogram(Graphics):
                    height=10.5)
 
             plt.close('all')
+
+
+class Heatmap(Graphics):
+
+    def __init__(self, metric='f1_micro', type_path=RegressionPath()):
+        super().__init__(metric, type_path)
+
+    def rank_buckets(self):
+        analysis_path = self.type_path.analysis_path
+        rank_scores_path = path.join(analysis_path, 'ranks_scores.csv')
+        rank_scores = read_csv(rank_scores_path, header=0, index_col=0)
+
+        bucket_count = rank_scores.loc[:, ['1', '2', '3', '4']]
+
+        ax = sns.heatmap(bucket_count, cmap='Blues_r')
+        ax.set_xlabel('Bucket')
+        ax.set_ylabel('Dataset')
