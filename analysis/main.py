@@ -123,6 +123,9 @@ def main(args):
         graphic.regression_performance()
         graphic.regression_by_aggregator()
 
+        graphic.best_regressors_performance()
+        graphic.save('bp-performance-best_regressors.pdf')
+
         for name, cluster in clusters.items():
             graphic = Boxplot()
 

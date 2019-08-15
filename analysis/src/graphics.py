@@ -409,6 +409,38 @@ class Boxplot(Graphics):
             self.__make(ranks, methods, 'Mean Squared Error', 'Methods')
             self.save('bp-performance-regression-aggr-{}.pdf'.format(aggr_name))
 
+    def best_regressors_performance(self):
+        analysis_path = self.type_path.analysis_path
+        evaluation_path = self.type_path.evaluation_path
+
+        readables = self.type_path.human_readable_methods()
+
+        br_path = path.join(analysis_path, 'best_regressors_cleaned.csv')
+        best_regressors = read_csv(br_path, header=0, index_col=0)
+
+        data = {}
+
+        for aggr_method in best_regressors.index.values:
+            if aggr_method in ['arbmd', 'arbmdi', 'arbmdic', 'cmb', 'math', 'classif', 'scf', 'vote']:
+                continue
+
+            best_regressor = best_regressors.loc[aggr_method, 'best_regressor']
+            br_results_path = path.join(evaluation_path, "{}_f1/{}.csv".format(aggr_method, best_regressor))
+
+            br_results = read_csv(br_results_path, header=0, index_col=None)
+
+            values = br_results.loc[:, 'mean_square'].values
+
+            readable_aggr_method = readables[aggr_method]
+            data.setdefault(readable_aggr_method, values)
+
+        positions = list(data.items())
+        positions = sorted(positions, key=lambda x: x[0])
+        methods, ranks = zip(*positions)
+        methods, ranks = list(methods), list(ranks)
+
+        self.__make(ranks, methods, 'Mean Squared Error', 'Aggregation Method')
+
     def __problem_type_performance(self, metric, ylabel, problem_type):
         evaluation_path = self.type_path.evaluation_path
         folders = glob(path.join(evaluation_path, '*'))
