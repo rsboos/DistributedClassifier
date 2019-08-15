@@ -43,7 +43,7 @@ class Path:
 
     @staticmethod
     def human_readable_methods():
-        return {
+        ret = {
             "vote_plurality": "Plurality",
             "scf_simpson": "Social Choice Function Simpson",
             "scf_dowdall": "Social Choice Function Dowdall",
@@ -85,6 +85,43 @@ class Path:
             'scf': 'Social Choice Functions',
             'vote': 'Plurality'
         }
+
+        ret['arb_md_dtree'] = ret['arbmd_dtree']
+        ret['arb_md_gnb'] = ret['arbmd_gnb']
+        ret['arb_md_knn'] = ret['arbmd_knn']
+        ret['arb_md_mlp'] = ret['arbmd_mlp']
+        ret['arb_md_svc'] = ret['arbmd_svc']
+
+        ret['arb_mdi_dtree'] = ret['arbmdi_dtree']
+        ret['arb_mdi_gnb'] = ret['arbmdi_gnb']
+        ret['arb_mdi_knn'] = ret['arbmdi_knn']
+        ret['arb_mdi_mlp'] = ret['arbmdi_mlp']
+        ret['arb_mdi_svc'] = ret['arbmdi_svc']
+
+        ret['arb_mdic_dtree'] = ret['arbmdic_dtree']
+        ret['arb_mdic_gnb'] = ret['arbmdic_gnb']
+        ret['arb_mdic_knn'] = ret['arbmdic_knn']
+        ret['arb_mdic_mlp'] = ret['arbmdic_mlp']
+        ret['arb_mdic_svc'] = ret['arbmdic_svc']
+
+        ret['arb_md'] = ret['arbmd']
+        ret['arb_mdi'] = ret['arbmdi']
+        ret['arb_mdic'] = ret['arbmdic']
+
+        ret['borda'] = ret['scf_borda']
+        ret['copeland'] = ret['scf_copeland']
+        ret['dowdall'] = ret['scf_dowdall']
+        ret['simpson'] = ret['scf_simpson']
+        ret['dtree'] = ret['classif_dtree']
+        ret['gnb'] = ret['classif_gnb']
+        ret['knn'] = ret['classif_knn']
+        ret['mlp'] = ret['classif_mlp']
+        ret['svc'] = ret['classif_svc']
+        ret['mean'] = ret['math_mean']
+        ret['median'] = ret['math_median']
+        ret['plurality'] = ret['vote_plurality']
+
+        return ret
 
     @staticmethod
     def human_readable_types():
