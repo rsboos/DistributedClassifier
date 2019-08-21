@@ -1,6 +1,9 @@
+cmb_mlp,0.73
+cmb_knn,0.72
 arb_mdic_dtree,0.68
 arb_md_mlp,0.68
-arb_md_gnb,0.64
+cmb_dtree,0.67
+arb_md_gnb,0.67
 arb_mdi_knn,0.62
 arb_md_dtree,0.61
 arb_mdic_mlp,0.61
@@ -24,9 +27,6 @@ svc,0.44
 copeland,0.44
 simpson,0.44
 arb_mdic_svc,0.42
-cmb_mlp,0.41
-cmb_knn,0.39
-cmb_svc,0.36
 arb_mdic_gnb,0.36
-cmb_dtree,0.31
+cmb_svc,0.36
 gnb,0.28

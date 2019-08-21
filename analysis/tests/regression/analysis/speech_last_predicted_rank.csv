@@ -1,9 +1,9 @@
 simpson,0.92
-cmb_dtree,0.9
 gnb,0.89
-cmb_knn,0.89
 cmb_mlp,0.89
-cmb_svc,0.83
+cmb_dtree,0.87
+cmb_svc,0.82
+cmb_knn,0.8
 arb_mdic_mlp,0.75
 arb_mdic_dtree,0.75
 borda,0.73

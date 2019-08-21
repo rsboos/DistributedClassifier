@@ -7,6 +7,7 @@ arb_md_dtree,1.04
 svc,0.93
 knn,0.92
 mlp,0.91
+cmb_dtree,0.91
 dowdall,0.9
 plurality,0.9
 arb_mdic_mlp,0.9
@@ -17,16 +18,15 @@ cmb_mlp,0.89
 mean,0.88
 arb_mdic_knn,0.88
 dtree,0.88
-cmb_dtree,0.87
-simpson,0.83
 gnb,0.82
 arb_mdic_gnb,0.81
 copeland,0.81
 cmb_svc,0.78
+simpson,0.74
 cmb_gnb,0.73
 median,0.68
 arb_md_mlp,0.68
 arb_mdic_dtree,0.64
 arb_md_svc,0.63
-arb_md_gnb,0.61
 arb_mdi_knn,0.52
+arb_md_gnb,0.34

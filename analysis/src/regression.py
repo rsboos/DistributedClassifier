@@ -524,6 +524,11 @@ class RegressionAnalysis:
                 if b2_j != b1_i and b2_j != b1_j and b2_j != b2_i:
                     buckets_count[b2_j] += 1
 
+        # Exclude non-existing buckets
+        for i, k in enumerate(buckets1_intervals):
+            if len(buckets1[k]) == 0 and len(buckets2[k]) == 0:
+                buckets_count[i] = np.nan
+
         return sum(penalties_rank) / len(p), sum(penalties_bucket) / len(p), np.array(buckets_count) / len(p)
 
     def __penalty_with_buckets(self, i, j, buckets1, buckets2):
