@@ -921,10 +921,17 @@ class Heatmap(Graphics):
     def rank_buckets(self):
         analysis_path = self.type_path.analysis_path
         rank_scores_path = path.join(analysis_path, 'ranks_scores.csv')
-        rank_scores = read_csv(rank_scores_path, header=0, index_col=0)
+        rank_scores = read_csv(rank_scores_path, header=0, index_col=0).T
 
-        bucket_count = rank_scores.loc[:, ['1', '2', '3', '4']]
+        bucket_count = rank_scores.loc[['1', '2', '3', '4'], :]
 
-        ax = sns.heatmap(bucket_count, cmap='Blues_r')
-        ax.set_xlabel('Bucket')
-        ax.set_ylabel('Dataset')
+        ax = sns.heatmap(bucket_count,
+                         vmin=0, vmax=1,
+                         cmap='Blues',
+                         annot=True, fmt=".2f",
+                         yticklabels=['[0.00; 0.50)', '[0.50; 0.75)', '[0.75; 0.90)', '[0.90; 1.00]'])
+
+        ax.set_xlabel('Dataset')
+        ax.set_ylabel("Bucket's interval")
+
+        plt.yticks(rotation=0)
