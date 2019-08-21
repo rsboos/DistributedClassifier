@@ -6,6 +6,7 @@ import os
 import numpy as np
 from os import path
 from glob import glob
+from joblib import dump
 from copy import deepcopy
 from metrics import summary
 from itertools import product
@@ -175,6 +176,8 @@ class RegressionAnalysis:
 
             mdl.fit(x, y)
             regressors_mdl[aggr] = mdl
+
+            # dump(mdl, path.join(r_path.regressors_path, aggr + '.joblib'))
 
         # Create ranks for each dataset
         test_data_path = path.join(evaluation_path, '../datasets_tests')

@@ -148,6 +148,7 @@ class RegressionPath(Path):
 
     def __init__(self):
         super().__init__('regression')
+        self.regressors_path = path.join(self.test_path, 'regressors/')
 
 
 class ClassificationPath(Path):
