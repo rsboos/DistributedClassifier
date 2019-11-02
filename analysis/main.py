@@ -5,6 +5,7 @@ from src.regression import RegressionAnalysis
 from src.classification import ClassificationAnalysis
 from src.graphics import Boxplot, NewickTree, GGPlot, Histogram, Heatmap
 from src.path import ClassificationPath
+from src.partition import PartitionAnalysis
 from theobserver import Observer
 from glob import glob
 
@@ -167,6 +168,11 @@ def main(args):
         hm.rank_buckets()
         hm.save('heatmap-buckets.pdf')
 
+    if args.partition:
+        PartitionAnalysis.characteristics()
+        PartitionAnalysis.compare()
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -246,6 +252,11 @@ if __name__ == "__main__":
                         dest="heatmap",
                         default=None,
                         help="Create a specified graphic.")
+
+    parser.add_argument("-pt", "--partition",
+                        dest="partition",
+                        default=None,
+                        help="Run all analysis about vertical partitions.")
 
     args = parser.parse_args()
     main(args)
